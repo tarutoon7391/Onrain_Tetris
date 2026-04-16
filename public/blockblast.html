@@ -1189,14 +1189,20 @@
       });
     }
 
+    // ブロックのセルリストから中央配置用オフセット（行・列）を返す
+    function getBlockCenterOffset(cells) {
+      const maxR = Math.max(...cells.map(([r]) => r));
+      const maxC = Math.max(...cells.map(([, c]) => c));
+      return { rowOffset: Math.floor(maxR / 2), colOffset: Math.floor(maxC / 2), maxR, maxC };
+    }
+
     // ドラッグゴーストのキャンバスを更新してカーソルに追従させる
     function updateDragGhost(clientX, clientY) {
       if (draggingIdx < 0) return;
 
       const block = tray[draggingIdx];
       const cells = block.cells;
-      const maxR = Math.max(...cells.map(([r]) => r));
-      const maxC = Math.max(...cells.map(([, c]) => c));
+      const { rowOffset, colOffset, maxR, maxC } = getBlockCenterOffset(cells);
 
       // ゴースト表示用のセルサイズ
       const ghostCellSz = 32;
@@ -1221,10 +1227,8 @@
       });
 
       // ブロックの中央セルがカーソル位置に来るようにゴーストを配置する
-      const centerOffsetCol = Math.floor(maxC / 2);
-      const centerOffsetRow = Math.floor(maxR / 2);
-      dragGhost.style.left = `${clientX - (centerOffsetCol + 0.5) * ghostCellSz}px`;
-      dragGhost.style.top = `${clientY - (centerOffsetRow + 0.5) * ghostCellSz}px`;
+      dragGhost.style.left = `${clientX - (colOffset + 0.5) * ghostCellSz}px`;
+      dragGhost.style.top = `${clientY - (rowOffset + 0.5) * ghostCellSz}px`;
       dragGhost.style.display = "block";
     }
 
@@ -1243,11 +1247,9 @@
         const cursorRow = Math.floor(y / CELL);
         const cursorCol = Math.floor(x / CELL);
         if (draggingIdx >= 0) {
-          const cells = tray[draggingIdx].cells;
-          const maxR = Math.max(...cells.map(([r]) => r));
-          const maxC = Math.max(...cells.map(([, c]) => c));
-          hoverRow = cursorRow - Math.floor(maxR / 2);
-          hoverCol = cursorCol - Math.floor(maxC / 2);
+          const { rowOffset, colOffset } = getBlockCenterOffset(tray[draggingIdx].cells);
+          hoverRow = cursorRow - rowOffset;
+          hoverCol = cursorCol - colOffset;
         } else {
           hoverRow = cursorRow;
           hoverCol = cursorCol;
@@ -1270,11 +1272,9 @@
       if (x < 0 || x >= BOARD_PX || y < 0 || y >= BOARD_PX) return;
 
       const block = tray[draggingIdx];
-      const cells = block.cells;
-      const maxR = Math.max(...cells.map(([r]) => r));
-      const maxC = Math.max(...cells.map(([, c]) => c));
-      const targetRow = Math.floor(y / CELL) - Math.floor(maxR / 2);
-      const targetCol = Math.floor(x / CELL) - Math.floor(maxC / 2);
+      const { rowOffset, colOffset } = getBlockCenterOffset(block.cells);
+      const targetRow = Math.floor(y / CELL) - rowOffset;
+      const targetCol = Math.floor(x / CELL) - colOffset;
 
       if (!canPlace(block.cells, targetRow, targetCol)) return;
 
