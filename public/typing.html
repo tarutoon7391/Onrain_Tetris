@@ -601,7 +601,7 @@
       "じゃ":["ja","zya"],
       "じゅ":["ju","zyu"],
       "じょ":["jo","zyo"],
-      "づ":  ["du","zu"],
+      "づ":  ["du"],
     };
 
     // ============================
@@ -874,7 +874,7 @@
       const total = targetReading.length;
       const myPct = total > 0 ? Math.round((myRomajiProgress / total) * 100) : 0;
       document.getElementById("myProgressBar").style.width  = `${myPct}%`;
-      document.getElementById("myProgressLabel").textContent = `${currentSyllableIdx} / ${syllables.length} 音節`;
+      document.getElementById("myProgressLabel").textContent = `${myRomajiProgress} / ${total} 文字 (${currentSyllableIdx} / ${syllables.length} 音節)`;
       document.getElementById("myProgressText").textContent  = `${myPct}%`;
 
       const oppPct = total > 0 ? Math.round((oppProgress / total) * 100) : 0;
@@ -925,7 +925,8 @@
       const validAlts = alts.filter(a => a.startsWith(newTyped));
 
       if (validAlts.length === 0) {
-        // 現在の入力と合わない場合は currentTyped をリセットして再試行する
+        // currentTyped が空でなければリセットして1度だけ再試行する
+        // currentTyped が空の場合は再試行しない（無限ループ防止）
         if (currentTyped !== "") {
           currentTyped = "";
           processKey(key);
@@ -937,7 +938,8 @@
 
       // 完全一致する候補があれば音節を進める
       if (validAlts.some(a => a === newTyped)) {
-        const isSokuonDoubling = s.isSokuon && newTyped.length === 1;
+        // っ を次の子音1文字で入力した（二重子音方式）かどうか判定する
+        const usedConsonantDoublingForSokuon = s.isSokuon && newTyped.length === 1;
         // 音節を確定して次へ進む
         myRomajiProgress += s.romaji.length;
         currentSyllableIdx++;
@@ -953,7 +955,7 @@
         updateProgressUI();
 
         // っ を次の子音で入力した場合は同じキーを次の音節へ転送する
-        if (isSokuonDoubling) {
+        if (usedConsonantDoublingForSokuon) {
           processKey(key);
           return;
         }
