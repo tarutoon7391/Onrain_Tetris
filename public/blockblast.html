@@ -330,9 +330,67 @@
       text-align: center;
       margin-top: 4px;
     }
+
+    /* ===== 演出エフェクト ===== */
+
+    /* 画面フラッシュオーバーレイ */
+    #flashOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ef4444;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0;
+    }
+
+    /* 赤フラッシュアニメーション */
+    @keyframes redFlash {
+      0%   { opacity: 0.65; }
+      100% { opacity: 0; }
+    }
+
+    #flashOverlay.flash-active {
+      animation: redFlash 0.5s ease-out forwards;
+    }
+
+    /* ダメージテキストポップアップ */
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+      60%  { opacity: 1; transform: translateX(-50%) translateY(-50px) scale(1.15); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-90px) scale(1.2); }
+    }
+
+    .damage-popup {
+      position: fixed;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #facc15;
+      text-shadow: 0 0 12px rgba(250, 204, 21, 0.9), 2px 2px 6px rgba(0, 0, 0, 0.95);
+      pointer-events: none;
+      z-index: 9999;
+      animation: floatUp 1.3s ease-out forwards;
+      white-space: nowrap;
+    }
+
+    /* シェイクアニメーション */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      15%      { transform: translateX(-8px); }
+      30%      { transform: translateX(8px); }
+      45%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+      75%      { transform: translateX(-3px); }
+      90%      { transform: translateX(3px); }
+    }
+
+    .shake {
+      animation: shake 0.45s ease-out;
+    }
   </style>
 </head>
 <body>
+  <!-- 画面フラッシュ用オーバーレイ -->
+  <div id="flashOverlay"></div>
 
   <!-- ログイン画面 -->
   <div id="loginScreen" class="screen">
@@ -366,14 +424,14 @@
 
     <!-- HPバーエリア -->
     <div class="hp-area">
-      <div class="hp-row">
+      <div class="hp-row" id="myHPRow">
         <span class="hp-label" id="myHPLabel">あなた</span>
         <div class="hp-bar-bg">
           <div class="hp-bar-fill" id="myHPFill" style="width:100%"></div>
         </div>
         <span class="hp-text" id="myHPText">100/100</span>
       </div>
-      <div class="hp-row">
+      <div class="hp-row" id="oppHPRow">
         <span class="hp-label" id="oppHPLabel">相手</span>
         <div class="hp-bar-bg">
           <div class="hp-bar-fill" id="oppHPFill" style="width:100%"></div>
@@ -531,6 +589,18 @@
     let isPenalty = false;
     let penaltyTimerId = null;
 
+    // ===== 演出エフェクト用変数 =====
+    // パーティクルの配列
+    let particles = [];
+    // ラインフラッシュの対象行インデックス
+    let lineFlashRows = [];
+    // ラインフラッシュの対象列インデックス
+    let lineFlashCols = [];
+    // ラインフラッシュの終了時刻
+    let lineFlashEndTime = 0;
+    // エフェクトアニメーションループが動作中かを示すフラグ
+    let effectAnimating = false;
+
     // ===== DOM要素の取得 =====
     const mainBoardCanvas = document.getElementById("mainBoard");
     const mainCtx = mainBoardCanvas.getContext("2d");
@@ -685,7 +755,7 @@
       return rd + cd;
     }
 
-    // 揃った行・列を消去してクリア数を返す
+    // 揃った行・列を消去してクリア数と消去インデックスを返す
     function clearLines() {
       const rowsToClear = [];
       const colsToClear = [];
@@ -716,7 +786,153 @@
         });
       });
 
-      return { clearedRows: rowsToClear.length, clearedCols: colsToClear.length };
+      return { clearedRows: rowsToClear.length, clearedCols: colsToClear.length, rowsToClear, colsToClear };
+    }
+
+    // ===== 演出エフェクト関数 =====
+
+    // カラフルなパーティクルを指定セル位置から生成する
+    function spawnParticlesAtCells(cellPositions) {
+      const colors = ["#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff", "#e040fb", "#ff9f1c", "#ffffff"];
+      cellPositions.forEach(([r, c]) => {
+        for (let i = 0; i < 4; i++) {
+          particles.push({
+            x: (c + Math.random()) * CELL,
+            y: (r + Math.random()) * CELL,
+            vx: (Math.random() - 0.5) * 7,
+            vy: (Math.random() - 1.8) * 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            life: 1.0,
+            decay: 0.03 + Math.random() * 0.03,
+            size: 2 + Math.random() * 4,
+          });
+        }
+      });
+    }
+
+    // パーティクルを更新してメイン盤面キャンバスに描画する
+    function drawParticles() {
+      particles = particles.filter((p) => p.life > 0);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.25; // 重力
+        p.life -= p.decay;
+        mainCtx.save();
+        mainCtx.globalAlpha = Math.max(0, p.life);
+        mainCtx.fillStyle = p.color;
+        mainCtx.beginPath();
+        mainCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        mainCtx.fill();
+        mainCtx.restore();
+      });
+    }
+
+    // ラインフラッシュを開始する（消えた行・列を白く光らせる）
+    function triggerCellFlash(rows, cols) {
+      lineFlashRows = rows.slice();
+      lineFlashCols = cols.slice();
+      lineFlashEndTime = performance.now() + 220;
+    }
+
+    // ラインフラッシュをメイン盤面に描画する（drawMainBoard直後に呼ぶ）
+    function drawLineFlash() {
+      const now = performance.now();
+      if ((lineFlashRows.length === 0 && lineFlashCols.length === 0) || now > lineFlashEndTime) return;
+      const alpha = ((lineFlashEndTime - now) / 220) * 0.85;
+      mainCtx.save();
+      mainCtx.globalAlpha = alpha;
+      mainCtx.fillStyle = "#ffffff";
+      lineFlashRows.forEach((r) => {
+        mainCtx.fillRect(0, r * CELL, BOARD_PX, CELL);
+      });
+      lineFlashCols.forEach((c) => {
+        mainCtx.fillRect(c * CELL, 0, CELL, BOARD_PX);
+      });
+      mainCtx.restore();
+    }
+
+    // ダメージテキストをメイン盤面の上にポップアップ表示する
+    function showDamagePopup(text, canvasEl) {
+      const rect = canvasEl.getBoundingClientRect();
+      const popup = document.createElement("div");
+      popup.className = "damage-popup";
+      popup.textContent = text;
+      popup.style.left = `${rect.left + rect.width / 2}px`;
+      popup.style.top = `${rect.top + 40}px`;
+      document.body.appendChild(popup);
+      // アニメーション終了後に要素を削除する
+      popup.addEventListener("animationend", () => popup.remove());
+    }
+
+    // 画面全体を赤くフラッシュさせる
+    function triggerScreenFlash() {
+      const overlay = document.getElementById("flashOverlay");
+      overlay.classList.remove("flash-active");
+      // リフロー強制でアニメーションをリセットする
+      void overlay.offsetWidth;
+      overlay.classList.add("flash-active");
+    }
+
+    // 指定要素をシェイクさせる
+    function triggerShake(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.classList.remove("shake");
+      // リフロー強制でアニメーションをリセットする
+      void el.offsetWidth;
+      el.classList.add("shake");
+      el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true });
+    }
+
+    // ブロック消去演出をまとめて発動する
+    function triggerLineClearEffectBB(rowsToClear, colsToClear, dmg) {
+      // 1. 消えた行・列をフラッシュさせる
+      triggerCellFlash(rowsToClear, colsToClear);
+      // 2. パーティクルを消えたセルから飛び散らせる
+      const cells = [];
+      rowsToClear.forEach((r) => {
+        for (let c = 0; c < BOARD_SIZE; c++) cells.push([r, c]);
+      });
+      colsToClear.forEach((c) => {
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          // 行クリアと重複するセルを除いて追加する
+          if (!rowsToClear.includes(r)) cells.push([r, c]);
+        }
+      });
+      spawnParticlesAtCells(cells);
+      // 3. 与えたダメージ数をポップアップ表示する
+      if (dmg > 0) {
+        showDamagePopup(`-${dmg}`, mainBoardCanvas);
+      }
+      // エフェクトアニメーションループを起動する
+      startEffectAnimation();
+    }
+
+    // エフェクト専用のアニメーションループを開始する
+    function startEffectAnimation() {
+      if (effectAnimating) return;
+      effectAnimating = true;
+      requestAnimationFrame(effectAnimationLoop);
+    }
+
+    // エフェクトが残っている間だけ動作するアニメーションループ
+    function effectAnimationLoop() {
+      const now = performance.now();
+      const hasFlash = (lineFlashRows.length > 0 || lineFlashCols.length > 0) && now <= lineFlashEndTime;
+      const hasParticles = particles.length > 0;
+
+      if (!hasFlash && !hasParticles) {
+        // エフェクトがすべて終了したのでループを停止する
+        effectAnimating = false;
+        return;
+      }
+
+      // 盤面を再描画してエフェクトをその上に重ねる
+      drawMainBoard();
+      drawLineFlash();
+      drawParticles();
+      requestAnimationFrame(effectAnimationLoop);
     }
 
     // ===== HP管理 =====
@@ -732,6 +948,9 @@
       updateHPBars();
       // 自分のHP変化を相手に通知する
       socket.emit("bbHPUpdate", { hp: myHP });
+      // 被弾時の演出を発動する（画面赤フラッシュ・自分のHPバーシェイク）
+      triggerScreenFlash();
+      triggerShake("myHPRow");
 
       // HPが0以下になったら敗北処理を行う
       if (myHP <= 0 && !gameOver) {
@@ -1049,10 +1268,14 @@
       block.placed = true;
 
       // ラインクリアを実行してダメージを計算する
-      const { clearedRows, clearedCols } = clearLines();
+      const { clearedRows, clearedCols, rowsToClear, colsToClear } = clearLines();
       if (clearedRows > 0 || clearedCols > 0) {
         const dmg = calcTotalDamage(clearedRows, clearedCols);
         dealDamageToOpponent(dmg);
+        // ブロック消去演出を発動する
+        triggerLineClearEffectBB(rowsToClear, colsToClear, dmg);
+        // 攻撃側として相手のHPバーを揺らす
+        triggerShake("oppHPRow");
       }
 
       // 更新した盤面をサーバー経由で相手に送信する
