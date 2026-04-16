@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>タイピングバトル | オンラインゲームセンター</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #1f2937;
+      --text: #e5e7eb;
+      --accent: #10b981;
+      --border: #374151;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: radial-gradient(circle at top, #0d1f15 0%, #0b1020 70%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* 各画面共通ラッパー */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* カード */
+    .card {
+      background: linear-gradient(180deg, rgba(20,30,20,0.98), rgba(10,15,10,0.98));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 14px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 18px rgba(16,185,129,0.1);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 1.6rem;
+      margin: 0 0 28px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    /* 待機中ステータス */
+    .matching-status {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #fde68a;
+      min-height: 1.4em;
+    }
+
+    /* 勝敗テキスト */
+    .result-win {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--ok);
+      margin: 0 0 16px;
+    }
+
+    .result-lose {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--danger);
+      margin: 0 0 16px;
+    }
+
+    .result-time {
+      font-size: 1rem;
+      color: rgba(200,255,200,0.7);
+      margin: 0 0 28px;
+    }
+
+    /* ボタン */
+    button {
+      cursor: pointer;
+      border: 1px solid var(--accent);
+      color: white;
+      background: linear-gradient(180deg, #059669, #047857);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      width: 100%;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ===== ゲーム画面 ===== */
+    .game-screen {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ヘッダーバー（プレイヤー名と進捗） */
+    .header-bar {
+      background: rgba(20,30,20,0.95);
+      border: 1px solid rgba(16,185,129,0.35);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    .header-bar .my-name {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .header-bar .opponent-name {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .header-bar .vs-text {
+      color: rgba(200,200,200,0.5);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* メインコンテンツ（文章表示 + 相手進捗） */
+    .game-content {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    /* タイピングエリア（左・メイン） */
+    .typing-area {
+      flex: 1;
+      background: rgba(10,20,12,0.97);
+      border: 1px solid rgba(16,185,129,0.35);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    /* タイトル表示 */
+    .typing-area .area-title {
+      font-size: 0.8rem;
+      color: rgba(160,220,180,0.6);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* 文章表示ボックス */
+    #textDisplay {
+      font-size: 1.15rem;
+      line-height: 2;
+      letter-spacing: 0.03em;
+      word-break: break-all;
+      min-height: 120px;
+      margin-bottom: 16px;
+      font-family: "Courier New", "Consolas", monospace;
+    }
+
+    /* タイプ済み文字 */
+    .char-done {
+      color: rgba(100, 220, 140, 0.5);
+    }
+
+    /* 現在の入力位置カーソル */
+    .char-current {
+      color: #ffffff;
+      background: rgba(16, 185, 129, 0.55);
+      border-radius: 2px;
+    }
+
+    /* まだ打っていない文字 */
+    .char-pending {
+      color: rgba(220, 220, 240, 0.85);
+    }
+
+    /* 進捗バー */
+    .progress-bar-wrap {
+      background: rgba(30,50,35,0.7);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #059669, #34d399);
+      border-radius: 999px;
+      transition: width 0.15s ease;
+    }
+
+    .progress-label {
+      font-size: 0.83rem;
+      color: rgba(160,220,180,0.7);
+      text-align: right;
+    }
+
+    /* 入力フィールド（視覚的に非表示にするが機能は保持） */
+    #typingInput {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
+    }
+
+    /* クリックで入力フォーカスを誘導するヒント */
+    .click-hint {
+      font-size: 0.8rem;
+      color: rgba(160,220,180,0.55);
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    /* ===== 相手パネル（右・小） ===== */
+    .opponent-panel {
+      width: 220px;
+      flex-shrink: 0;
+      background: rgba(10,15,20,0.95);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.82rem;
+    }
+
+    .opponent-panel .panel-title {
+      font-size: 0.75rem;
+      color: rgba(245,158,11,0.7);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    /* 相手の進捗バー */
+    .opp-progress-bar-wrap {
+      background: rgba(40,30,10,0.7);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .opp-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #d97706, #fbbf24);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .opp-progress-label {
+      font-size: 0.78rem;
+      color: rgba(245,158,11,0.7);
+      text-align: right;
+      margin-bottom: 12px;
+    }
+
+    /* 相手のテキスト表示（縮小版） */
+    #opponentTextDisplay {
+      font-size: 0.72rem;
+      line-height: 1.8;
+      word-break: break-all;
+      color: rgba(200,180,150,0.7);
+      max-height: 200px;
+      overflow: hidden;
+      font-family: "Courier New", "Consolas", monospace;
+    }
+
+    /* 相手のタイプ済み文字（縮小版） */
+    .opp-char-done {
+      color: rgba(245, 158, 11, 0.45);
+    }
+
+    /* 相手の現在位置（縮小版） */
+    .opp-char-current {
+      color: #fff;
+      background: rgba(245,158,11,0.5);
+      border-radius: 2px;
+    }
+
+    /* 相手のまだ打っていない文字（縮小版） */
+    .opp-char-pending {
+      color: rgba(200,180,150,0.45);
+    }
+
+    /* カウントダウン表示 */
+    #countdown {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+
+    /* スタート表示 */
+    #startLabel {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 680px) {
+      .game-content {
+        flex-direction: column;
+      }
+
+      .opponent-panel {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 待機画面 -->
+  <div id="waitingScreen" class="screen">
+    <div class="card">
+      <h1>⌨️ タイピングバトル</h1>
+      <p id="waitingStatus" class="matching-status">対戦相手を探しています...</p>
+      <button id="cancelBtn" type="button" style="margin-top:24px;background:linear-gradient(180deg,#6b7280,#4b5563);border-color:#6b7280">
+        キャンセルしてロビーへ戻る
+      </button>
+    </div>
+  </div>
+
+  <!-- カウントダウン画面 -->
+  <div id="countdownScreen" class="screen" style="display:none">
+    <div id="countdown"></div>
+    <div id="startLabel" style="display:none">スタート！</div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="gameScreen" class="game-screen" style="display:none">
+    <!-- プレイヤー名バー -->
+    <div class="header-bar">
+      <div>
+        <span class="my-name" id="myNameDisplay">あなた</span>
+        <span style="font-size:0.8rem;color:rgba(160,220,180,0.6);margin-left:8px" id="myProgressText">0%</span>
+      </div>
+      <div class="vs-text">VS</div>
+      <div style="text-align:right">
+        <span class="opponent-name" id="opponentNameDisplay">相手</span>
+        <span style="font-size:0.8rem;color:rgba(245,158,11,0.6);margin-left:8px" id="oppProgressText">0%</span>
+      </div>
+    </div>
+
+    <div class="game-content">
+      <!-- タイピングエリア（メイン） -->
+      <div class="typing-area" id="typingArea">
+        <div class="area-title">⌨️ Typing Battle</div>
+
+        <!-- 文章表示 -->
+        <div id="textDisplay"></div>
+
+        <!-- 自分の進捗バー -->
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="myProgressBar" style="width:0%"></div>
+        </div>
+        <div class="progress-label" id="myProgressLabel">0 / 0 文字</div>
+
+        <!-- フォーカスヒント -->
+        <div class="click-hint" id="clickHint" onclick="focusInput()">
+          クリックして入力開始 ▶
+        </div>
+
+        <!-- 透明な入力フィールド（キーイベント受付用） -->
+        <input id="typingInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      </div>
+
+      <!-- 相手進捗パネル（右） -->
+      <div class="opponent-panel">
+        <div class="panel-title">相手の進捗</div>
+        <!-- 相手の進捗バー -->
+        <div class="opp-progress-bar-wrap">
+          <div class="opp-progress-bar-fill" id="oppProgressBar" style="width:0%"></div>
+        </div>
+        <div class="opp-progress-label" id="oppProgressLabel">0 / 0 文字</div>
+        <!-- 相手のテキスト表示（小） -->
+        <div id="opponentTextDisplay"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 勝敗画面 -->
+  <div id="resultScreen" class="screen" style="display:none">
+    <div class="card">
+      <p id="resultText"></p>
+      <p class="result-time" id="resultTime"></p>
+      <button id="backToLobbyBtn" type="button">🏠 ロビーに戻る</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Socket.ioへ接続する
+    const socket = io();
+
+    // プレイヤー名をローカルストレージから取得する
+    const myPlayerName = localStorage.getItem("typingPlayerName") || "ゲスト";
+
+    // ゲーム状態変数
+    let targetText = "";       // 入力すべき長文
+    let myProgress = 0;        // 自分の現在の文字位置
+    let oppProgress = 0;       // 相手の現在の文字位置
+    let gameActive = false;    // ゲームが進行中かどうか
+    let startTime = null;      // ゲーム開始時刻
+
+    // 画面切り替え関数
+    function showScreen(id) {
+      ["waitingScreen", "countdownScreen", "gameScreen", "resultScreen"].forEach((sid) => {
+        const el = document.getElementById(sid);
+        if (el) {
+          el.style.display = sid === id ? (sid === "gameScreen" ? "flex" : "flex") : "none";
+        }
+      });
+    }
+
+    // 文章表示を更新する関数（自分用）
+    function updateTextDisplay() {
+      const el = document.getElementById("textDisplay");
+      if (!el || !targetText) return;
+
+      let html = "";
+      for (let i = 0; i < targetText.length; i++) {
+        const ch = escapeHtml(targetText[i]);
+        if (i < myProgress) {
+          html += `<span class="char-done">${ch}</span>`;
+        } else if (i === myProgress) {
+          html += `<span class="char-current">${ch}</span>`;
+        } else {
+          html += `<span class="char-pending">${ch}</span>`;
+        }
+      }
+      el.innerHTML = html;
+
+      // 現在の入力位置が見えるようにスクロールする
+      const currentEl = el.querySelector(".char-current");
+      if (currentEl) {
+        currentEl.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    // 相手のテキスト表示を更新する関数
+    function updateOpponentTextDisplay() {
+      const el = document.getElementById("opponentTextDisplay");
+      if (!el || !targetText) return;
+
+      // 相手の前後の文字だけ表示する（全文だと重いため前後20文字程度に絞る）
+      const start = Math.max(0, oppProgress - 10);
+      const end = Math.min(targetText.length, oppProgress + 30);
+      const slice = targetText.slice(start, end);
+
+      let html = "";
+      for (let i = 0; i < slice.length; i++) {
+        const absIdx = start + i;
+        const ch = escapeHtml(slice[i]);
+        if (absIdx < oppProgress) {
+          html += `<span class="opp-char-done">${ch}</span>`;
+        } else if (absIdx === oppProgress) {
+          html += `<span class="opp-char-current">${ch}</span>`;
+        } else {
+          html += `<span class="opp-char-pending">${ch}</span>`;
+        }
+      }
+      el.innerHTML = html;
+    }
+
+    // 進捗バーとラベルを更新する関数
+    function updateProgressUI() {
+      const total = targetText.length;
+
+      // 自分の進捗を更新する
+      const myPct = total > 0 ? Math.round((myProgress / total) * 100) : 0;
+      document.getElementById("myProgressBar").style.width = `${myPct}%`;
+      document.getElementById("myProgressLabel").textContent = `${myProgress} / ${total} 文字`;
+      document.getElementById("myProgressText").textContent = `${myPct}%`;
+
+      // 相手の進捗を更新する
+      const oppPct = total > 0 ? Math.round((oppProgress / total) * 100) : 0;
+      document.getElementById("oppProgressBar").style.width = `${oppPct}%`;
+      document.getElementById("oppProgressLabel").textContent = `${oppProgress} / ${total} 文字`;
+      document.getElementById("oppProgressText").textContent = `${oppPct}%`;
+    }
+
+    // HTMLエスケープ関数
+    function escapeHtml(ch) {
+      if (ch === "&") return "&amp;";
+      if (ch === "<") return "&lt;";
+      if (ch === ">") return "&gt;";
+      if (ch === '"') return "&quot;";
+      if (ch === " ") return "&nbsp;";
+      return ch;
+    }
+
+    // 入力フィールドにフォーカスを当てる
+    function focusInput() {
+      document.getElementById("typingInput").focus();
+    }
+
+    // タイピングエリアクリックでもフォーカスを当てる
+    document.getElementById("typingArea")?.addEventListener("click", focusInput);
+
+    // キー入力処理
+    document.getElementById("typingInput").addEventListener("keydown", (e) => {
+      if (!gameActive || !targetText) return;
+
+      // Backspaceやその他の制御キーは無視する（ペナルティなし仕様）
+      if (e.key === "Backspace" || e.key === "Tab" || e.key === "Escape") {
+        e.preventDefault();
+        return;
+      }
+
+      // 入力された文字が1文字の場合のみ処理する
+      if (e.key.length !== 1) return;
+
+      // 次の文字と比較する（ミスでも進められる仕様のため常に進める）
+      myProgress++;
+      if (myProgress > targetText.length) {
+        myProgress = targetText.length;
+      }
+
+      // 進捗をサーバーへ送信する
+      socket.emit("typingProgress", { progress: myProgress });
+
+      // UIを更新する
+      updateTextDisplay();
+      updateProgressUI();
+
+      // 全文字入力完了チェック
+      if (myProgress >= targetText.length) {
+        gameActive = false;
+        socket.emit("typingComplete");
+      }
+    });
+
+    // モバイル向けIMEでの入力（compositionend）を処理する
+    document.getElementById("typingInput").addEventListener("input", (e) => {
+      // inputイベントはkeydownで処理できない文字入力を補完する
+      // ただし今回はkeydownで処理しているためinputフィールドをリセットする
+      e.target.value = "";
+    });
+
+    // カウントダウンを表示する関数
+    function startCountdown(callback) {
+      showScreen("countdownScreen");
+      const countEl = document.getElementById("countdown");
+      const startEl = document.getElementById("startLabel");
+      countEl.style.display = "block";
+      startEl.style.display = "none";
+
+      let count = 3;
+      countEl.textContent = count;
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countEl.textContent = count;
+        } else {
+          clearInterval(timer);
+          countEl.style.display = "none";
+          startEl.style.display = "block";
+          setTimeout(() => {
+            startEl.style.display = "none";
+            callback();
+          }, 600);
+        }
+      }, 800);
+    }
+
+    // ゲームを開始する関数
+    function startGame() {
+      myProgress = 0;
+      oppProgress = 0;
+      gameActive = true;
+      startTime = Date.now();
+
+      // プレイヤー名を表示する
+      document.getElementById("myNameDisplay").textContent = myPlayerName;
+
+      showScreen("gameScreen");
+      updateTextDisplay();
+      updateProgressUI();
+      updateOpponentTextDisplay();
+      focusInput();
+    }
+
+    // ===== Socket.ioイベントハンドラ =====
+
+    // 接続時にマッチング要求を送信する
+    socket.on("connect", () => {
+      socket.emit("typingJoinMatch", { playerName: myPlayerName });
+    });
+
+    // 待機中通知を受け取る
+    socket.on("typingWaiting", () => {
+      showScreen("waitingScreen");
+      document.getElementById("waitingStatus").textContent = "対戦相手を待っています...";
+    });
+
+    // 対戦開始通知を受け取る
+    socket.on("typingMatchStart", (payload) => {
+      targetText = payload.text;
+      const opponentName = payload.opponentName || "相手";
+      document.getElementById("opponentNameDisplay").textContent = opponentName;
+      document.getElementById("myNameDisplay").textContent = myPlayerName;
+
+      // カウントダウン後にゲームを開始する
+      startCountdown(() => {
+        startGame();
+      });
+    });
+
+    // 相手の進捗更新を受け取る
+    socket.on("typingOpponentProgress", (payload) => {
+      oppProgress = typeof payload.progress === "number" ? payload.progress : 0;
+      updateProgressUI();
+      updateOpponentTextDisplay();
+    });
+
+    // 勝敗通知を受け取る
+    socket.on("typingResult", (payload) => {
+      gameActive = false;
+      showScreen("resultScreen");
+
+      const resultEl = document.getElementById("resultText");
+      const timeEl = document.getElementById("resultTime");
+
+      if (payload.win) {
+        resultEl.className = "result-win";
+        resultEl.textContent = "🏆 WIN！";
+      } else {
+        resultEl.className = "result-lose";
+        resultEl.textContent = "💀 LOSE...";
+      }
+
+      // かかった時間を表示する
+      if (startTime) {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        timeEl.textContent = `タイム: ${elapsed} 秒`;
+      } else {
+        timeEl.textContent = "";
+      }
+    });
+
+    // 相手が切断した通知を受け取る
+    socket.on("typingOpponentLeft", () => {
+      gameActive = false;
+      showScreen("waitingScreen");
+      document.getElementById("waitingStatus").textContent = "相手が切断しました。再マッチング中...";
+      socket.emit("typingJoinMatch", { playerName: myPlayerName });
+    });
+
+    // キャンセルボタン処理
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      socket.emit("typingLeaveRoom");
+      window.location.href = "/";
+    });
+
+    // ロビーへ戻るボタン処理
+    document.getElementById("backToLobbyBtn").addEventListener("click", () => {
+      socket.emit("typingLeaveRoom");
+      window.location.href = "/";
+    });
+  </script>
+</body>
+</html>

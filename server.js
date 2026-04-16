@@ -302,6 +302,144 @@ function leaveBBRoom(socket) {
   });
 }
 
+// ===== タイピングバトル用ルーム管理 =====
+
+// タイピングバトル用ルーム情報を保持するマップ
+const typingRooms = new Map();
+
+// タイピングバトル用ソケットごとの所属ルーム情報を保持するマップ
+const typingSocketMeta = new Map();
+
+// タイピングバトル用待機中ルームIDを保持する
+let typingWaitingRoomId = null;
+
+// タイピングバトルで使用する長文テキストリスト
+const TYPING_TEXTS = [
+  "吾輩は猫である。名前はまだない。どこで生れたかとんと見当がつかぬ。何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。",
+  "国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。向側の座席から娘が立って来て、島村の前のガラス窓を落とした。",
+  "山路を登りながら、こう考えた。智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。とかくに人の世は住みにくい。",
+  "メロスは激怒した。必ず、かの邪智暴虐の王を除かなければならぬと決意した。メロスには政治がわからぬ。メロスは、村の牧人である。",
+  "親譲りの無鉄砲で子供の時から損ばかりしている。小学校にいる時分学校の二階から飛び降りて一週間ほど腰を抜かした事がある。",
+  "花は盛りに、月は隈なきをのみ見るものかは。雨に向かひて月を恋ひ、垂れこめて春の行方知らぬも、なほ哀れに情け深し。",
+  "祇園精舎の鐘の声、諸行無常の響きあり。娑羅双樹の花の色、盛者必衰の理をあらはす。おごれる人も久しからず、ただ春の夜の夢のごとし。",
+  "木曾路はすべて山の中である。あるところは岨づたいに行く崖の道であり、あるところは数十間の深さに臨む木曾川の岸であり、あるところは山の尾をめぐる谷の入り口である。",
+];
+
+// ランダムなタイピングテキストを選択する関数
+function getRandomTypingText() {
+  const idx = Math.floor(Math.random() * TYPING_TEXTS.length);
+  return TYPING_TEXTS[idx];
+}
+
+// タイピングバトル用ルームIDを生成する関数
+function createTypingRoomId() {
+  return `typing-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// 新しいタイピングバトルルームを作成する関数
+function createTypingRoom() {
+  const roomId = createTypingRoomId();
+  const room = {
+    id: roomId,
+    players: [],
+    playerNames: {},
+    started: false,
+    resultSent: false,
+    text: getRandomTypingText(),
+  };
+  typingRooms.set(roomId, room);
+  typingWaitingRoomId = roomId;
+  return room;
+}
+
+// 参加可能なタイピングバトルルームを取得する関数
+function getJoinableTypingRoom() {
+  if (!typingWaitingRoomId) {
+    return createTypingRoom();
+  }
+  const room = typingRooms.get(typingWaitingRoomId);
+  if (!room || room.players.length >= 2) {
+    return createTypingRoom();
+  }
+  return room;
+}
+
+// タイピングバトルルームへプレイヤーを参加させる関数
+function joinTypingRoom(socket, playerName) {
+  const room = getJoinableTypingRoom();
+  room.players.push(socket.id);
+  room.playerNames[socket.id] = playerName;
+  socket.join(room.id);
+
+  const playerNumber = room.players.length;
+  typingSocketMeta.set(socket.id, { roomId: room.id, playerNumber });
+
+  if (room.players.length >= 2) {
+    // 2人揃ったのでゲーム開始を通知する
+    room.started = true;
+    typingWaitingRoomId = null;
+
+    room.players.forEach((socketId, index) => {
+      const opponentId = room.players[1 - index];
+      const myName = room.playerNames[socketId] || `プレイヤー${index + 1}`;
+      const opponentName = room.playerNames[opponentId] || `プレイヤー${2 - index}`;
+
+      io.to(socketId).emit("typingMatchStart", {
+        roomId: room.id,
+        playerNumber: index + 1,
+        myName,
+        opponentName,
+        text: room.text,
+      });
+    });
+  } else {
+    // 1人目は待機状態を通知する
+    io.to(socket.id).emit("typingWaiting", { roomId: room.id, playerNumber: 1 });
+  }
+}
+
+// タイピングバトルルームからプレイヤーを退出させる共通処理関数
+function leaveTypingRoom(socket) {
+  const meta = typingSocketMeta.get(socket.id);
+  if (!meta) {
+    return;
+  }
+
+  const room = typingRooms.get(meta.roomId);
+  typingSocketMeta.delete(socket.id);
+
+  if (!room) {
+    if (typingWaitingRoomId === meta.roomId) {
+      typingWaitingRoomId = null;
+    }
+    return;
+  }
+
+  room.players = room.players.filter((id) => id !== socket.id);
+  delete room.playerNames[socket.id];
+
+  if (room.players.length === 0) {
+    typingRooms.delete(room.id);
+    if (typingWaitingRoomId === room.id) {
+      typingWaitingRoomId = null;
+    }
+    return;
+  }
+
+  // 勝敗確定済みの場合は切断通知を送らない
+  if (room.resultSent) {
+    return;
+  }
+
+  room.started = false;
+  typingWaitingRoomId = room.id;
+
+  // 残ったプレイヤーに相手切断を通知する
+  room.players.forEach((socketId) => {
+    io.to(socketId).emit("typingOpponentLeft", { roomId: room.id });
+  });
+}
+
 io.on("connection", (socket) => {
   // マッチング要求を受け取りプレイヤーをルームへ参加させる
   socket.on("joinMatch", (payload) => {
@@ -540,10 +678,73 @@ io.on("connection", (socket) => {
     leaveBBRoom(socket);
   });
 
+  // ===== タイピングバトル用イベントハンドラ =====
+
+  // タイピングバトルマッチング要求を受け取りルームへ参加させる
+  socket.on("typingJoinMatch", (payload) => {
+    const raw = typeof payload?.playerName === "string" ? payload.playerName : "";
+    const playerName = raw.trim().slice(0, 20) || "ゲスト";
+    joinTypingRoom(socket, playerName);
+  });
+
+  // タイピング進捗を相手へリアルタイムで転送する
+  socket.on("typingProgress", (payload) => {
+    const meta = typingSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = typingRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    // 進捗値のバリデーション（0以上テキスト長以下の整数）
+    const progress = Number(payload?.progress);
+    if (!Number.isInteger(progress) || progress < 0 || progress > room.text.length) {
+      return;
+    }
+
+    // 相手に進捗を送信する
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("typingOpponentProgress", { progress });
+      }
+    });
+  });
+
+  // タイピング完了通知を受け取り勝敗を両プレイヤーへ通知する
+  socket.on("typingComplete", () => {
+    const meta = typingSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = typingRooms.get(meta.roomId);
+    if (!room || room.players.length < 2 || room.resultSent) {
+      return;
+    }
+
+    // 最初に完了したプレイヤーが勝ち
+    room.resultSent = true;
+    io.to(socket.id).emit("typingResult", { win: true });
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("typingResult", { win: false });
+      }
+    });
+  });
+
+  // タイピングバトルロビーへ戻る際にルームから退出させる
+  socket.on("typingLeaveRoom", () => {
+    leaveTypingRoom(socket);
+  });
+
   // 切断時に部屋の状態を整理する
   socket.on("disconnect", () => {
     leaveCurrentRoom(socket);
     leaveBBRoom(socket);
+    leaveTypingRoom(socket);
   });
 });
 
