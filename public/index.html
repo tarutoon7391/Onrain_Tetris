@@ -214,6 +214,17 @@
       background: #030712;
     }
 
+    /* 相手の盤面（小サイズ）*/
+    #opponentGame {
+      display: block;
+      width: 150px;
+      height: 300px;
+      border: 2px solid #64748b;
+      border-radius: 8px;
+      background: #030712;
+      margin-top: 8px;
+    }
+
     #next1,
     #next2,
     #hold {
@@ -358,6 +369,12 @@
         <h1>オンラインテトリス</h1>
       </div>
 
+      <!-- 相手の盤面パネル -->
+      <div class="panel">
+        <div>相手の盤面（<span id="opponentNameLabel"></span>）</div>
+        <canvas id="opponentGame" width="150" height="300" aria-label="相手のテトリス盤面"></canvas>
+      </div>
+
       <div class="panel">
         <div class="match-line"><strong>対戦状態</strong><span id="matchBadge" class="badge waiting">待機中</span></div>
         <div class="match-line"><span>ルームID</span><span id="roomId">-</span></div>
@@ -410,6 +427,10 @@
     const COLS = 10;
     const ROWS = 20;
     const BLOCK = 30;
+    // 相手盤面の1マスサイズ（自分の半分）
+    const OPPONENT_BLOCK = 15;
+    // 盤面データ送信のスロットル間隔（ミリ秒）
+    const BOARD_SEND_INTERVAL = 100;
 
     // 落下速度制御の定義
     const BASE_DROP_MS = 800;
@@ -508,10 +529,12 @@
     const next1Canvas = document.getElementById("next1");
     const next2Canvas = document.getElementById("next2");
     const holdCanvas = document.getElementById("hold");
+    const opponentGameCanvas = document.getElementById("opponentGame");
     const g = gameCanvas.getContext("2d");
     const n1 = next1Canvas.getContext("2d");
     const n2 = next2Canvas.getContext("2d");
     const h = holdCanvas.getContext("2d");
+    const og = opponentGameCanvas.getContext("2d");
     const scoreEl = document.getElementById("score");
     const linesEl = document.getElementById("lines");
     const levelEl = document.getElementById("level");
@@ -546,6 +569,11 @@
     // プレイヤー名を保持する変数
     let myPlayerName = "";
     let opponentPlayerName = "";
+
+    // 相手の盤面データを保持する変数
+    let opponentBoard = null;
+    // 盤面データを最後に送信した時刻
+    let lastBoardSendTime = 0;
 
     // 盤面を空で初期化する関数
     function createBoard() {
@@ -898,6 +926,43 @@
       garbageStockEl.textContent = String(pendingGarbage);
     }
 
+    // 相手の盤面を描画する関数
+    function drawOpponentBoard() {
+      og.clearRect(0, 0, opponentGameCanvas.width, opponentGameCanvas.height);
+      og.fillStyle = "#020617";
+      og.fillRect(0, 0, opponentGameCanvas.width, opponentGameCanvas.height);
+
+      // グリッドを描画する
+      og.strokeStyle = "rgba(100, 116, 139, 0.15)";
+      og.lineWidth = 0.5;
+      for (let x = 0; x <= COLS; x++) {
+        og.beginPath();
+        og.moveTo(x * OPPONENT_BLOCK + 0.5, 0);
+        og.lineTo(x * OPPONENT_BLOCK + 0.5, ROWS * OPPONENT_BLOCK);
+        og.stroke();
+      }
+      for (let y = 0; y <= ROWS; y++) {
+        og.beginPath();
+        og.moveTo(0, y * OPPONENT_BLOCK + 0.5);
+        og.lineTo(COLS * OPPONENT_BLOCK, y * OPPONENT_BLOCK + 0.5);
+        og.stroke();
+      }
+
+      // 相手盤面のセルを描画する
+      if (!opponentBoard) {
+        return;
+      }
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const cell = opponentBoard[y][x];
+          if (!cell) {
+            continue;
+          }
+          drawCell(og, x, y, COLORS[cell] || COLORS.G, OPPONENT_BLOCK);
+        }
+      }
+    }
+
     // 盤面や表示を待機状態へ戻す関数
     function resetForWaiting() {
       board = createBoard();
@@ -905,8 +970,10 @@
       nextQueue = [];
       holdType = null;
       pendingGarbage = 0;
+      opponentBoard = null;
       updateGarbageStock();
       drawBoard();
+      drawOpponentBoard();
       drawPiecePreview(n1, next1Canvas, null);
       drawPiecePreview(n2, next2Canvas, null);
       drawPiecePreview(h, holdCanvas, null);
@@ -1182,6 +1249,13 @@
       drawBoard();
       drawGhostPiece();
       drawCurrentPiece();
+
+      // 盤面データをスロットルして相手へ送信する
+      if (matchReady && time - lastBoardSendTime >= BOARD_SEND_INTERVAL) {
+        lastBoardSendTime = time;
+        socket.emit("boardUpdate", { board: board });
+      }
+
       animationId = requestAnimationFrame(update);
     }
 
@@ -1201,6 +1275,8 @@
       canHold = true;
       lockAccumulator = 0;
       pendingGarbage = 0;
+      opponentBoard = null;
+      lastBoardSendTime = 0;
 
       ensureNextQueue(5);
       updateGarbageStock();
@@ -1367,6 +1443,8 @@
       // プレイヤー名バーを更新する
       document.getElementById("myNameDisplay").textContent = `${myPlayerName}（あなた）`;
       document.getElementById("opponentNameDisplay").textContent = opponentPlayerName;
+      // 相手盤面パネルのラベルを更新する
+      document.getElementById("opponentNameLabel").textContent = opponentPlayerName;
 
       // ゲーム画面へ遷移して対戦を開始する
       showScreen("gameScreen");
@@ -1401,6 +1479,17 @@
         resultTextEl.className = "result-lose";
       }
       showScreen("resultScreen");
+    });
+
+    // 相手の盤面更新を受信して描画する
+    socket.on("opponentBoardUpdate", (payload) => {
+      const board = payload?.board;
+      // 受信データが正しい20行×10列の配列であることを確認する
+      if (!Array.isArray(board) || board.length !== ROWS || !board.every((row) => Array.isArray(row) && row.length === COLS)) {
+        return;
+      }
+      opponentBoard = board;
+      drawOpponentBoard();
     });
 
     // 相手切断時の処理

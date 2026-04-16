@@ -180,6 +180,31 @@ io.on("connection", (socket) => {
     joinRoom(socket, playerName);
   });
 
+  // クライアントから受け取った盤面データを相手へリアルタイムで転送する
+  socket.on("boardUpdate", (payload) => {
+    const meta = socketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = rooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    // 盤面データの基本バリデーション（20行×10列の配列であることを確認する）
+    const board = payload?.board;
+    if (!Array.isArray(board) || board.length !== 20 || !board.every((row) => Array.isArray(row) && row.length === 10)) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("opponentBoardUpdate", { board });
+      }
+    });
+  });
+
   // クライアントから受け取ったおじゃまラインを相手へ転送する
   socket.on("garbageLines", (payload) => {
     const meta = socketMeta.get(socket.id);
