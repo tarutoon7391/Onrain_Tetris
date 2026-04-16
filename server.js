@@ -313,39 +313,39 @@ const typingSocketMeta = new Map();
 // タイピングバトル用待機中ルームIDを保持する
 let typingWaitingRoomId = null;
 
-// タイピングバトルで使用する長文テキストリスト（text: 表示用, reading: タイピング用ひらがな）
+// タイピングバトルで使用する長文テキストリスト（text: 表示用, reading: タイピング用ローマ字）
 const TYPING_TEXTS = [
   {
     text: "吾輩は猫である。名前はまだない。どこで生れたかとんと見当がつかぬ。何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。",
-    reading: "わがはいはねこである。なまえはまだない。どこでうまれたかとんとけんとうがつかぬ。なんでもうすぐらいじめじめしたところでにゃーにゃーないていたことだけはきおくしている。",
+    reading: "wagahaihanekodearu.namaehamadanai.dokodeumaretakatontokentougatsukanu.nandemousuguraijimejimeshitatokorodenyaanyaanaiteitakotodakehakiokushiteiru.",
   },
   {
     text: "国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。向側の座席から娘が立って来て、島村の前のガラス窓を落とした。",
-    reading: "こっきょうのながいとんねるをぬけるとゆきぐにであった。よるのそこがしろくなった。しんごうじょにきしゃがとまった。むこうがわのざせきからむすめがたってきて、しまむらのまえのがらすまどをおとした。",
+    reading: "kokkyounonagaitonneruwonukerutoyukigunideatta.yorunosokogashirokunatta.shingoujonikishagatomatta.mukougawanozasekikaramusumegatattekite,shimamuranomaenogarasumadowootoshita.",
   },
   {
     text: "山路を登りながら、こう考えた。智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。とかくに人の世は住みにくい。",
-    reading: "やまじをのぼりながら、こうかんがえた。ちにはたらけばかどがたつ。じょうにさおさせばながされる。いじをとおせばきゅうくつだ。とかくにひとのよはすみにくい。",
+    reading: "yamajiwonoborinagara,koukangaeta.chinihatarakebakadogatatsu.jounisaosasebanagasareru.ijiwotoosebakyuukutsuda.tokakunihitonoyohasuminikui.",
   },
   {
     text: "メロスは激怒した。必ず、かの邪智暴虐の王を除かなければならぬと決意した。メロスには政治がわからぬ。メロスは、村の牧人である。",
-    reading: "めろすはげきどした。かならず、かのじゃちぼうぎゃくのおうをのぞかなければならぬとけついした。めろすにはせいじがわからぬ。めろすは、むらのぼくじんである。",
+    reading: "merosuhagekidoshita.kanarazu,kanojachibougyakunoouwonozokanakerebanaranutoketsuishita.merosunihaseijigawakaranu.merosuha,muranobokujindearu.",
   },
   {
     text: "親譲りの無鉄砲で子供の時から損ばかりしている。小学校にいる時分学校の二階から飛び降りて一週間ほど腰を抜かした事がある。",
-    reading: "おやゆずりのむてっぽうでこどものときからそんばかりしている。しょうがっこうにいるじぶんがっこうのにかいからとびおりていっしゅうかんほどこしをぬかしたことがある。",
+    reading: "oyayuzurinomuteppoudekodomonotokikarasonbakarishiteiru.shougakkouniirujibungakkounonikaikaratobioriteisshuukanhodokoshiwonukashitakotogaaru.",
   },
   {
     text: "花は盛りに、月は隈なきをのみ見るものかは。雨に向かひて月を恋ひ、垂れこめて春の行方知らぬも、なほ哀れに情け深し。",
-    reading: "はなはさかりに、つきはくまなきをのみみるものかは。あめにむかひてつきをこひ、たれこめてはるのゆくえしらぬも、なほあわれにこころふかし。",
+    reading: "hanahasakarini,tsukihakumanakiwonomimirumonokaha.amenimukahitetsukiwokohi,tarekometeharunoyukueshiranumo,nahoawarenikokorofukashi.",
   },
   {
     text: "祇園精舎の鐘の声、諸行無常の響きあり。娑羅双樹の花の色、盛者必衰の理をあらはす。おごれる人も久しからず、ただ春の夜の夢のごとし。",
-    reading: "ぎおんしょうじゃのかねのこえ、しょぎょうむじょうのひびきあり。しゃらそうじゅのはなのいろ、じょうしゃひっすいのことわりをあらはす。おごれるひともひさしからず、ただはるのよのゆめのごとし。",
+    reading: "gionshoujanokanenokoe,shogyoumujounohibikiari.sharasoujunohananoiro,joushahissuinokotowariwoarahasu.ogoreruhitomohisashikarazu,tadaharunoyonoyumenogotoshi.",
   },
   {
     text: "木曾路はすべて山の中である。あるところは岨づたいに行く崖の道であり、あるところは数十間の深さに臨む木曾川の岸であり、あるところは山の尾をめぐる谷の入り口である。",
-    reading: "きそじはすべてやまのなかである。あるところはそばづたいにいくがけのみちであり、あるところはすうじっけんのふかさにのぞむきそがわのきしであり、あるところはやまのおをめぐるたにのいりぐちである。",
+    reading: "kisojihasubeteyamanonakadearu.arutokorohasobadutainiikugakenomichideari,arutokorohasuujikkennofukasaninozomukisogawanokishideari,arutokorohayamanoowomegurutaninoiriguchidearu.",
   },
 ];
 
