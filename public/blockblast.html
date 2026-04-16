@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ブロックブラスト対戦</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --text: #e5e7eb;
+      --accent: #60a5fa;
+      --border: #374151;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0%, #0b1020 65%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* 各画面の共通ラッパー */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ログイン・ロビー・勝敗画面のカード */
+    .card {
+      background: linear-gradient(180deg, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 1.6rem;
+      margin-bottom: 32px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    .card .greeting {
+      font-size: 1.15rem;
+      margin-bottom: 28px;
+      color: var(--text);
+    }
+
+    .card .matching-status {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #fde68a;
+      min-height: 1.4em;
+    }
+
+    /* フォーム */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .form-group input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    /* ボタン共通スタイル */
+    button {
+      display: inline-block;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 10px;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.btn-back {
+      background: linear-gradient(135deg, #6b7280, #4b5563);
+      margin-bottom: 0;
+    }
+
+    /* 勝敗テキスト */
+    .result-win {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--ok);
+      margin-bottom: 32px;
+    }
+
+    .result-lose {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--danger);
+      margin-bottom: 32px;
+    }
+
+    /* ゲーム画面 */
+    #gameScreen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px 20px;
+      gap: 10px;
+      min-height: 100vh;
+    }
+
+    /* プレイヤー名ヘッダー */
+    #playerNamesBar {
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 8px 20px;
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      width: 100%;
+      max-width: 760px;
+      text-align: center;
+    }
+
+    #myNameDisplay {
+      color: var(--accent);
+    }
+
+    #oppNameDisplay {
+      color: var(--warn);
+    }
+
+    /* HPバーエリア */
+    .hp-area {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hp-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hp-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      width: 80px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hp-bar-bg {
+      flex: 1;
+      height: 16px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      background: var(--ok);
+      transition: width 0.3s ease, background-color 0.3s;
+    }
+
+    .hp-text {
+      font-size: 0.8rem;
+      width: 55px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ゲームエリア（メイン盤面 + 右パネル） */
+    .game-area {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    /* メイン盤面キャンバス */
+    #mainBoard {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      display: block;
+      touch-action: none;
+      user-select: none;
+      cursor: crosshair;
+    }
+
+    /* 右パネル */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 174px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.95));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    /* 相手盤面キャンバス */
+    #opponentBoard {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: block;
+    }
+
+    /* ブロックトレイエリア */
+    .tray-area {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .tray-slot {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      width: 130px;
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      user-select: none;
+      transition: border-color 0.15s, opacity 0.2s;
+      cursor: grab;
+    }
+
+    .tray-slot.placed {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .tray-slot:not(.placed):hover {
+      border-color: var(--accent);
+    }
+
+    .tray-slot canvas {
+      display: block;
+    }
+
+    /* ステータスバー */
+    #statusBar {
+      font-size: 0.9rem;
+      padding: 6px 20px;
+      border-radius: 8px;
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid var(--border);
+      min-width: 220px;
+      text-align: center;
+    }
+
+    #statusBar.penalty {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: var(--danger);
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    /* 相手ペナルティ表示 */
+    #oppPenaltyBadge {
+      font-size: 0.75rem;
+      color: var(--danger);
+      font-weight: 700;
+      min-height: 1.2em;
+      text-align: center;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ログイン画面 -->
+  <div id="loginScreen" class="screen">
+    <div class="card">
+      <h1>ブロックブラスト</h1>
+      <div class="form-group">
+        <input id="nameInput" type="text" maxlength="20" placeholder="プレイヤー名を入力" autocomplete="off" />
+      </div>
+      <button id="loginBtn" type="button">ログイン</button>
+      <button id="backFromLoginBtn" class="btn-back" type="button">← テトリスロビーへ</button>
+    </div>
+  </div>
+
+  <!-- ロビー画面 -->
+  <div id="lobbyScreen" class="screen" style="display:none">
+    <div class="card">
+      <h1>ブロックブラスト</h1>
+      <p id="greeting" class="greeting"></p>
+      <button id="matchBtn" type="button">対戦相手を探す</button>
+      <p id="matchingStatus" class="matching-status"></p>
+      <button id="backToIndexBtn" class="btn-back" type="button">← テトリスロビーへ</button>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="gameScreen">
+    <!-- プレイヤー名バー -->
+    <div id="playerNamesBar">
+      <span id="myNameDisplay"></span>　vs　<span id="oppNameDisplay"></span>
+    </div>
+
+    <!-- HPバーエリア -->
+    <div class="hp-area">
+      <div class="hp-row">
+        <span class="hp-label" id="myHPLabel">あなた</span>
+        <div class="hp-bar-bg">
+          <div class="hp-bar-fill" id="myHPFill" style="width:100%"></div>
+        </div>
+        <span class="hp-text" id="myHPText">100/100</span>
+      </div>
+      <div class="hp-row">
+        <span class="hp-label" id="oppHPLabel">相手</span>
+        <div class="hp-bar-bg">
+          <div class="hp-bar-fill" id="oppHPFill" style="width:100%"></div>
+        </div>
+        <span class="hp-text" id="oppHPText">100/100</span>
+      </div>
+    </div>
+
+    <!-- メイン盤面と右パネル -->
+    <div class="game-area">
+      <canvas id="mainBoard" width="432" height="432" aria-label="ブロックブラスト盤面"></canvas>
+
+      <div class="right-panel">
+        <div class="panel">
+          <div class="panel-title" id="oppBoardTitle">相手の盤面</div>
+          <canvas id="opponentBoard" width="160" height="160" aria-label="相手のブロックブラスト盤面"></canvas>
+          <div id="oppPenaltyBadge"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">ルーム情報</div>
+          <div style="font-size:0.78rem;color:#94a3b8;line-height:1.8">
+            <div>ルームID: <span id="roomIdDisplay">-</span></div>
+            <div>番号: <span id="playerNumberDisplay">-</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ブロックトレイ -->
+    <div class="tray-area">
+      <div class="tray-slot" id="traySlot0">
+        <canvas id="trayCanvas0" width="120" height="120" aria-label="ブロック1"></canvas>
+      </div>
+      <div class="tray-slot" id="traySlot1">
+        <canvas id="trayCanvas1" width="120" height="120" aria-label="ブロック2"></canvas>
+      </div>
+      <div class="tray-slot" id="traySlot2">
+        <canvas id="trayCanvas2" width="120" height="120" aria-label="ブロック3"></canvas>
+      </div>
+    </div>
+
+    <!-- ステータスバー -->
+    <div id="statusBar">対戦中</div>
+  </div>
+
+  <!-- 勝敗画面 -->
+  <div id="resultScreen" class="screen" style="display:none">
+    <div class="card">
+      <p id="resultText" class="result-win"></p>
+      <button id="backToLobbyBtn" type="button">ロビーに戻る</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ===== 定数定義 =====
+
+    // 盤面の縦横マス数
+    const BOARD_SIZE = 8;
+    // メインボードのセルサイズ（ピクセル）
+    const CELL = 54;
+    // ミニボード（相手盤面）のセルサイズ
+    const MINI_CELL = 20;
+    // メインボードの全体ピクセル数
+    const BOARD_PX = BOARD_SIZE * CELL; // 432
+    // ミニボードの全体ピクセル数
+    const MINI_PX = BOARD_SIZE * MINI_CELL; // 160
+
+    // ===== ブロック定義 =====
+    // cells: [row, col] のオフセット配列でブロック形状を表す
+    const BLOCK_DEFS = [
+      // 1マス（ドット）
+      { cells: [[0, 0]], color: "#60a5fa" },
+      // 横2連
+      { cells: [[0, 0], [0, 1]], color: "#34d399" },
+      // 縦2連
+      { cells: [[0, 0], [1, 0]], color: "#34d399" },
+      // 横3連（I型）
+      { cells: [[0, 0], [0, 1], [0, 2]], color: "#fbbf24" },
+      // 横4連（I型）
+      { cells: [[0, 0], [0, 1], [0, 2], [0, 3]], color: "#f97316" },
+      // 横5連（I型）
+      { cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], color: "#ef4444" },
+      // 縦3連（I型）
+      { cells: [[0, 0], [1, 0], [2, 0]], color: "#fbbf24" },
+      // 縦4連（I型）
+      { cells: [[0, 0], [1, 0], [2, 0], [3, 0]], color: "#f97316" },
+      // 縦5連（I型）
+      { cells: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]], color: "#ef4444" },
+      // L字型（右下）
+      { cells: [[0, 0], [1, 0], [2, 0], [2, 1]], color: "#a78bfa" },
+      // J字型（左下）
+      { cells: [[0, 1], [1, 1], [2, 0], [2, 1]], color: "#a78bfa" },
+      // 逆L字型（右上）
+      { cells: [[0, 0], [0, 1], [1, 0], [2, 0]], color: "#c084fc" },
+      // 逆J字型（左上）
+      { cells: [[0, 0], [0, 1], [1, 1], [2, 1]], color: "#c084fc" },
+      // 正方形2×2
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: "#fb7185" },
+      // 正方形3×3
+      { cells: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]], color: "#e879f9" },
+      // T字型（上向き）
+      { cells: [[0, 0], [0, 1], [0, 2], [1, 1]], color: "#38bdf8" },
+      // T字型（下向き）
+      { cells: [[0, 1], [1, 0], [1, 1], [1, 2]], color: "#38bdf8" },
+      // T字型（左向き）
+      { cells: [[0, 0], [1, 0], [1, 1], [2, 0]], color: "#38bdf8" },
+      // T字型（右向き）
+      { cells: [[0, 1], [1, 0], [1, 1], [2, 1]], color: "#38bdf8" },
+      // S字型
+      { cells: [[0, 1], [0, 2], [1, 0], [1, 1]], color: "#4ade80" },
+      // Z字型
+      { cells: [[0, 0], [0, 1], [1, 1], [1, 2]], color: "#fb923c" },
+    ];
+
+    // ===== ダメージテーブル =====
+    // インデックス = 消去した列数、値 = 与えるダメージ
+    // 1列: 2, 2列: 5, 3列: 10, 4列: 20 と指数的に増加し、5列以上は独自スケールで設定
+    const DAMAGE_TABLE = [0, 2, 5, 10, 20, 35, 50, 70, 100];
+
+    // ペナルティ時に与えるダメージ量
+    const PENALTY_DAMAGE = 20;
+    // ペナルティ中の操作不能時間（秒）
+    const PENALTY_DURATION_SECONDS = 10;
+
+    // ===== ゲーム状態変数 =====
+    let myPlayerName = "";
+    let opponentPlayerName = "";
+    let roomId = "";
+    let playerNumber = 0;
+    let matchReady = false;
+    let gameOver = false;
+
+    // 自分の盤面（8×8）。各セルはnullまたはカラー文字列
+    let board = [];
+    // 相手の盤面（受信データ）
+    let opponentBoard = [];
+
+    // 自分・相手のHP
+    let myHP = 100;
+    let opponentHP = 100;
+
+    // 現在のブロックトレイ（3つ）
+    let tray = [];
+
+    // ドラッグ&ドロップの状態
+    let isDragging = false;
+    let draggingIdx = -1;
+    let dragScreenX = 0;
+    let dragScreenY = 0;
+    let hoverRow = -1;
+    let hoverCol = -1;
+
+    // ペナルティ状態
+    let isPenalty = false;
+    let penaltyTimerId = null;
+
+    // ===== DOM要素の取得 =====
+    const mainBoardCanvas = document.getElementById("mainBoard");
+    const mainCtx = mainBoardCanvas.getContext("2d");
+    const opponentBoardCanvas = document.getElementById("opponentBoard");
+    const opponentCtx = opponentBoardCanvas.getContext("2d");
+
+    // トレイのキャンバスとスロット要素
+    const trayCanvases = [
+      document.getElementById("trayCanvas0"),
+      document.getElementById("trayCanvas1"),
+      document.getElementById("trayCanvas2"),
+    ];
+    const traySlots = [
+      document.getElementById("traySlot0"),
+      document.getElementById("traySlot1"),
+      document.getElementById("traySlot2"),
+    ];
+
+    // ===== ドラッグゴースト要素の作成 =====
+    // ドラッグ中にカーソルに追従する半透明ブロックプレビュー
+    const dragGhost = document.createElement("div");
+    dragGhost.style.cssText =
+      "position:fixed;pointer-events:none;z-index:1000;opacity:0.75;display:none;";
+    const ghostCanvas = document.createElement("canvas");
+    dragGhost.appendChild(ghostCanvas);
+    document.body.appendChild(dragGhost);
+
+    // ===== Socket.io接続 =====
+    const socket = io();
+
+    // ===== ユーティリティ関数 =====
+
+    // 指定した画面を表示し、他の画面を非表示にする
+    function showScreen(id) {
+      ["loginScreen", "lobbyScreen", "gameScreen", "resultScreen"].forEach(
+        (sid) => {
+          const el = document.getElementById(sid);
+          if (!el) return;
+          el.style.display = sid === id ? "flex" : "none";
+        }
+      );
+    }
+
+    // ステータスバーのテキストとスタイルを設定する
+    function setStatus(text, penaltyMode) {
+      const bar = document.getElementById("statusBar");
+      bar.textContent = text;
+      bar.className = penaltyMode ? "penalty" : "";
+    }
+
+    // HPバーの表示を更新する
+    function updateHPBars() {
+      const myPct = Math.max(0, myHP);
+      const oppPct = Math.max(0, opponentHP);
+
+      const myFill = document.getElementById("myHPFill");
+      myFill.style.width = `${myPct}%`;
+      myFill.style.backgroundColor =
+        myHP <= 25 ? "#ef4444" : myHP <= 50 ? "#f59e0b" : "#22c55e";
+      document.getElementById("myHPText").textContent =
+        `${Math.max(0, myHP)}/100`;
+
+      const oppFill = document.getElementById("oppHPFill");
+      oppFill.style.width = `${oppPct}%`;
+      oppFill.style.backgroundColor =
+        opponentHP <= 25 ? "#ef4444" : opponentHP <= 50 ? "#f59e0b" : "#22c55e";
+      document.getElementById("oppHPText").textContent =
+        `${Math.max(0, opponentHP)}/100`;
+    }
+
+    // ===== 盤面管理 =====
+
+    // 自分の盤面を空の8×8配列で初期化する
+    function initBoard() {
+      board = Array.from({ length: BOARD_SIZE }, () =>
+        Array(BOARD_SIZE).fill(null)
+      );
+    }
+
+    // 相手の盤面を空の8×8配列で初期化する
+    function initOpponentBoard() {
+      opponentBoard = Array.from({ length: BOARD_SIZE }, () =>
+        Array(BOARD_SIZE).fill(null)
+      );
+    }
+
+    // ===== ブロック管理 =====
+
+    // ランダムなブロック定義を1つ選んで返す
+    function randomBlockDef() {
+      return BLOCK_DEFS[Math.floor(Math.random() * BLOCK_DEFS.length)];
+    }
+
+    // トレイに3つのランダムブロックを生成する
+    function generateTray() {
+      tray = [
+        { ...randomBlockDef(), placed: false },
+        { ...randomBlockDef(), placed: false },
+        { ...randomBlockDef(), placed: false },
+      ];
+    }
+
+    // 指定位置にブロックを置けるか確認する
+    function canPlace(cells, startRow, startCol) {
+      return cells.every(([dr, dc]) => {
+        const r = startRow + dr;
+        const c = startCol + dc;
+        return (
+          r >= 0 &&
+          r < BOARD_SIZE &&
+          c >= 0 &&
+          c < BOARD_SIZE &&
+          board[r][c] === null
+        );
+      });
+    }
+
+    // 盤面上のどこかにブロックを置けるか全マスを走査して確認する
+    function canPlaceAnywhere(cells) {
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (canPlace(cells, r, c)) return true;
+        }
+      }
+      return false;
+    }
+
+    // 指定位置にブロックを配置して盤面を更新する
+    function placeBlockOnBoard(cells, color, startRow, startCol) {
+      cells.forEach(([dr, dc]) => {
+        board[startRow + dr][startCol + dc] = color;
+      });
+    }
+
+    // ===== ラインクリアとダメージ計算 =====
+
+    // 消去列数に対応するダメージ値を返す
+    function calcLineDamage(n) {
+      return DAMAGE_TABLE[Math.min(n, DAMAGE_TABLE.length - 1)];
+    }
+
+    // 消去行数・列数からトータルダメージを計算する
+    // 縦横同時消しの場合は掛け算、片方のみの場合はそのダメージ値を返す
+    function calcTotalDamage(clearedRows, clearedCols) {
+      const rd = calcLineDamage(clearedRows);
+      const cd = calcLineDamage(clearedCols);
+      if (clearedRows > 0 && clearedCols > 0) {
+        // 縦横同時消しはダメージを掛け合わせる
+        return rd * cd;
+      }
+      // 片方のみ（もう一方は0なので加算でよい）
+      return rd + cd;
+    }
+
+    // 揃った行・列を消去してクリア数を返す
+    function clearLines() {
+      const rowsToClear = [];
+      const colsToClear = [];
+
+      // 横方向（行）を確認する
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        if (board[r].every((cell) => cell !== null)) {
+          rowsToClear.push(r);
+        }
+      }
+
+      // 縦方向（列）を確認する
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        if (board.every((row) => row[c] !== null)) {
+          colsToClear.push(c);
+        }
+      }
+
+      // 行を消去する
+      rowsToClear.forEach((r) => {
+        board[r] = Array(BOARD_SIZE).fill(null);
+      });
+
+      // 列を消去する
+      colsToClear.forEach((c) => {
+        board.forEach((row) => {
+          row[c] = null;
+        });
+      });
+
+      return { clearedRows: rowsToClear.length, clearedCols: colsToClear.length };
+    }
+
+    // ===== HP管理 =====
+
+    // 相手にダメージを与える（自分がラインを消したとき呼ぶ）
+    function dealDamageToOpponent(dmg) {
+      socket.emit("bbDamage", { damage: dmg });
+    }
+
+    // 自分がダメージを受けた時の処理
+    function takeDamage(dmg) {
+      myHP = Math.max(0, myHP - dmg);
+      updateHPBars();
+      // 自分のHP変化を相手に通知する
+      socket.emit("bbHPUpdate", { hp: myHP });
+
+      // HPが0以下になったら敗北処理を行う
+      if (myHP <= 0 && !gameOver) {
+        gameOver = true;
+        socket.emit("bbGameOver");
+      }
+    }
+
+    // ===== ペナルティ処理 =====
+
+    // ペナルティを発動する（すべてのブロックが置けない場合）
+    function triggerPenalty() {
+      if (isPenalty || gameOver) return;
+      isPenalty = true;
+
+      // サーバー経由でペナルティ開始を相手に通知する
+      socket.emit("bbPenalty", {});
+      // ペナルティダメージは置けなくなった自分自身が受ける
+      takeDamage(PENALTY_DAMAGE);
+
+      // ペナルティ操作不能時間でカウントダウン開始
+      let remaining = PENALTY_DURATION_SECONDS;
+      setStatus(`⚠️ ペナルティ: ${remaining}秒後にリセット`, true);
+      drawMainBoard();
+
+      penaltyTimerId = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(penaltyTimerId);
+          penaltyTimerId = null;
+          endPenalty();
+        } else {
+          setStatus(`⚠️ ペナルティ: ${remaining}秒後にリセット`, true);
+        }
+      }, 1000);
+    }
+
+    // ペナルティ終了後に盤面をリセットして再開する
+    function endPenalty() {
+      isPenalty = false;
+      if (gameOver) return;
+
+      // 盤面を空にしてトレイを新しく生成する
+      initBoard();
+      generateTray();
+
+      socket.emit("bbBoardUpdate", { board });
+      socket.emit("bbPenaltyEnd", {});
+
+      setStatus("対戦中", false);
+      drawMainBoard();
+      drawTray();
+
+      // 新しいトレイでもペナルティ状態に陥らないか再チェック
+      checkAndHandleGameState();
+    }
+
+    // ===== ゲーム状態チェック =====
+
+    // ブロック配置後のトレイ状態を確認し、補充またはペナルティを判定する
+    function checkAndHandleGameState() {
+      if (isPenalty || gameOver) return;
+
+      const unplaced = tray.filter((b) => !b.placed);
+
+      if (unplaced.length === 0) {
+        // 3つすべて配置完了 → 新しいトレイを生成して再チェック
+        generateTray();
+        drawTray();
+        checkAndHandleGameState();
+        return;
+      }
+
+      // 未配置ブロックのうち1つでも置けるなら問題なし
+      if (unplaced.some((b) => canPlaceAnywhere(b.cells))) return;
+
+      // すべての未配置ブロックが置けない → ペナルティ発動
+      triggerPenalty();
+    }
+
+    // ===== 描画関数 =====
+
+    // セル1マスを描画するヘルパー
+    function drawCell(ctx, r, c, color, sz) {
+      const GAP = 2;
+      // セル本体を塗りつぶす
+      ctx.fillStyle = color;
+      ctx.fillRect(c * sz + GAP, r * sz + GAP, sz - GAP * 2, sz - GAP * 2);
+      // 上部にハイライトを描画してブロック感を出す
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(
+        c * sz + GAP,
+        r * sz + GAP,
+        sz - GAP * 2,
+        Math.floor((sz - GAP * 2) * 0.28)
+      );
+    }
+
+    // メイン盤面を描画する
+    function drawMainBoard() {
+      // 背景
+      mainCtx.fillStyle = "#0f172a";
+      mainCtx.fillRect(0, 0, BOARD_PX, BOARD_PX);
+
+      // グリッド線
+      mainCtx.strokeStyle = "#1e293b";
+      mainCtx.lineWidth = 1;
+      for (let i = 0; i <= BOARD_SIZE; i++) {
+        mainCtx.beginPath();
+        mainCtx.moveTo(i * CELL, 0);
+        mainCtx.lineTo(i * CELL, BOARD_PX);
+        mainCtx.stroke();
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, i * CELL);
+        mainCtx.lineTo(BOARD_PX, i * CELL);
+        mainCtx.stroke();
+      }
+
+      // 配置済みブロックを描画する
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (board[r][c]) {
+            drawCell(mainCtx, r, c, board[r][c], CELL);
+          }
+        }
+      }
+
+      // ドラッグ中のプレビューを描画する
+      if (isDragging && draggingIdx >= 0 && hoverRow >= 0 && hoverCol >= 0) {
+        const block = tray[draggingIdx];
+        const valid = canPlace(block.cells, hoverRow, hoverCol);
+
+        mainCtx.globalAlpha = 0.55;
+        block.cells.forEach(([dr, dc]) => {
+          const pr = hoverRow + dr;
+          const pc = hoverCol + dc;
+          // 盤面の範囲外は描画しない
+          if (pr >= 0 && pr < BOARD_SIZE && pc >= 0 && pc < BOARD_SIZE) {
+            drawCell(mainCtx, pr, pc, valid ? block.color : "#ef4444", CELL);
+          }
+        });
+        mainCtx.globalAlpha = 1;
+      }
+
+      // ペナルティ中は赤いオーバーレイを表示する
+      if (isPenalty) {
+        mainCtx.fillStyle = "rgba(239,68,68,0.12)";
+        mainCtx.fillRect(0, 0, BOARD_PX, BOARD_PX);
+      }
+    }
+
+    // 相手の盤面（ミニボード）を描画する
+    function drawOpponentBoard() {
+      // 背景
+      opponentCtx.fillStyle = "#0f172a";
+      opponentCtx.fillRect(0, 0, MINI_PX, MINI_PX);
+
+      // グリッド線
+      opponentCtx.strokeStyle = "#1e293b";
+      opponentCtx.lineWidth = 0.5;
+      for (let i = 0; i <= BOARD_SIZE; i++) {
+        opponentCtx.beginPath();
+        opponentCtx.moveTo(i * MINI_CELL, 0);
+        opponentCtx.lineTo(i * MINI_CELL, MINI_PX);
+        opponentCtx.stroke();
+        opponentCtx.beginPath();
+        opponentCtx.moveTo(0, i * MINI_CELL);
+        opponentCtx.lineTo(MINI_PX, i * MINI_CELL);
+        opponentCtx.stroke();
+      }
+
+      // 相手のブロックを描画する
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (opponentBoard[r] && opponentBoard[r][c]) {
+            const sz = MINI_CELL;
+            opponentCtx.fillStyle = opponentBoard[r][c];
+            opponentCtx.fillRect(c * sz + 1, r * sz + 1, sz - 2, sz - 2);
+          }
+        }
+      }
+    }
+
+    // トレイの3つのブロックを描画する
+    function drawTray() {
+      tray.forEach((block, idx) => {
+        const canvas = trayCanvases[idx];
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width;
+        const H = canvas.height;
+
+        ctx.clearRect(0, 0, W, H);
+
+        if (block.placed) {
+          // 配置済みスロットをグレーアウトにする
+          traySlots[idx].classList.add("placed");
+          return;
+        }
+        traySlots[idx].classList.remove("placed");
+
+        const cells = block.cells;
+        const maxR = Math.max(...cells.map(([r]) => r));
+        const maxC = Math.max(...cells.map(([, c]) => c));
+
+        // ブロックがキャンバスに収まるようにセルサイズを計算する（上限40px）
+        const cellSz = Math.min(
+          Math.floor((W - 8) / (maxC + 1)),
+          Math.floor((H - 8) / (maxR + 1)),
+          40
+        );
+
+        const blockW = (maxC + 1) * cellSz;
+        const blockH = (maxR + 1) * cellSz;
+        // キャンバス中央に配置するためのオフセット
+        const offX = Math.floor((W - blockW) / 2);
+        const offY = Math.floor((H - blockH) / 2);
+
+        cells.forEach(([r, c]) => {
+          // セル本体
+          ctx.fillStyle = block.color;
+          ctx.fillRect(
+            offX + c * cellSz + 1,
+            offY + r * cellSz + 1,
+            cellSz - 2,
+            cellSz - 2
+          );
+          // ハイライト
+          ctx.fillStyle = "rgba(255,255,255,0.2)";
+          ctx.fillRect(
+            offX + c * cellSz + 1,
+            offY + r * cellSz + 1,
+            cellSz - 2,
+            Math.floor((cellSz - 2) * 0.3)
+          );
+        });
+      });
+    }
+
+    // ドラッグゴーストのキャンバスを更新してカーソルに追従させる
+    function updateDragGhost(clientX, clientY) {
+      if (draggingIdx < 0) return;
+
+      const block = tray[draggingIdx];
+      const cells = block.cells;
+      const maxR = Math.max(...cells.map(([r]) => r));
+      const maxC = Math.max(...cells.map(([, c]) => c));
+
+      // ゴースト表示用のセルサイズ
+      const ghostCellSz = 32;
+      const w = (maxC + 1) * ghostCellSz;
+      const h = (maxR + 1) * ghostCellSz;
+
+      ghostCanvas.width = w;
+      ghostCanvas.height = h;
+      const ctx = ghostCanvas.getContext("2d");
+      ctx.clearRect(0, 0, w, h);
+
+      cells.forEach(([r, c]) => {
+        ctx.fillStyle = block.color;
+        ctx.fillRect(c * ghostCellSz + 1, r * ghostCellSz + 1, ghostCellSz - 2, ghostCellSz - 2);
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.fillRect(
+          c * ghostCellSz + 1,
+          r * ghostCellSz + 1,
+          ghostCellSz - 2,
+          Math.floor((ghostCellSz - 2) * 0.3)
+        );
+      });
+
+      // カーソル位置の中心にゴーストを配置する
+      dragGhost.style.left = `${clientX - w / 2}px`;
+      dragGhost.style.top = `${clientY - h / 2}px`;
+      dragGhost.style.display = "block";
+    }
+
+    // ドラッグゴーストを非表示にする
+    function hideDragGhost() {
+      dragGhost.style.display = "none";
+    }
+
+    // カーソル位置からメイン盤面上のホバーセルを更新する
+    function updateBoardHover(clientX, clientY) {
+      const rect = mainBoardCanvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      if (x >= 0 && x < BOARD_PX && y >= 0 && y < BOARD_PX) {
+        hoverRow = Math.floor(y / CELL);
+        hoverCol = Math.floor(x / CELL);
+      } else {
+        hoverRow = -1;
+        hoverCol = -1;
+      }
+    }
+
+    // ドロップ時の配置処理
+    function handleDrop(clientX, clientY) {
+      if (draggingIdx < 0) return;
+
+      const rect = mainBoardCanvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      // 盤面の外にドロップした場合は何もしない
+      if (x < 0 || x >= BOARD_PX || y < 0 || y >= BOARD_PX) return;
+
+      const targetRow = Math.floor(y / CELL);
+      const targetCol = Math.floor(x / CELL);
+      const block = tray[draggingIdx];
+
+      if (!canPlace(block.cells, targetRow, targetCol)) return;
+
+      // ブロックを盤面に配置する
+      placeBlockOnBoard(block.cells, block.color, targetRow, targetCol);
+      block.placed = true;
+
+      // ラインクリアを実行してダメージを計算する
+      const { clearedRows, clearedCols } = clearLines();
+      if (clearedRows > 0 || clearedCols > 0) {
+        const dmg = calcTotalDamage(clearedRows, clearedCols);
+        dealDamageToOpponent(dmg);
+      }
+
+      // 更新した盤面をサーバー経由で相手に送信する
+      socket.emit("bbBoardUpdate", { board });
+
+      // トレイの状態を確認して次の処理を決める
+      checkAndHandleGameState();
+    }
+
+    // ===== トレイのドラッグ&ドロップイベント =====
+    // 各トレイスロットにポインターイベントを設定する
+    traySlots.forEach((slot, idx) => {
+      const canvas = trayCanvases[idx];
+
+      canvas.addEventListener("pointerdown", (e) => {
+        // ペナルティ中・ゲームオーバー・未マッチ・配置済みは無視する
+        if (isPenalty || gameOver || !matchReady || tray[idx]?.placed) return;
+        // ポインターキャプチャを取得してドラッグ中の移動を追跡する
+        canvas.setPointerCapture(e.pointerId);
+        isDragging = true;
+        draggingIdx = idx;
+        dragScreenX = e.clientX;
+        dragScreenY = e.clientY;
+        updateDragGhost(e.clientX, e.clientY);
+        updateBoardHover(e.clientX, e.clientY);
+        drawMainBoard();
+        e.preventDefault();
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        if (!isDragging || draggingIdx !== idx) return;
+        dragScreenX = e.clientX;
+        dragScreenY = e.clientY;
+        updateDragGhost(e.clientX, e.clientY);
+        updateBoardHover(e.clientX, e.clientY);
+        drawMainBoard();
+        e.preventDefault();
+      });
+
+      canvas.addEventListener("pointerup", (e) => {
+        if (!isDragging || draggingIdx !== idx) return;
+        handleDrop(e.clientX, e.clientY);
+        isDragging = false;
+        draggingIdx = -1;
+        hoverRow = -1;
+        hoverCol = -1;
+        hideDragGhost();
+        drawMainBoard();
+        drawTray();
+        e.preventDefault();
+      });
+
+      canvas.addEventListener("pointercancel", () => {
+        isDragging = false;
+        draggingIdx = -1;
+        hoverRow = -1;
+        hoverCol = -1;
+        hideDragGhost();
+        drawMainBoard();
+      });
+    });
+
+    // ===== ゲーム開始処理 =====
+
+    // ゲーム開始時の初期化を行う
+    function startGame() {
+      gameOver = false;
+      isPenalty = false;
+      if (penaltyTimerId) {
+        clearInterval(penaltyTimerId);
+        penaltyTimerId = null;
+      }
+      myHP = 100;
+      opponentHP = 100;
+
+      initBoard();
+      initOpponentBoard();
+      generateTray();
+
+      updateHPBars();
+      setStatus("対戦中", false);
+      drawMainBoard();
+      drawOpponentBoard();
+      drawTray();
+
+      // 初期盤面を送信する
+      socket.emit("bbBoardUpdate", { board });
+    }
+
+    // ロビーへ戻る共通処理
+    function enterLobby() {
+      matchReady = false;
+      gameOver = true;
+      isPenalty = false;
+      if (penaltyTimerId) {
+        clearInterval(penaltyTimerId);
+        penaltyTimerId = null;
+      }
+      document.getElementById("matchBtn").disabled = false;
+      document.getElementById("matchingStatus").textContent = "";
+      showScreen("lobbyScreen");
+    }
+
+    // ===== Socket.ioイベントハンドラ =====
+
+    // 待機状態の通知を受け取る
+    socket.on("bbWaiting", (payload) => {
+      roomId = payload.roomId;
+      playerNumber = payload.playerNumber;
+      document.getElementById("matchingStatus").textContent =
+        "対戦相手を待っています...";
+    });
+
+    // 対戦開始通知を受け取る
+    socket.on("bbMatchStart", (payload) => {
+      roomId = payload.roomId;
+      playerNumber = payload.playerNumber;
+      myPlayerName = payload.myName || myPlayerName;
+      opponentPlayerName = payload.opponentName || "相手";
+
+      // プレイヤー名バーを更新する
+      document.getElementById("myNameDisplay").textContent =
+        `${myPlayerName}（あなた）`;
+      document.getElementById("oppNameDisplay").textContent =
+        opponentPlayerName;
+      document.getElementById("oppBoardTitle").textContent =
+        `相手の盤面（${opponentPlayerName}）`;
+      document.getElementById("myHPLabel").textContent = myPlayerName;
+      document.getElementById("oppHPLabel").textContent = opponentPlayerName;
+      document.getElementById("roomIdDisplay").textContent = roomId;
+      document.getElementById("playerNumberDisplay").textContent =
+        `P${playerNumber}`;
+
+      // ゲーム画面へ遷移してゲームを開始する
+      showScreen("gameScreen");
+      matchReady = true;
+      startGame();
+    });
+
+    // 相手の盤面更新を受け取って描画する
+    socket.on("bbOpponentBoardUpdate", (payload) => {
+      const b = payload?.board;
+      // 8×8の配列であることを確認する
+      if (
+        !Array.isArray(b) ||
+        b.length !== BOARD_SIZE ||
+        !b.every((row) => Array.isArray(row) && row.length === BOARD_SIZE)
+      ) {
+        return;
+      }
+      opponentBoard = b;
+      drawOpponentBoard();
+    });
+
+    // 相手からのダメージを受け取って自分のHPを減らす
+    socket.on("bbReceiveDamage", (payload) => {
+      const dmg = Number(payload?.damage || 0);
+      if (!Number.isFinite(dmg) || dmg <= 0) return;
+      takeDamage(dmg);
+    });
+
+    // 相手のHP更新を受け取って表示する
+    socket.on("bbOpponentHP", (payload) => {
+      const hp = Number(payload?.hp);
+      if (!Number.isFinite(hp)) return;
+      opponentHP = Math.max(0, hp);
+      updateHPBars();
+    });
+
+    // 勝敗結果を受け取って結果画面を表示する
+    socket.on("bbResult", (payload) => {
+      matchReady = false;
+      const el = document.getElementById("resultText");
+      if (payload.win) {
+        el.textContent = "あなたの勝ち！";
+        el.className = "result-win";
+      } else {
+        el.textContent = "あなたの負け...";
+        el.className = "result-lose";
+      }
+      showScreen("resultScreen");
+    });
+
+    // 相手のペナルティ状態を受け取って表示する
+    socket.on("bbOpponentPenalty", () => {
+      document.getElementById("oppPenaltyBadge").textContent =
+        "⚠️ 相手ペナルティ中";
+    });
+
+    // 相手のペナルティ終了を受け取って表示を消す
+    socket.on("bbOpponentPenaltyEnd", () => {
+      document.getElementById("oppPenaltyBadge").textContent = "";
+    });
+
+    // 相手が切断した場合の処理
+    socket.on("bbOpponentLeft", () => {
+      document.getElementById("matchingStatus").textContent =
+        "相手が切断しました。";
+      enterLobby();
+    });
+
+    // ===== UIイベントハンドラ =====
+
+    // ログインボタン処理
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) return;
+      myPlayerName = name;
+      localStorage.setItem("bbPlayerName", name);
+      document.getElementById("greeting").textContent =
+        `こんにちは、${name}さん`;
+      showScreen("lobbyScreen");
+    });
+
+    // Enterキーでもログインできるようにする
+    document.getElementById("nameInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+
+    // マッチングボタン処理
+    document.getElementById("matchBtn").addEventListener("click", () => {
+      document.getElementById("matchBtn").disabled = true;
+      document.getElementById("matchingStatus").textContent =
+        "対戦相手を待っています...";
+      socket.emit("bbJoinMatch", { playerName: myPlayerName });
+    });
+
+    // ロビーへ戻るボタン処理（勝敗画面から）
+    document.getElementById("backToLobbyBtn").addEventListener("click", () => {
+      socket.emit("bbLeaveRoom");
+      enterLobby();
+    });
+
+    // テトリスロビーへ戻るボタン処理（ロビー画面から）
+    document.getElementById("backToIndexBtn").addEventListener("click", () => {
+      socket.emit("bbLeaveRoom");
+      window.location.href = "/";
+    });
+
+    // テトリスロビーへ戻るボタン処理（ログイン画面から）
+    document.getElementById("backFromLoginBtn").addEventListener("click", () => {
+      window.location.href = "/";
+    });
+
+    // ===== 起動時処理 =====
+    // localStorageにプレイヤー名が保存されていれば自動ログインする
+    (function init() {
+      const savedName = localStorage.getItem("bbPlayerName");
+      if (savedName) {
+        myPlayerName = savedName;
+        document.getElementById("nameInput").value = savedName;
+        document.getElementById("greeting").textContent =
+          `こんにちは、${savedName}さん`;
+        showScreen("lobbyScreen");
+      } else {
+        showScreen("loginScreen");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -347,7 +347,8 @@
     <div class="card">
       <h1>ロビー</h1>
       <p id="greeting" class="greeting"></p>
-      <button id="matchBtn" type="button">マッチング開始</button>
+      <button id="matchBtn" type="button">テトリスで対戦</button>
+      <button id="matchBBBtn" type="button" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">ブロックブラストで対戦</button>
       <p id="matchingStatus" class="matching-status"></p>
     </div>
   </div>
@@ -1413,11 +1414,17 @@
       }
     });
 
-    // マッチングボタン処理
+    // マッチングボタン処理（テトリス）
     document.getElementById("matchBtn").addEventListener("click", () => {
       document.getElementById("matchBtn").disabled = true;
       document.getElementById("matchingStatus").textContent = "対戦相手を待っています...";
       socket.emit("joinMatch", { playerName: myPlayerName });
+    });
+
+    // ブロックブラストボタン処理（blockblast.htmlへ遷移する）
+    document.getElementById("matchBBBtn").addEventListener("click", () => {
+      localStorage.setItem("bbPlayerName", myPlayerName);
+      window.location.href = "/blockblast.html";
     });
 
     // ロビーへ戻るボタン処理
