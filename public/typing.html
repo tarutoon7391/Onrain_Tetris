@@ -181,12 +181,30 @@
     /* 文章表示ボックス */
     #textDisplay {
       font-size: 1.15rem;
-      line-height: 2;
-      letter-spacing: 0.03em;
+      line-height: 2.2;
+      letter-spacing: 0.04em;
       word-break: break-all;
-      min-height: 120px;
+      min-height: 80px;
       margin-bottom: 16px;
-      font-family: "Courier New", "Consolas", monospace;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    }
+
+    /* 原文（参考用）表示ボックス */
+    #refDisplay {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      word-break: break-all;
+      color: rgba(160, 220, 180, 0.5);
+      margin-bottom: 6px;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    }
+
+    /* セクションラベル */
+    .section-label {
+      font-size: 0.7rem;
+      color: rgba(160, 220, 180, 0.4);
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
     }
 
     /* タイプ済み文字 */
@@ -296,7 +314,7 @@
       color: rgba(200,180,150,0.7);
       max-height: 200px;
       overflow: hidden;
-      font-family: "Courier New", "Consolas", monospace;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
     }
 
     /* 相手のタイプ済み文字（縮小版） */
@@ -384,6 +402,12 @@
       <div class="typing-area" id="typingArea">
         <div class="area-title">⌨️ Typing Battle</div>
 
+        <!-- 原文表示（参考用） -->
+        <div class="section-label">原文</div>
+        <div id="refDisplay"></div>
+
+        <!-- 読み（タイプ対象） -->
+        <div class="section-label">読み（タイプしてください）</div>
         <!-- 文章表示 -->
         <div id="textDisplay"></div>
 
@@ -434,11 +458,13 @@
     const myPlayerName = localStorage.getItem("typingPlayerName") || "ゲスト";
 
     // ゲーム状態変数
-    let targetText = "";       // 入力すべき長文
-    let myProgress = 0;        // 自分の現在の文字位置
-    let oppProgress = 0;       // 相手の現在の文字位置
+    let targetText = "";       // 表示用の原文
+    let targetReading = "";    // タイピング対象のひらがな読み
+    let myProgress = 0;        // 自分の現在の文字位置（reading基準）
+    let oppProgress = 0;       // 相手の現在の文字位置（reading基準）
     let gameActive = false;    // ゲームが進行中かどうか
     let startTime = null;      // ゲーム開始時刻
+    let isComposing = false;   // IMEで変換中かどうか
 
     // 画面切り替え関数
     function showScreen(id) {
@@ -450,14 +476,21 @@
       });
     }
 
-    // 文章表示を更新する関数（自分用）
+    // 原文（参考用）を表示する関数
+    function updateRefDisplay() {
+      const el = document.getElementById("refDisplay");
+      if (!el) return;
+      el.textContent = targetText;
+    }
+
+    // 読み表示を更新する関数（自分用）
     function updateTextDisplay() {
       const el = document.getElementById("textDisplay");
-      if (!el || !targetText) return;
+      if (!el || !targetReading) return;
 
       let html = "";
-      for (let i = 0; i < targetText.length; i++) {
-        const ch = escapeHtml(targetText[i]);
+      for (let i = 0; i < targetReading.length; i++) {
+        const ch = escapeHtml(targetReading[i]);
         if (i < myProgress) {
           html += `<span class="char-done">${ch}</span>`;
         } else if (i === myProgress) {
@@ -478,12 +511,12 @@
     // 相手のテキスト表示を更新する関数
     function updateOpponentTextDisplay() {
       const el = document.getElementById("opponentTextDisplay");
-      if (!el || !targetText) return;
+      if (!el || !targetReading) return;
 
       // 相手の前後の文字だけ表示する（全文だと重いため前後20文字程度に絞る）
       const start = Math.max(0, oppProgress - 10);
-      const end = Math.min(targetText.length, oppProgress + 30);
-      const slice = targetText.slice(start, end);
+      const end = Math.min(targetReading.length, oppProgress + 30);
+      const slice = targetReading.slice(start, end);
 
       let html = "";
       for (let i = 0; i < slice.length; i++) {
@@ -502,7 +535,7 @@
 
     // 進捗バーとラベルを更新する関数
     function updateProgressUI() {
-      const total = targetText.length;
+      const total = targetReading.length;
 
       // 自分の進捗を更新する
       const myPct = total > 0 ? Math.round((myProgress / total) * 100) : 0;
@@ -535,9 +568,45 @@
     // タイピングエリアクリックでもフォーカスを当てる
     document.getElementById("typingArea")?.addEventListener("click", focusInput);
 
-    // キー入力処理
+    // IME変換開始イベント
+    document.getElementById("typingInput").addEventListener("compositionstart", () => {
+      isComposing = true;
+    });
+
+    // IME変換確定イベント（日本語入力の主な入力経路）
+    document.getElementById("typingInput").addEventListener("compositionend", (e) => {
+      isComposing = false;
+      if (!gameActive || !targetReading) return;
+
+      const composed = e.data || "";
+      for (const ch of composed) {
+        if (myProgress < targetReading.length && ch === targetReading[myProgress]) {
+          myProgress++;
+        } else {
+          break;
+        }
+      }
+
+      // 進捗をサーバーへ送信する
+      socket.emit("typingProgress", { progress: myProgress });
+
+      // UIを更新する
+      updateTextDisplay();
+      updateProgressUI();
+
+      // 全文字入力完了チェック
+      if (myProgress >= targetReading.length) {
+        gameActive = false;
+        socket.emit("typingComplete");
+      }
+    });
+
+    // キー入力処理（IMEを使わない直接入力・記号類のフォールバック）
     document.getElementById("typingInput").addEventListener("keydown", (e) => {
-      if (!gameActive || !targetText) return;
+      if (!gameActive || !targetReading) return;
+
+      // IME変換中は処理しない
+      if (isComposing) return;
 
       // Backspaceやその他の制御キーは無視する（ペナルティなし仕様）
       if (e.key === "Backspace" || e.key === "Tab" || e.key === "Escape") {
@@ -549,15 +618,9 @@
       if (e.key.length !== 1) return;
 
       // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視、ペナルティなし）
-      if (e.key !== targetText[myProgress]) return;
+      if (e.key !== targetReading[myProgress]) return;
 
       myProgress++;
-      if (myProgress > targetText.length) {
-        myProgress = targetText.length;
-      }
-      if (myProgress > targetText.length) {
-        myProgress = targetText.length;
-      }
 
       // 進捗をサーバーへ送信する
       socket.emit("typingProgress", { progress: myProgress });
@@ -567,7 +630,7 @@
       updateProgressUI();
 
       // 全文字入力完了チェック
-      if (myProgress >= targetText.length) {
+      if (myProgress >= targetReading.length) {
         gameActive = false;
         socket.emit("typingComplete");
       }
@@ -618,6 +681,7 @@
       document.getElementById("myNameDisplay").textContent = myPlayerName;
 
       showScreen("gameScreen");
+      updateRefDisplay();
       updateTextDisplay();
       updateProgressUI();
       updateOpponentTextDisplay();
@@ -640,6 +704,7 @@
     // 対戦開始通知を受け取る
     socket.on("typingMatchStart", (payload) => {
       targetText = payload.text;
+      targetReading = payload.reading;
       const opponentName = payload.opponentName || "相手";
       document.getElementById("opponentNameDisplay").textContent = opponentName;
       document.getElementById("myNameDisplay").textContent = myPlayerName;
