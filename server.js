@@ -313,39 +313,85 @@ const typingSocketMeta = new Map();
 // タイピングバトル用待機中ルームIDを保持する
 let typingWaitingRoomId = null;
 
-// タイピングバトルで使用する長文テキストリスト（text: 表示用, reading: タイピング用ローマ字）
+// タイピングバトルで使用する長文テキストリスト（text: 表示用, reading: タイピング用ローマ字,
+//   tokens: [[表示文字列, かな読み|null], ...] ルビ表示用トークン列）
 const TYPING_TEXTS = [
   {
     text: "吾輩は猫である。名前はまだない。どこで生れたかとんと見当がつかぬ。何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。",
     reading: "wagahaihanekodearu.namaehamadanai.dokodeumaretakatontokentougatsukanu.nandemousuguraijimejimeshitatokorodenyaanyaanaiteitakotodakehakiokushiteiru.",
+    tokens: [
+      ["吾輩","わがはい"],["は",null],["猫","ねこ"],["で",null],["ある",null],["。",null],
+      ["名前","なまえ"],["は",null],["まだ",null],["ない",null],["。",null],
+      ["どこで",null],["生れた","うまれた"],["か",null],["とんと",null],["見当","けんとう"],["が",null],["つかぬ",null],["。",null],
+      ["何","なん"],["でも",null],["薄暗い","うすぐらい"],["じめじめした",null],["所","ところ"],["で",null],["ニャーニャー",null],["泣いていた","ないていた"],["事","こと"],["だけは",null],["記憶","きおく"],["している",null],["。",null],
+    ],
   },
   {
     text: "国境の長いトンネルを抜けると雪国であった。夜の底が白くなった。信号所に汽車が止まった。向側の座席から娘が立って来て、島村の前のガラス窓を落とした。",
     reading: "kokkyounonagaitonneruwonukerutoyukigunideatta.yorunosokogashirokunatta.shingoujonikishagatomatta.mukougawanozasekikaramusumegatattekite,shimamuranomaenogarasumadowootoshita.",
+    tokens: [
+      ["国境","こっきょう"],["の",null],["長い","ながい"],["トンネル",null],["を",null],["抜ける","ぬける"],["と",null],["雪国","ゆきぐに"],["で",null],["あった",null],["。",null],
+      ["夜","よる"],["の",null],["底","そこ"],["が",null],["白く","しろく"],["なった",null],["。",null],
+      ["信号所","しんごうじょ"],["に",null],["汽車","きしゃ"],["が",null],["止まった","とまった"],["。",null],
+      ["向側","むこうがわ"],["の",null],["座席","ざせき"],["から",null],["娘","むすめ"],["が",null],["立って","たって"],["来て","きて"],["、",null],["島村","しまむら"],["の",null],["前","まえ"],["の",null],["ガラス",null],["窓","まど"],["を",null],["落とした","おとした"],["。",null],
+    ],
   },
   {
     text: "山路を登りながら、こう考えた。智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。とかくに人の世は住みにくい。",
     reading: "yamajiwonoborinagara,koukangaeta.chinihatarakebakadogatatsu.jounisaosasebanagasareru.ijiwotoosebakyuukutsuda.tokakunihitonoyohasuminikui.",
+    tokens: [
+      ["山路","やまじ"],["を",null],["登り","のぼり"],["ながら",null],["、",null],["こう",null],["考えた","かんがえた"],["。",null],
+      ["智","ち"],["に",null],["働けば","はたらけば"],["角","かど"],["が",null],["立つ","たつ"],["。",null],
+      ["情","じょう"],["に",null],["棹させば","さおさせば"],["流される","ながされる"],["。",null],
+      ["意地","いじ"],["を",null],["通せば","とおせば"],["窮屈","きゅうくつ"],["だ",null],["。",null],
+      ["とかくに",null],["人","ひと"],["の",null],["世","よ"],["は",null],["住みにくい","すみにくい"],["。",null],
+    ],
   },
   {
     text: "メロスは激怒した。必ず、かの邪智暴虐の王を除かなければならぬと決意した。メロスには政治がわからぬ。メロスは、村の牧人である。",
     reading: "merosuhagekidoshita.kanarazu,kanojachibougyakunoouwonozokanakerebanaranutoketsuishita.merosunihaseijigawakaranu.merosuha,muranobokujindearu.",
+    tokens: [
+      ["メロス",null],["は",null],["激怒","げきど"],["した",null],["。",null],
+      ["必ず","かならず"],["、",null],["かの",null],["邪智暴虐","じゃちぼうぎゃく"],["の",null],["王","おう"],["を",null],["除かなければ","のぞかなければ"],["ならぬ",null],["と",null],["決意","けつい"],["した",null],["。",null],
+      ["メロス",null],["には",null],["政治","せいじ"],["が",null],["わからぬ",null],["。",null],
+      ["メロス",null],["は",null],["、",null],["村","むら"],["の",null],["牧人","ぼくじん"],["で",null],["ある",null],["。",null],
+    ],
   },
   {
     text: "親譲りの無鉄砲で子供の時から損ばかりしている。小学校にいる時分学校の二階から飛び降りて一週間ほど腰を抜かした事がある。",
     reading: "oyayuzurinomuteppoudekodomonotokikarasonbakarishiteiru.shougakkouniirujibungakkounonikaikaratobioriteisshuukanhodokoshiwonukashitakotogaaru.",
+    tokens: [
+      ["親譲り","おやゆずり"],["の",null],["無鉄砲","むてっぽう"],["で",null],["子供","こども"],["の",null],["時","とき"],["から",null],["損","そん"],["ばかりしている",null],["。",null],
+      ["小学校","しょうがっこう"],["に",null],["いる",null],["時分","じぶん"],["学校","がっこう"],["の",null],["二階","にかい"],["から",null],["飛び降りて","とびおりて"],["一週間","いっしゅうかん"],["ほど",null],["腰","こし"],["を",null],["抜かした","ぬかした"],["事","こと"],["が",null],["ある",null],["。",null],
+    ],
   },
   {
     text: "花は盛りに、月は隈なきをのみ見るものかは。雨に向かひて月を恋ひ、垂れこめて春の行方知らぬも、なほ哀れに情け深し。",
     reading: "hanahasakarini,tsukihakumanakiwonomimirumonokaha.amenimukahitetsukiwokohi,tarekometeharunoyukueshiranumo,nahoawarenikokorofukashi.",
+    tokens: [
+      ["花","はな"],["は",null],["盛り","さかり"],["に",null],["、",null],["月","つき"],["は",null],["隈なき","くまなき"],["を",null],["のみ",null],["見る","みる"],["もの",null],["かは",null],["。",null],
+      ["雨","あめ"],["に",null],["向かひて","むかひて"],["月","つき"],["を",null],["恋ひ","こひ"],["、",null],["垂れこめて","たれこめて"],["春","はる"],["の",null],["行方","ゆくえ"],["知らぬ","しらぬ"],["も",null],["、",null],
+      ["なほ",null],["哀れに","あわれに"],["情け深し","こころふかし"],["。",null],
+    ],
   },
   {
     text: "祇園精舎の鐘の声、諸行無常の響きあり。娑羅双樹の花の色、盛者必衰の理をあらはす。おごれる人も久しからず、ただ春の夜の夢のごとし。",
     reading: "gionshoujanokanenokoe,shogyoumujounohibikiari.sharasoujunohananoiro,joushahissuinokotowariwoarahasu.ogoreruhitomohisashikarazu,tadaharunoyonoyumenogotoshi.",
+    tokens: [
+      ["祇園精舎","ぎおんしょうじゃ"],["の",null],["鐘","かね"],["の",null],["声","こえ"],["、",null],["諸行無常","しょぎょうむじょう"],["の",null],["響き","ひびき"],["あり",null],["。",null],
+      ["娑羅双樹","しゃらそうじゅ"],["の",null],["花","はな"],["の",null],["色","いろ"],["、",null],["盛者必衰","じょうしゃひっすい"],["の",null],["理","ことわり"],["を",null],["あらはす",null],["。",null],
+      ["おごれる",null],["人","ひと"],["も",null],["久しからず","ひさしからず"],["、",null],["ただ",null],["春","はる"],["の",null],["夜","よ"],["の",null],["夢","ゆめ"],["の",null],["ごとし",null],["。",null],
+    ],
   },
   {
     text: "木曾路はすべて山の中である。あるところは岨づたいに行く崖の道であり、あるところは数十間の深さに臨む木曾川の岸であり、あるところは山の尾をめぐる谷の入り口である。",
     reading: "kisojihasubeteyamanonakadearu.arutokorohasobadutainiikugakenomichideari,arutokorohasuujikkennofukasaninozomukisogawanokishideari,arutokorohayamanoowomegurutaninoiriguchidearu.",
+    tokens: [
+      ["木曾路","きそじ"],["は",null],["すべて",null],["山","やま"],["の",null],["中","なか"],["で",null],["ある",null],["。",null],
+      ["あるところ",null],["は",null],["岨づたい","そばづたい"],["に",null],["行く","いく"],["崖","がけ"],["の",null],["道","みち"],["で",null],["あり",null],["、",null],
+      ["あるところ",null],["は",null],["数十間","すうじっけん"],["の",null],["深さ","ふかさ"],["に",null],["臨む","のぞむ"],["木曾川","きそがわ"],["の",null],["岸","きし"],["で",null],["あり",null],["、",null],
+      ["あるところ",null],["は",null],["山","やま"],["の",null],["尾","お"],["を",null],["めぐる",null],["谷","たに"],["の",null],["入り口","いりぐち"],["で",null],["ある",null],["。",null],
+    ],
   },
 ];
 
@@ -372,6 +418,7 @@ function createTypingRoom() {
     resultSent: false,
     text: entry.text,
     reading: entry.reading,
+    tokens: entry.tokens,
   };
   typingRooms.set(roomId, room);
   typingWaitingRoomId = roomId;
@@ -417,6 +464,7 @@ function joinTypingRoom(socket, playerName) {
         opponentName,
         text: room.text,
         reading: room.reading,
+        tokens: room.tokens,
       });
     });
   } else {

@@ -189,14 +189,52 @@
       font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
     }
 
-    /* 原文（参考用）表示ボックス */
-    #refDisplay {
-      font-size: 0.95rem;
-      line-height: 1.8;
+    /* 本文ルビ表示ボックス */
+    #rubyDisplay {
+      font-size: 1.3rem;
+      line-height: 3.4;
       word-break: break-all;
-      color: rgba(160, 220, 180, 0.5);
-      margin-bottom: 6px;
+      margin-bottom: 16px;
       font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    }
+
+    #rubyDisplay ruby {
+      ruby-position: over;
+    }
+
+    #rubyDisplay rt {
+      font-size: 0.52em;
+      letter-spacing: 0.04em;
+    }
+
+    /* ルビ（ひらがな）のタイプ済み文字 */
+    .kana-done {
+      color: #22c55e;
+      text-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+    }
+
+    /* ルビ（ひらがな）の現在入力位置 */
+    .kana-current {
+      color: #ffffff;
+      background: rgba(16, 185, 129, 0.5);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* ルビ（ひらがな）の未打文字 */
+    .kana-pending {
+      color: rgba(180, 200, 220, 0.55);
+    }
+
+    /* タイプ完了した漢字 */
+    .kanji-done {
+      color: #22c55e;
+      text-shadow: 0 0 10px rgba(34, 197, 94, 0.85);
+    }
+
+    /* まだ打っていない漢字 */
+    .kanji-pending {
+      color: rgba(220, 220, 240, 0.85);
     }
 
     /* セクションラベル */
@@ -402,9 +440,9 @@
       <div class="typing-area" id="typingArea">
         <div class="area-title">⌨️ Typing Battle</div>
 
-        <!-- 原文表示（参考用） -->
-        <div class="section-label">原文</div>
-        <div id="refDisplay"></div>
+        <!-- 本文ルビ表示 -->
+        <div class="section-label">本文</div>
+        <div id="rubyDisplay"></div>
 
         <!-- 読み（タイプ対象） -->
         <div class="section-label">読み（ローマ字でタイプしてください）</div>
@@ -459,12 +497,161 @@
 
     // ゲーム状態変数
     let targetText = "";       // 表示用の原文
-    let targetReading = "";    // タイピング対象のひらがな読み
+    let targetReading = "";    // タイピング対象のローマ字読み
+    let targetTokens = [];     // ルビ表示用トークン列
     let myProgress = 0;        // 自分の現在の文字位置（reading基準）
     let oppProgress = 0;       // 相手の現在の文字位置（reading基準）
     let gameActive = false;    // ゲームが進行中かどうか
     let startTime = null;      // ゲーム開始時刻
     let isComposing = false;   // IMEで変換中かどうか
+
+    // ルビ表示で使うかな→ローマ字長テーブル
+    const KANA_ROMAJI_LEN = {
+      // ひらがな五十音
+      'あ':1,'い':1,'う':1,'え':1,'お':1,
+      'か':2,'き':2,'く':2,'け':2,'こ':2,
+      'さ':2,'し':3,'す':2,'せ':2,'そ':2,
+      'た':2,'ち':3,'つ':3,'て':2,'と':2,
+      'な':2,'に':2,'ぬ':2,'ね':2,'の':2,
+      'は':2,'ひ':2,'ふ':2,'へ':2,'ほ':2,
+      'ま':2,'み':2,'む':2,'め':2,'も':2,
+      'や':2,'ゆ':2,'よ':2,
+      'ら':2,'り':2,'る':2,'れ':2,'ろ':2,
+      'わ':2,'を':2,'ん':1,'っ':1,
+      // 濁音・半濁音
+      'が':2,'ぎ':2,'ぐ':2,'げ':2,'ご':2,
+      'ざ':2,'じ':2,'ず':2,'ぜ':2,'ぞ':2,
+      'だ':2,'ぢ':2,'づ':2,'で':2,'ど':2,
+      'ば':2,'び':2,'ぶ':2,'べ':2,'ぼ':2,
+      'ぱ':2,'ぴ':2,'ぷ':2,'ぺ':2,'ぽ':2,
+      // カタカナ
+      'ア':1,'イ':1,'ウ':1,'エ':1,'オ':1,
+      'カ':2,'キ':2,'ク':2,'ケ':2,'コ':2,
+      'サ':2,'シ':3,'ス':2,'セ':2,'ソ':2,
+      'タ':2,'チ':3,'ツ':3,'テ':2,'ト':2,
+      'ナ':2,'ニ':2,'ヌ':2,'ネ':2,'ノ':2,
+      'ハ':2,'ヒ':2,'フ':2,'ヘ':2,'ホ':2,
+      'マ':2,'ミ':2,'ム':2,'メ':2,'モ':2,
+      'ヤ':2,'ユ':2,'ヨ':2,
+      'ラ':2,'リ':2,'ル':2,'レ':2,'ロ':2,
+      'ワ':2,'ヲ':2,'ン':1,'ッ':1,'ー':1,
+      'ガ':2,'ギ':2,'グ':2,'ゲ':2,'ゴ':2,
+      'ザ':2,'ジ':2,'ズ':2,'ゼ':2,'ゾ':2,
+      'ダ':2,'ヂ':2,'ヅ':2,'デ':2,'ド':2,
+      'バ':2,'ビ':2,'ブ':2,'ベ':2,'ボ':2,
+      'パ':2,'ピ':2,'プ':2,'ペ':2,'ポ':2,
+      // 句読点など
+      '。':1,'、':1,'，':1,'．':1,',':1,'.':1,'「':1,'」':1,'・':1,
+    };
+
+    // 小書きかな（複合かな判定用）
+    const SMALL_KANA = new Set(['ゃ','ゅ','ょ','ャ','ュ','ョ']);
+
+    // 複合かな（きゃ、しゃなど）のローマ字長を返す
+    function getCompoundRomajiLen(base) {
+      if (base === 'じ' || base === 'ジ') return 2; // ja/ju/jo
+      return 3; // kya/sha/cha/nya/hya/mya/rya/gya/bya/pya/shu/sho etc.
+    }
+
+    // ===== ルビ表示用データ構造 =====
+    // kanaUnits: [{chars, romajiEnd, tokenIdx}]
+    //   chars     … 表示するかな文字列（複合かなはまとめて1ユニット）
+    //   romajiEnd … このユニットまで入力した時点のreading累積位置
+    //   tokenIdx  … 対応するtokenDataのインデックス
+    let kanaUnits = [];
+    // tokenData: [{text, isKanji, unitStart, unitEnd}]
+    let tokenData = [];
+
+    // トークン列からkanaUnitsとtokenDataを構築する
+    function processTokens(tokens) {
+      kanaUnits = [];
+      tokenData = [];
+      if (!tokens || !tokens.length) return;
+
+      let rPos = 0;
+      for (let ti = 0; ti < tokens.length; ti++) {
+        const [text, kana] = tokens[ti];
+        const isKanji = kana !== null;
+        // かな文字列: kanji トークンはkana、それ以外はtextそのもの
+        const kanaStr = isKanji ? kana : text;
+        const unitStart = kanaUnits.length;
+
+        let i = 0;
+        while (i < kanaStr.length) {
+          const ch = kanaStr[i];
+          const next = i + 1 < kanaStr.length ? kanaStr[i + 1] : null;
+          if (next && SMALL_KANA.has(next)) {
+            // 複合かな（きゃ・しゅ・じょ など）
+            const len = getCompoundRomajiLen(ch);
+            rPos += len;
+            kanaUnits.push({ chars: ch + next, romajiEnd: rPos, tokenIdx: ti });
+            i += 2;
+          } else {
+            const len = KANA_ROMAJI_LEN[ch] !== undefined ? KANA_ROMAJI_LEN[ch] : 1;
+            rPos += len;
+            kanaUnits.push({ chars: ch, romajiEnd: rPos, tokenIdx: ti });
+            i += 1;
+          }
+        }
+
+        const unitEnd = kanaUnits.length;
+        tokenData.push({ text, isKanji, unitStart, unitEnd });
+      }
+    }
+
+    // 現在の進捗に基づいてルビ表示HTMLを生成する
+    function buildRubyDisplayHtml() {
+      if (!tokenData.length) return escapeHtml(targetText);
+
+      let html = '';
+      for (let ti = 0; ti < tokenData.length; ti++) {
+        const { text, isKanji, unitStart, unitEnd } = tokenData[ti];
+
+        if (isKanji) {
+          const lastRomajiEnd = kanaUnits[unitEnd - 1].romajiEnd;
+          const kanjiClass = myProgress >= lastRomajiEnd ? 'kanji-done' : 'kanji-pending';
+
+          let rtHtml = '';
+          for (let ui = unitStart; ui < unitEnd; ui++) {
+            const unit = kanaUnits[ui];
+            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
+            let cls;
+            if (myProgress >= unit.romajiEnd) {
+              cls = 'kana-done';
+            } else if (myProgress >= unitRomajiStart) {
+              cls = 'kana-current';
+            } else {
+              cls = 'kana-pending';
+            }
+            rtHtml += `<span class="${cls}">${escapeHtml(unit.chars)}</span>`;
+          }
+          html += `<ruby class="${kanjiClass}">${escapeHtml(text)}<rt>${rtHtml}</rt></ruby>`;
+        } else {
+          // 非漢字トークン：かなユニットごとにspanを出力
+          for (let ui = unitStart; ui < unitEnd; ui++) {
+            const unit = kanaUnits[ui];
+            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
+            let cls;
+            if (myProgress >= unit.romajiEnd) {
+              cls = 'kana-done';
+            } else if (myProgress >= unitRomajiStart) {
+              cls = 'kana-current';
+            } else {
+              cls = 'kana-pending';
+            }
+            html += `<span class="${cls}">${escapeHtml(unit.chars)}</span>`;
+          }
+        }
+      }
+      return html;
+    }
+
+    // ルビ表示を更新する
+    function updateRubyDisplay() {
+      const el = document.getElementById("rubyDisplay");
+      if (!el) return;
+      el.innerHTML = buildRubyDisplayHtml();
+    }
 
     // 画面切り替え関数
     function showScreen(id) {
@@ -474,13 +661,6 @@
           el.style.display = sid === id ? "flex" : "none";
         }
       });
-    }
-
-    // 原文（参考用）を表示する関数
-    function updateRefDisplay() {
-      const el = document.getElementById("refDisplay");
-      if (!el) return;
-      el.textContent = targetText;
     }
 
     // 読み表示を更新する関数（自分用）
@@ -627,6 +807,7 @@
 
       // UIを更新する
       updateTextDisplay();
+      updateRubyDisplay();
       updateProgressUI();
 
       // 全文字入力完了チェック
@@ -674,7 +855,7 @@
       document.getElementById("myNameDisplay").textContent = myPlayerName;
 
       showScreen("gameScreen");
-      updateRefDisplay();
+      updateRubyDisplay();
       updateTextDisplay();
       updateProgressUI();
       updateOpponentTextDisplay();
@@ -698,6 +879,8 @@
     socket.on("typingMatchStart", (payload) => {
       targetText = payload.text;
       targetReading = payload.reading;
+      targetTokens = Array.isArray(payload.tokens) ? payload.tokens : [];
+      processTokens(targetTokens);
       const opponentName = payload.opponentName || "相手";
       document.getElementById("opponentNameDisplay").textContent = opponentName;
       document.getElementById("myNameDisplay").textContent = myPlayerName;
