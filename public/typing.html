@@ -407,7 +407,7 @@
         <div id="refDisplay"></div>
 
         <!-- 読み（タイプ対象） -->
-        <div class="section-label">読み（タイプしてください）</div>
+        <div class="section-label">読み（ローマ字で入力してください）</div>
         <!-- 文章表示 -->
         <div id="textDisplay"></div>
 
@@ -422,8 +422,8 @@
           クリックして入力開始 ▶
         </div>
 
-        <!-- 透明な入力フィールド（キーイベント受付用） -->
-        <input id="typingInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <!-- 透明な入力フィールド（キーイベント受付用・英語入力固定） -->
+        <input id="typingInput" type="text" inputmode="latin" lang="en" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       </div>
 
       <!-- 相手進捗パネル（右） -->
@@ -458,13 +458,14 @@
     const myPlayerName = localStorage.getItem("typingPlayerName") || "ゲスト";
 
     // ゲーム状態変数
-    let targetText = "";       // 表示用の原文
-    let targetReading = "";    // タイピング対象のひらがな読み
-    let myProgress = 0;        // 自分の現在の文字位置（reading基準）
-    let oppProgress = 0;       // 相手の現在の文字位置（reading基準）
-    let gameActive = false;    // ゲームが進行中かどうか
-    let startTime = null;      // ゲーム開始時刻
-    let isComposing = false;   // IMEで変換中かどうか
+    let targetText = "";          // 表示用の原文
+    let targetReading = "";       // 表示用のひらがな読み
+    let targetRomaji = "";        // タイピング対象のローマ字文字列
+    let kanaCompletedAt = [];     // kanaCompletedAt[i] = ローマ字位置（ひらがな文字iが完了する直後）
+    let myProgress = 0;           // 自分の現在の文字位置（ローマ字基準）
+    let oppProgress = 0;          // 相手の現在の文字位置（ローマ字基準）
+    let gameActive = false;       // ゲームが進行中かどうか
+    let startTime = null;         // ゲーム開始時刻
 
     // 画面切り替え関数
     function showScreen(id) {
@@ -483,18 +484,29 @@
       el.textContent = targetText;
     }
 
+    // ローマ字進捗からひらがなの現在文字インデックスを求めるヘルパー関数
+    // 全文字完了の場合は -1 を返す
+    function romajiToKanaPosition(romajiProgress) {
+      for (let i = 0; i < targetReading.length; i++) {
+        if (romajiProgress < kanaCompletedAt[i]) return i;
+      }
+      return -1;
+    }
+
     // 読み表示を更新する関数（自分用）
     function updateTextDisplay() {
       const el = document.getElementById("textDisplay");
       if (!el || !targetReading) return;
 
+      const currentKana = romajiToKanaPosition(myProgress);
+
       let html = "";
       for (let i = 0; i < targetReading.length; i++) {
         const ch = escapeHtml(targetReading[i]);
-        if (i < myProgress) {
-          html += `<span class="char-done">${ch}</span>`;
-        } else if (i === myProgress) {
+        if (currentKana !== -1 && i === currentKana) {
           html += `<span class="char-current">${ch}</span>`;
+        } else if (currentKana === -1 || i < currentKana) {
+          html += `<span class="char-done">${ch}</span>`;
         } else {
           html += `<span class="char-pending">${ch}</span>`;
         }
@@ -513,19 +525,22 @@
       const el = document.getElementById("opponentTextDisplay");
       if (!el || !targetReading) return;
 
+      const oppCurrentKana = romajiToKanaPosition(oppProgress);
+      const oppKanaIdx = oppCurrentKana === -1 ? targetReading.length : oppCurrentKana;
+
       // 相手の前後の文字だけ表示する（全文だと重いため前後20文字程度に絞る）
-      const start = Math.max(0, oppProgress - 10);
-      const end = Math.min(targetReading.length, oppProgress + 30);
+      const start = Math.max(0, oppKanaIdx - 10);
+      const end = Math.min(targetReading.length, oppKanaIdx + 30);
       const slice = targetReading.slice(start, end);
 
       let html = "";
       for (let i = 0; i < slice.length; i++) {
         const absIdx = start + i;
         const ch = escapeHtml(slice[i]);
-        if (absIdx < oppProgress) {
-          html += `<span class="opp-char-done">${ch}</span>`;
-        } else if (absIdx === oppProgress) {
+        if (oppCurrentKana !== -1 && absIdx === oppCurrentKana) {
           html += `<span class="opp-char-current">${ch}</span>`;
+        } else if (oppCurrentKana === -1 || absIdx < oppCurrentKana) {
+          html += `<span class="opp-char-done">${ch}</span>`;
         } else {
           html += `<span class="opp-char-pending">${ch}</span>`;
         }
@@ -535,7 +550,7 @@
 
     // 進捗バーとラベルを更新する関数
     function updateProgressUI() {
-      const total = targetReading.length;
+      const total = targetRomaji.length;
 
       // 自分の進捗を更新する
       const myPct = total > 0 ? Math.round((myProgress / total) * 100) : 0;
@@ -560,6 +575,101 @@
       return ch;
     }
 
+    // ひらがな→ローマ字変換関数（kanaCompletedAt配列も生成する）
+    // kanaCompletedAt[i] = ひらがな文字iが完了するローマ字位置（その位置に達すると文字iが打ち終わり）
+    function hiraganaToRomaji(kana) {
+      const single = {
+        'あ':'a','い':'i','う':'u','え':'e','お':'o',
+        'か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko',
+        'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so',
+        'た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
+        'な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no',
+        'は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+        'ま':'ma','み':'mi','む':'mu','め':'me','も':'mo',
+        'や':'ya','ゆ':'yu','よ':'yo',
+        'ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro',
+        'わ':'wa','を':'wo','ん':'n',
+        'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go',
+        'ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo',
+        'だ':'da','ぢ':'di','づ':'du','で':'de','ど':'do',
+        'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo',
+        'ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po',
+        '。':'.','、':',',
+      };
+      const digraph = {
+        'きゃ':'kya','きゅ':'kyu','きょ':'kyo',
+        'しゃ':'sha','しゅ':'shu','しょ':'sho',
+        'ちゃ':'cha','ちゅ':'chu','ちょ':'cho',
+        'にゃ':'nya','にゅ':'nyu','にょ':'nyo',
+        'ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo',
+        'みゃ':'mya','みゅ':'myu','みょ':'myo',
+        'りゃ':'rya','りゅ':'ryu','りょ':'ryo',
+        'ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo',
+        'じゃ':'ja','じゅ':'ju','じょ':'jo',
+        'びゃ':'bya','びゅ':'byu','びょ':'byo',
+        'ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo',
+      };
+
+      let romaji = '';
+      const kanaMapping = []; // kanaMapping[romaji_idx] = kana_idx
+      let i = 0;
+
+      while (i < kana.length) {
+        const ch = kana[i];
+
+        // 促音（っ）: 次の子音を重ねる
+        if (ch === 'っ') {
+          i++;
+          let ahead = '';
+          if (i < kana.length) {
+            const pair = kana.slice(i, i + 2);
+            ahead = digraph[pair] || single[kana[i]] || '';
+          }
+          if (ahead && ahead[0] !== 'n') {
+            kanaMapping.push(i - 1);
+            romaji += ahead[0];
+          }
+          continue;
+        }
+
+        // 拗音（きゃ等の2文字組み合わせ）
+        if (i + 1 < kana.length) {
+          const pair = kana.slice(i, i + 2);
+          const pr = digraph[pair];
+          if (pr) {
+            for (let j = 0; j < pr.length; j++) kanaMapping.push(i);
+            romaji += pr;
+            i += 2;
+            continue;
+          }
+        }
+
+        // 単独文字
+        const sr = single[ch];
+        if (sr) {
+          for (let j = 0; j < sr.length; j++) kanaMapping.push(i);
+          romaji += sr;
+        }
+        // ー等の未対応文字はスキップ
+        i++;
+      }
+
+      // ひらがな文字ごとの「完了ローマ字位置」を構築する
+      const kanaCount = kana.length;
+      const completedAt = new Array(kanaCount).fill(-1);
+      for (let j = 0; j < kanaMapping.length; j++) {
+        completedAt[kanaMapping[j]] = j + 1;
+      }
+      // 未対応文字（ー等）は直前の文字と同じ完了位置を割り当てる
+      for (let k = 0; k < kanaCount; k++) {
+        if (completedAt[k] === -1) {
+          completedAt[k] = k > 0 ? completedAt[k - 1] : 0;
+        }
+      }
+
+      return { romaji, kanaCompletedAt: completedAt };
+    }
+
     // 入力フィールドにフォーカスを当てる
     function focusInput() {
       document.getElementById("typingInput").focus();
@@ -568,45 +678,9 @@
     // タイピングエリアクリックでもフォーカスを当てる
     document.getElementById("typingArea")?.addEventListener("click", focusInput);
 
-    // IME変換開始イベント
-    document.getElementById("typingInput").addEventListener("compositionstart", () => {
-      isComposing = true;
-    });
-
-    // IME変換確定イベント（日本語入力の主な入力経路）
-    document.getElementById("typingInput").addEventListener("compositionend", (e) => {
-      isComposing = false;
-      if (!gameActive || !targetReading) return;
-
-      const composed = e.data || "";
-      for (const ch of composed) {
-        if (myProgress < targetReading.length && ch === targetReading[myProgress]) {
-          myProgress++;
-        } else {
-          break;
-        }
-      }
-
-      // 進捗をサーバーへ送信する
-      socket.emit("typingProgress", { progress: myProgress });
-
-      // UIを更新する
-      updateTextDisplay();
-      updateProgressUI();
-
-      // 全文字入力完了チェック
-      if (myProgress >= targetReading.length) {
-        gameActive = false;
-        socket.emit("typingComplete");
-      }
-    });
-
-    // キー入力処理（IMEを使わない直接入力・記号類のフォールバック）
+    // キー入力処理（英語ローマ字入力）
     document.getElementById("typingInput").addEventListener("keydown", (e) => {
-      if (!gameActive || !targetReading) return;
-
-      // IME変換中は処理しない
-      if (isComposing) return;
+      if (!gameActive || !targetRomaji) return;
 
       // Backspaceやその他の制御キーは無視する（ペナルティなし仕様）
       if (e.key === "Backspace" || e.key === "Tab" || e.key === "Escape") {
@@ -617,8 +691,8 @@
       // 入力された文字が1文字の場合のみ処理する
       if (e.key.length !== 1) return;
 
-      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視、ペナルティなし）
-      if (e.key !== targetReading[myProgress]) return;
+      // 正しいローマ字が入力された場合のみ進める（ミスタイプはそのまま無視、ペナルティなし）
+      if (e.key !== targetRomaji[myProgress]) return;
 
       myProgress++;
 
@@ -630,16 +704,14 @@
       updateProgressUI();
 
       // 全文字入力完了チェック
-      if (myProgress >= targetReading.length) {
+      if (myProgress >= targetRomaji.length) {
         gameActive = false;
         socket.emit("typingComplete");
       }
     });
 
-    // モバイル向けIMEでの入力（compositionend）を処理する
+    // inputフィールドをリセットする（IME入力残留防止）
     document.getElementById("typingInput").addEventListener("input", (e) => {
-      // inputイベントはkeydownで処理できない文字入力を補完する
-      // ただし今回はkeydownで処理しているためinputフィールドをリセットする
       e.target.value = "";
     });
 
@@ -705,6 +777,10 @@
     socket.on("typingMatchStart", (payload) => {
       targetText = payload.text;
       targetReading = payload.reading;
+      // ひらがな読みからローマ字とひらがな完了位置配列を生成する
+      const romajiData = hiraganaToRomaji(targetReading);
+      targetRomaji = romajiData.romaji;
+      kanaCompletedAt = romajiData.kanaCompletedAt;
       const opponentName = payload.opponentName || "相手";
       document.getElementById("opponentNameDisplay").textContent = opponentName;
       document.getElementById("myNameDisplay").textContent = myPlayerName;
