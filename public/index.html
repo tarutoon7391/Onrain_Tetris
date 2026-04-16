@@ -226,7 +226,6 @@
     }
 
     #next1,
-    #next2,
     #hold {
       display: block;
       width: 120px;
@@ -235,6 +234,25 @@
       border-radius: 8px;
       background: #030712;
       margin-top: 8px;
+    }
+
+    .next-small-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    #next2,
+    #next3,
+    #next4,
+    #next5 {
+      display: block;
+      width: 70px;
+      height: 70px;
+      border: 2px solid #64748b;
+      border-radius: 6px;
+      background: #030712;
     }
 
     .status {
@@ -449,9 +467,14 @@
       </div>
 
       <div class="panel">
-        <div>ネクスト（2つ）</div>
+        <div>ネクスト</div>
         <canvas id="next1" width="120" height="120" aria-label="次のピース1"></canvas>
-        <canvas id="next2" width="120" height="120" aria-label="次のピース2"></canvas>
+        <div class="next-small-grid">
+          <canvas id="next2" width="70" height="70" aria-label="次のピース2"></canvas>
+          <canvas id="next3" width="70" height="70" aria-label="次のピース3"></canvas>
+          <canvas id="next4" width="70" height="70" aria-label="次のピース4"></canvas>
+          <canvas id="next5" width="70" height="70" aria-label="次のピース5"></canvas>
+        </div>
       </div>
 
       <div class="panel">
@@ -588,11 +611,17 @@
     const gameCanvas = document.getElementById("game");
     const next1Canvas = document.getElementById("next1");
     const next2Canvas = document.getElementById("next2");
+    const next3Canvas = document.getElementById("next3");
+    const next4Canvas = document.getElementById("next4");
+    const next5Canvas = document.getElementById("next5");
     const holdCanvas = document.getElementById("hold");
     const opponentGameCanvas = document.getElementById("opponentGame");
     const g = gameCanvas.getContext("2d");
     const n1 = next1Canvas.getContext("2d");
     const n2 = next2Canvas.getContext("2d");
+    const n3 = next3Canvas.getContext("2d");
+    const n4 = next4Canvas.getContext("2d");
+    const n5 = next5Canvas.getContext("2d");
     const h = holdCanvas.getContext("2d");
     const og = opponentGameCanvas.getContext("2d");
     const scoreEl = document.getElementById("score");
@@ -1059,7 +1088,7 @@
       }
 
       const shape = SHAPES[type];
-      const size = 24;
+      const size = Math.min(Math.floor((Math.min(canvas.width, canvas.height) - 4) / 4), 24);
       const shapeW = shape[0].length * size;
       const shapeH = shape.length * size;
       const startX = Math.floor((canvas.width - shapeW) / 2 / size);
@@ -1078,6 +1107,9 @@
     function drawNext() {
       drawPiecePreview(n1, next1Canvas, nextQueue[0] || null);
       drawPiecePreview(n2, next2Canvas, nextQueue[1] || null);
+      drawPiecePreview(n3, next3Canvas, nextQueue[2] || null);
+      drawPiecePreview(n4, next4Canvas, nextQueue[3] || null);
+      drawPiecePreview(n5, next5Canvas, nextQueue[4] || null);
     }
 
     // HOLD表示を更新する関数
@@ -1158,6 +1190,9 @@
       drawOpponentBoard();
       drawPiecePreview(n1, next1Canvas, null);
       drawPiecePreview(n2, next2Canvas, null);
+      drawPiecePreview(n3, next3Canvas, null);
+      drawPiecePreview(n4, next4Canvas, null);
+      drawPiecePreview(n5, next5Canvas, null);
       drawPiecePreview(h, holdCanvas, null);
     }
 
