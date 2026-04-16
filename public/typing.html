@@ -246,7 +246,7 @@
       text-align: right;
     }
 
-    /* 入力フィールド（視覚的に非表示にするが機能は保持） */
+    /* 入力フィールド（IME制御用・視覚的に非表示） */
     #typingInput {
       position: absolute;
       opacity: 0;
@@ -407,7 +407,7 @@
         <div id="refDisplay"></div>
 
         <!-- 読み（タイプ対象） -->
-        <div class="section-label">読み（タイプしてください）</div>
+        <div class="section-label">読み（ローマ字でタイプしてください）</div>
         <!-- 文章表示 -->
         <div id="textDisplay"></div>
 
@@ -568,56 +568,56 @@
     // タイピングエリアクリックでもフォーカスを当てる
     document.getElementById("typingArea")?.addEventListener("click", focusInput);
 
-    // IME変換開始イベント
-    document.getElementById("typingInput").addEventListener("compositionstart", () => {
+    // 入力フィールドの参照を取得する
+    const typingInput = document.getElementById("typingInput");
+
+    // IME変換開始：変換中フラグをセットする
+    typingInput.addEventListener("compositionstart", () => {
       isComposing = true;
     });
 
-    // IME変換確定イベント（日本語入力の主な入力経路）
-    document.getElementById("typingInput").addEventListener("compositionend", (e) => {
+    // IME変換確定：フラグをクリアし入力フィールドをリセットする
+    // 読みはローマ字（ASCII）なので日本語入力は不要のため内容を破棄する
+    typingInput.addEventListener("compositionend", () => {
       isComposing = false;
-      if (!gameActive || !targetReading) return;
+      typingInput.value = "";
+    });
 
-      const composed = e.data || "";
-      for (const ch of composed) {
-        if (myProgress < targetReading.length && ch === targetReading[myProgress]) {
-          myProgress++;
-        } else {
-          break;
-        }
-      }
-
-      // 進捗をサーバーへ送信する
-      socket.emit("typingProgress", { progress: myProgress });
-
-      // UIを更新する
-      updateTextDisplay();
-      updateProgressUI();
-
-      // 全文字入力完了チェック
-      if (myProgress >= targetReading.length) {
-        gameActive = false;
-        socket.emit("typingComplete");
+    // inputイベント：IME変換中でない場合のみ入力フィールドをリセットする
+    // IME変換中にvalue=""すると変換バッファが破壊されIME入力が壊れるため、
+    // e.isComposingがtrueの間はリセットをスキップする
+    typingInput.addEventListener("input", (e) => {
+      if (!e.isComposing) {
+        e.target.value = "";
       }
     });
 
-    // キー入力処理（IMEを使わない直接入力・記号類のフォールバック）
-    document.getElementById("typingInput").addEventListener("keydown", (e) => {
+    // documentのkeydownで1文字ずつ判定する（非表示inputへのフォーカスに依存しない方式）
+    document.addEventListener("keydown", (e) => {
       if (!gameActive || !targetReading) return;
 
-      // IME変換中は処理しない
-      if (isComposing) return;
+      // IME変換中（ネイティブフラグおよび手動フラグ）は処理しない
+      if (e.isComposing || isComposing) return;
 
-      // Backspaceやその他の制御キーは無視する（ペナルティなし仕様）
+      // Backspace・Tab・Escapeはデフォルト動作を抑制して無視する
       if (e.key === "Backspace" || e.key === "Tab" || e.key === "Escape") {
         e.preventDefault();
         return;
       }
 
-      // 入力された文字が1文字の場合のみ処理する
-      if (e.key.length !== 1) return;
+      // スペースキーによるページスクロールを抑制する
+      if (e.key === " ") {
+        e.preventDefault();
+      }
 
-      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視、ペナルティなし）
+      // 1文字かつASCII印字可能文字（コード32〜126）のみ受け付ける
+      // key.length !== 1 で制御キー（Enter, ArrowLeft等）を除外し、
+      // charCodeAt チェックで日本語等の非ASCII文字（length===1だがコード>126）を除外する
+      if (e.key.length !== 1) return;
+      const code = e.key.charCodeAt(0);
+      if (code < 32 || code > 126) return;
+
+      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視）
       if (e.key !== targetReading[myProgress]) return;
 
       myProgress++;
@@ -634,13 +634,6 @@
         gameActive = false;
         socket.emit("typingComplete");
       }
-    });
-
-    // モバイル向けIMEでの入力（compositionend）を処理する
-    document.getElementById("typingInput").addEventListener("input", (e) => {
-      // inputイベントはkeydownで処理できない文字入力を補完する
-      // ただし今回はkeydownで処理しているためinputフィールドをリセットする
-      e.target.value = "";
     });
 
     // カウントダウンを表示する関数
