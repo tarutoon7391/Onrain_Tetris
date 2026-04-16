@@ -491,7 +491,13 @@
 
     // ===== ダメージテーブル =====
     // インデックス = 消去した列数、値 = 与えるダメージ
+    // 1列: 2, 2列: 5, 3列: 10, 4列: 20 と指数的に増加し、5列以上は独自スケールで設定
     const DAMAGE_TABLE = [0, 2, 5, 10, 20, 35, 50, 70, 100];
+
+    // ペナルティ時に与えるダメージ量
+    const PENALTY_DAMAGE = 20;
+    // ペナルティ中の操作不能時間（秒）
+    const PENALTY_DURATION_SECONDS = 10;
 
     // ===== ゲーム状態変数 =====
     let myPlayerName = "";
@@ -743,11 +749,11 @@
 
       // サーバー経由でペナルティ開始を相手に通知する
       socket.emit("bbPenalty", {});
-      // ペナルティダメージ20を相手に与える
-      dealDamageToOpponent(20);
+      // ペナルティダメージを相手に与える
+      dealDamageToOpponent(PENALTY_DAMAGE);
 
-      // 10秒カウントダウン開始
-      let remaining = 10;
+      // ペナルティ操作不能時間でカウントダウン開始
+      let remaining = PENALTY_DURATION_SECONDS;
       setStatus(`⚠️ ペナルティ: ${remaining}秒後にリセット`, true);
       drawMainBoard();
 

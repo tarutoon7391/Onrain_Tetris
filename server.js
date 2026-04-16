@@ -45,7 +45,7 @@ const bbSocketMeta = new Map();
 let bbWaitingRoomId = null;
 
 // テトリス用ルームIDを生成する関数
-function createRoomId() {
+function createTetrisRoomId() {
   return `room-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -56,7 +56,7 @@ function createBBRoomId() {
 
 // 新しいルームを作成する関数
 function createRoom() {
-  const roomId = createRoomId();
+  const roomId = createTetrisRoomId();
   const room = {
     id: roomId,
     players: [],
