@@ -26,9 +26,119 @@
       background: radial-gradient(circle at top, #1f2937 0%, #0b1020 65%);
       color: var(--text);
       min-height: 100vh;
-      display: grid;
-      place-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
+    }
+
+    /* 各画面共通のラッパー */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* ログイン・ロビー・勝敗画面のカード */
+    .card {
+      background: linear-gradient(180deg, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 48px 40px;
+      width: 100%;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 1.6rem;
+      margin: 0 0 32px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    .card h2 {
+      margin: 0 0 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .form-group input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .card button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      margin-bottom: 0;
+    }
+
+    .card .greeting {
+      font-size: 1.15rem;
+      margin: 0 0 28px;
+      color: var(--text);
+    }
+
+    .card .matching-status {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #fde68a;
+      min-height: 1.4em;
+    }
+
+    /* 勝敗テキスト */
+    .result-win {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--ok);
+      margin: 0 0 32px;
+    }
+
+    .result-lose {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--danger);
+      margin: 0 0 32px;
+    }
+
+    /* ゲーム画面のプレイヤー名バー */
+    #playerNamesBar {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 8px 12px;
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+    }
+
+    #myNameDisplay {
+      color: var(--accent);
+    }
+
+    #opponentNameDisplay {
+      color: var(--warn);
     }
 
     .app {
@@ -210,10 +320,35 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <!-- ログイン画面 -->
+  <div id="loginScreen" class="screen">
+    <div class="card">
+      <h1>オンラインテトリス</h1>
+      <div class="form-group">
+        <input id="nameInput" type="text" maxlength="20" placeholder="プレイヤー名を入力" autocomplete="off" />
+      </div>
+      <button id="loginBtn" type="button">ログイン</button>
+    </div>
+  </div>
+
+  <!-- ロビー画面 -->
+  <div id="lobbyScreen" class="screen" style="display:none">
+    <div class="card">
+      <h1>ロビー</h1>
+      <p id="greeting" class="greeting"></p>
+      <button id="matchBtn" type="button">マッチング開始</button>
+      <p id="matchingStatus" class="matching-status"></p>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div class="app" id="gameScreen" style="display:none">
+    <div id="playerNamesBar">
+      <span id="myNameDisplay"></span>　vs　<span id="opponentNameDisplay"></span>
+    </div>
     <div class="left">
       <canvas id="game" width="300" height="600" aria-label="テトリス盤面"></canvas>
-      <div class="status" id="status">サーバーへ接続中...</div>
+      <div class="status" id="status">対戦中</div>
       <button id="restartBtn" type="button">リスタート</button>
       <button id="levelUpBtn" type="button">デバッグ: レベル+1</button>
     </div>
@@ -255,6 +390,14 @@
         <div><span>スペース</span> : ハードドロップ</div>
         <div><span>Shift / C</span> : ホールド</div>
       </div>
+    </div>
+  </div>
+
+  <!-- 勝敗画面 -->
+  <div id="resultScreen" class="screen" style="display:none">
+    <div class="card">
+      <p id="resultText"></p>
+      <button id="backToLobbyBtn" type="button">ロビーに戻る</button>
     </div>
   </div>
 
@@ -399,6 +542,10 @@
     let playerNumber = 0;
     let matchReady = false;
     let pendingGarbage = 0;
+
+    // プレイヤー名を保持する変数
+    let myPlayerName = "";
+    let opponentPlayerName = "";
 
     // 盤面を空で初期化する関数
     function createBoard() {
@@ -617,6 +764,14 @@
       return piece ? collides(piece.shape, piece.x, piece.y + 1) : false;
     }
 
+    // サーバーへゲームオーバーを通知する関数
+    function notifyGameOver() {
+      if (roomId && matchReady) {
+        socket.emit("gameOver");
+        matchReady = false;
+      }
+    }
+
     // 受け取ったおじゃまラインを盤面へ反映する関数
     function applyPendingGarbage() {
       if (pendingGarbage <= 0 || gameOver) {
@@ -637,6 +792,7 @@
       if (board[0].some((cell) => cell !== 0)) {
         gameOver = true;
         setStatus("おじゃまでゲームオーバー", true);
+        notifyGameOver();
       }
     }
 
@@ -771,6 +927,7 @@
       if (collides(current.shape, current.x, current.y)) {
         gameOver = true;
         setStatus("ゲームオーバー", true);
+        notifyGameOver();
       }
     }
 
@@ -1055,15 +1212,43 @@
       drawBoard();
       drawGhostPiece();
       drawCurrentPiece();
+
+      // アニメーションループを再起動する
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+      }
+      animationId = requestAnimationFrame(update);
     }
 
-    // 待機状態へ切り替える関数
-    function enterWaitingMode(message) {
+    // 指定した画面を表示し他を非表示にする関数
+    function showScreen(id) {
+      ["loginScreen", "lobbyScreen", "gameScreen", "resultScreen"].forEach((screenId) => {
+        const el = document.getElementById(screenId);
+        if (!el) {
+          return;
+        }
+        if (screenId === id) {
+          // ゲーム画面はグリッドレイアウトで表示する
+          el.style.display = screenId === "gameScreen" ? "grid" : "flex";
+        } else {
+          el.style.display = "none";
+        }
+      });
+    }
+
+    // ロビー画面へ戻る処理
+    function enterLobby() {
       matchReady = false;
       gameOver = true;
-      updateMatchInfo("待機中", false);
-      setStatus(message, false);
-      resetForWaiting();
+      roomId = "";
+      playerNumber = 0;
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      document.getElementById("matchingStatus").textContent = "";
+      document.getElementById("matchBtn").disabled = false;
+      showScreen("lobbyScreen");
     }
 
     // 対戦開始状態へ切り替える関数
@@ -1073,9 +1258,14 @@
       startGame();
     }
 
-    // キー入力処理
+    // キー入力処理（ゲーム画面表示中のみ有効）
     window.addEventListener("keydown", (e) => {
       const key = e.key;
+
+      // ゲーム画面が非表示なら操作を無視する
+      if (document.getElementById("gameScreen").style.display === "none") {
+        return;
+      }
 
       if (gameOver && key !== "Shift" && key !== "c" && key !== "C") {
         return;
@@ -1112,7 +1302,6 @@
     // リスタートボタン処理
     restartBtn.addEventListener("click", () => {
       if (!matchReady) {
-        setStatus("対戦相手を待っています", false);
         return;
       }
       startGame();
@@ -1130,24 +1319,57 @@
       setStatus(`デバッグ: レベル${level}`, false);
     });
 
-    // 接続完了時の処理
-    socket.on("connect", () => {
-      setStatus("マッチング中...", false);
+    // ログインボタン処理
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) {
+        return;
+      }
+      myPlayerName = name;
+      document.getElementById("greeting").textContent = `こんにちは、${name}さん`;
+      showScreen("lobbyScreen");
     });
 
-    // 待機状態通知の処理
+    // Enterキーでもログインできるようにする
+    document.getElementById("nameInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("loginBtn").click();
+      }
+    });
+
+    // マッチングボタン処理
+    document.getElementById("matchBtn").addEventListener("click", () => {
+      document.getElementById("matchBtn").disabled = true;
+      document.getElementById("matchingStatus").textContent = "対戦相手を待っています...";
+      socket.emit("joinMatch", { playerName: myPlayerName });
+    });
+
+    // ロビーへ戻るボタン処理
+    document.getElementById("backToLobbyBtn").addEventListener("click", () => {
+      socket.emit("leaveRoom");
+      enterLobby();
+    });
+
+    // 待機状態通知の処理（ロビー画面上で状態を更新する）
     socket.on("waiting", (payload) => {
       roomId = payload.roomId;
       playerNumber = payload.playerNumber;
-      updateMatchInfo("待機中", false);
-      enterWaitingMode("対戦相手を待っています...");
+      document.getElementById("matchingStatus").textContent = "対戦相手を待っています...";
     });
 
     // 対戦開始通知の処理
     socket.on("matchStart", (payload) => {
       roomId = payload.roomId;
       playerNumber = payload.playerNumber;
-      updateMatchInfo("対戦中", true);
+      myPlayerName = payload.myName || myPlayerName;
+      opponentPlayerName = payload.opponentName || "相手";
+
+      // プレイヤー名バーを更新する
+      document.getElementById("myNameDisplay").textContent = `${myPlayerName}（あなた）`;
+      document.getElementById("opponentNameDisplay").textContent = opponentPlayerName;
+
+      // ゲーム画面へ遷移して対戦を開始する
+      showScreen("gameScreen");
       enterMatchMode();
     });
 
@@ -1162,16 +1384,33 @@
       setStatus(`おじゃま ${count} ライン受信`, false);
     });
 
-    // 相手切断時の処理
-    socket.on("opponentLeft", () => {
-      enterWaitingMode("相手が切断しました。次の相手を待っています...");
+    // 勝敗結果受信時の処理
+    socket.on("result", (payload) => {
+      // アニメーションループを停止する
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      const resultTextEl = document.getElementById("resultText");
+      if (payload.win) {
+        resultTextEl.textContent = "あなたの勝ち！";
+        resultTextEl.className = "result-win";
+      } else {
+        resultTextEl.textContent = "あなたの負け...";
+        resultTextEl.className = "result-lose";
+      }
+      showScreen("resultScreen");
     });
 
-    // 初期描画とループ開始
-    resetForWaiting();
-    updateMatchInfo("待機中", false);
-    updateStats();
-    update();
+    // 相手切断時の処理
+    socket.on("opponentLeft", () => {
+      document.getElementById("matchingStatus").textContent = "相手が切断しました。";
+      enterLobby();
+    });
+
+    // 起動時はログイン画面を表示する
+    showScreen("loginScreen");
   </script>
 </body>
 </html>

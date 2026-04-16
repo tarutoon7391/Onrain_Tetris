@@ -42,7 +42,9 @@ function createRoom() {
   const room = {
     id: roomId,
     players: [],
+    playerNames: {},
     started: false,
+    resultSent: false,
   };
   rooms.set(roomId, room);
   waitingRoomId = roomId;
@@ -85,23 +87,30 @@ function emitWaitingState(room) {
   });
 }
 
-// ルーム内2人へ対戦開始を通知する関数
+// ルーム内2人へ対戦開始を通知する関数（プレイヤー名を双方へ共有する）
 function emitMatchStart(room) {
   room.started = true;
   waitingRoomId = null;
 
   room.players.forEach((socketId, index) => {
+    const opponentId = room.players[1 - index];
+    const myName = room.playerNames[socketId] || `プレイヤー${index + 1}`;
+    const opponentName = room.playerNames[opponentId] || `プレイヤー${2 - index}`;
+
     io.to(socketId).emit("matchStart", {
       roomId: room.id,
       playerNumber: index + 1,
+      myName,
+      opponentName,
     });
   });
 }
 
 // ルームへプレイヤーを参加させる関数
-function joinRoom(socket) {
+function joinRoom(socket, playerName) {
   const room = getJoinableRoom();
   room.players.push(socket.id);
+  room.playerNames[socket.id] = playerName;
   socket.join(room.id);
 
   const playerNumber = room.players.length;
@@ -117,8 +126,8 @@ function joinRoom(socket) {
   }
 }
 
-// 切断時にルーム状態を整理する関数
-function handleDisconnect(socket) {
+// ルームからプレイヤーを退出させる共通処理関数
+function leaveCurrentRoom(socket) {
   const meta = socketMeta.get(socket.id);
   if (!meta) {
     return;
@@ -135,12 +144,18 @@ function handleDisconnect(socket) {
   }
 
   room.players = room.players.filter((id) => id !== socket.id);
+  delete room.playerNames[socket.id];
 
   if (room.players.length === 0) {
     rooms.delete(room.id);
     if (waitingRoomId === room.id) {
       waitingRoomId = null;
     }
+    return;
+  }
+
+  // 勝敗確定済みの場合は相手へ切断通知を送らない
+  if (room.resultSent) {
     return;
   }
 
@@ -158,8 +173,12 @@ function handleDisconnect(socket) {
 }
 
 io.on("connection", (socket) => {
-  // 接続したプレイヤーを待機ルームまたは新規ルームへ入れる
-  joinRoom(socket);
+  // マッチング要求を受け取りプレイヤーをルームへ参加させる
+  socket.on("joinMatch", (payload) => {
+    const raw = typeof payload?.playerName === "string" ? payload.playerName : "";
+    const playerName = raw.trim().slice(0, 20) || "ゲスト";
+    joinRoom(socket, playerName);
+  });
 
   // クライアントから受け取ったおじゃまラインを相手へ転送する
   socket.on("garbageLines", (payload) => {
@@ -188,9 +207,36 @@ io.on("connection", (socket) => {
     });
   });
 
+  // ゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する
+  socket.on("gameOver", () => {
+    const meta = socketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = rooms.get(meta.roomId);
+    if (!room || room.players.length < 2 || room.resultSent) {
+      return;
+    }
+
+    // 最初にゲームオーバーになったプレイヤーが負け
+    room.resultSent = true;
+    io.to(socket.id).emit("result", { win: false });
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("result", { win: true });
+      }
+    });
+  });
+
+  // プレイヤーがロビーへ戻る際にルームから退出させる
+  socket.on("leaveRoom", () => {
+    leaveCurrentRoom(socket);
+  });
+
   // 切断時に部屋の状態を整理する
   socket.on("disconnect", () => {
-    handleDisconnect(socket);
+    leaveCurrentRoom(socket);
   });
 });
 
