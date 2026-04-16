@@ -614,11 +614,11 @@
           let rtHtml = '';
           for (let ui = unitStart; ui < unitEnd; ui++) {
             const unit = kanaUnits[ui];
-            const unitStart0 = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
+            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
             let cls;
             if (myProgress >= unit.romajiEnd) {
               cls = 'kana-done';
-            } else if (myProgress >= unitStart0) {
+            } else if (myProgress >= unitRomajiStart) {
               cls = 'kana-current';
             } else {
               cls = 'kana-pending';
@@ -630,11 +630,11 @@
           // 非漢字トークン：かなユニットごとにspanを出力
           for (let ui = unitStart; ui < unitEnd; ui++) {
             const unit = kanaUnits[ui];
-            const unitStart0 = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
+            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
             let cls;
             if (myProgress >= unit.romajiEnd) {
               cls = 'kana-done';
-            } else if (myProgress >= unitStart0) {
+            } else if (myProgress >= unitRomajiStart) {
               cls = 'kana-current';
             } else {
               cls = 'kana-pending';
