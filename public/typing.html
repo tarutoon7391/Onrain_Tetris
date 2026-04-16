@@ -445,7 +445,7 @@
       ["waitingScreen", "countdownScreen", "gameScreen", "resultScreen"].forEach((sid) => {
         const el = document.getElementById(sid);
         if (el) {
-          el.style.display = sid === id ? (sid === "gameScreen" ? "flex" : "flex") : "none";
+          el.style.display = sid === id ? "flex" : "none";
         }
       });
     }
@@ -548,8 +548,13 @@
       // 入力された文字が1文字の場合のみ処理する
       if (e.key.length !== 1) return;
 
-      // 次の文字と比較する（ミスでも進められる仕様のため常に進める）
+      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視、ペナルティなし）
+      if (e.key !== targetText[myProgress]) return;
+
       myProgress++;
+      if (myProgress > targetText.length) {
+        myProgress = targetText.length;
+      }
       if (myProgress > targetText.length) {
         myProgress = targetText.length;
       }
