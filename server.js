@@ -22,6 +22,8 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
+// ===== テトリス用ルーム管理 =====
+
 // ルーム情報を保持するマップ
 const rooms = new Map();
 
@@ -31,9 +33,25 @@ const socketMeta = new Map();
 // 待機中ルームIDを保持する
 let waitingRoomId = null;
 
-// ルームIDを生成する関数
+// ===== Block Blast用ルーム管理 =====
+
+// Block Blastルーム情報を保持するマップ
+const bbRooms = new Map();
+
+// Block Blast用ソケットごとの所属ルーム情報を保持するマップ
+const bbSocketMeta = new Map();
+
+// Block Blast用待機中ルームIDを保持する
+let bbWaitingRoomId = null;
+
+// テトリス用ルームIDを生成する関数
 function createRoomId() {
   return `room-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// Block Blast用ルームIDを生成する関数
+function createBBRoomId() {
+  return `bb-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 // 新しいルームを作成する関数
@@ -172,6 +190,118 @@ function leaveCurrentRoom(socket) {
   emitWaitingState(room);
 }
 
+// ===== Block Blast用ルーム操作関数 =====
+
+// 新しいBlock Blastルームを作成する関数
+function createBBRoom() {
+  const roomId = createBBRoomId();
+  const room = {
+    id: roomId,
+    players: [],
+    playerNames: {},
+    started: false,
+    resultSent: false,
+  };
+  bbRooms.set(roomId, room);
+  bbWaitingRoomId = roomId;
+  return room;
+}
+
+// 参加可能なBlock Blastルームを取得する関数
+function getJoinableBBRoom() {
+  if (!bbWaitingRoomId) {
+    return createBBRoom();
+  }
+  const room = bbRooms.get(bbWaitingRoomId);
+  if (!room || room.players.length >= 2) {
+    return createBBRoom();
+  }
+  return room;
+}
+
+// Block Blastルームへプレイヤーを参加させる関数
+function joinBBRoom(socket, playerName) {
+  const room = getJoinableBBRoom();
+  room.players.push(socket.id);
+  room.playerNames[socket.id] = playerName;
+  socket.join(room.id);
+
+  const playerNumber = room.players.length;
+  bbSocketMeta.set(socket.id, { roomId: room.id, playerNumber });
+
+  if (room.players.length >= 2) {
+    // 2人揃ったのでゲーム開始を通知する
+    room.started = true;
+    bbWaitingRoomId = null;
+
+    room.players.forEach((socketId, index) => {
+      const opponentId = room.players[1 - index];
+      const myName = room.playerNames[socketId] || `プレイヤー${index + 1}`;
+      const opponentName = room.playerNames[opponentId] || `プレイヤー${2 - index}`;
+
+      io.to(socketId).emit("bbMatchStart", {
+        roomId: room.id,
+        playerNumber: index + 1,
+        myName,
+        opponentName,
+      });
+    });
+  } else {
+    // 1人目は待機状態を通知する
+    io.to(socket.id).emit("bbWaiting", {
+      roomId: room.id,
+      playerNumber: 1,
+    });
+  }
+}
+
+// Block Blastルームからプレイヤーを退出させる共通処理関数
+function leaveBBRoom(socket) {
+  const meta = bbSocketMeta.get(socket.id);
+  if (!meta) {
+    return;
+  }
+
+  const room = bbRooms.get(meta.roomId);
+  bbSocketMeta.delete(socket.id);
+
+  if (!room) {
+    if (bbWaitingRoomId === meta.roomId) {
+      bbWaitingRoomId = null;
+    }
+    return;
+  }
+
+  room.players = room.players.filter((id) => id !== socket.id);
+  delete room.playerNames[socket.id];
+
+  if (room.players.length === 0) {
+    bbRooms.delete(room.id);
+    if (bbWaitingRoomId === room.id) {
+      bbWaitingRoomId = null;
+    }
+    return;
+  }
+
+  // 勝敗確定済みの場合は切断通知を送らない
+  if (room.resultSent) {
+    return;
+  }
+
+  room.started = false;
+  bbWaitingRoomId = room.id;
+
+  // 残ったプレイヤーに相手切断を通知し待機状態へ戻す
+  room.players.forEach((socketId) => {
+    io.to(socketId).emit("bbOpponentLeft", { roomId: room.id });
+  });
+
+  io.to(room.players[0]).emit("bbWaiting", {
+    roomId: room.id,
+    playerNumber: 1,
+  });
+}
+
 io.on("connection", (socket) => {
   // マッチング要求を受け取りプレイヤーをルームへ参加させる
   socket.on("joinMatch", (payload) => {
@@ -259,9 +389,161 @@ io.on("connection", (socket) => {
     leaveCurrentRoom(socket);
   });
 
+  // ===== Block Blast用イベントハンドラ =====
+
+  // Block Blastマッチング要求を受け取りルームへ参加させる
+  socket.on("bbJoinMatch", (payload) => {
+    const raw = typeof payload?.playerName === "string" ? payload.playerName : "";
+    const playerName = raw.trim().slice(0, 20) || "ゲスト";
+    joinBBRoom(socket, playerName);
+  });
+
+  // Block Blast盤面データを相手へリアルタイムで転送する
+  socket.on("bbBoardUpdate", (payload) => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    // 盤面データの基本バリデーション（8行×8列の配列であることを確認する）
+    const board = payload?.board;
+    if (
+      !Array.isArray(board) ||
+      board.length !== 8 ||
+      !board.every((row) => Array.isArray(row) && row.length === 8)
+    ) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbOpponentBoardUpdate", { board });
+      }
+    });
+  });
+
+  // Block Blastダメージを相手へ転送する
+  socket.on("bbDamage", (payload) => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    const damage = Number(payload?.damage || 0);
+    if (!Number.isFinite(damage) || damage <= 0) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbReceiveDamage", { damage });
+      }
+    });
+  });
+
+  // Block Blast HP更新を相手へ転送する
+  socket.on("bbHPUpdate", (payload) => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    const hp = Number(payload?.hp);
+    if (!Number.isFinite(hp)) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbOpponentHP", { hp: Math.max(0, hp) });
+      }
+    });
+  });
+
+  // Block Blastゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する
+  socket.on("bbGameOver", () => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2 || room.resultSent) {
+      return;
+    }
+
+    // 最初にゲームオーバーになったプレイヤーが負け
+    room.resultSent = true;
+    io.to(socket.id).emit("bbResult", { win: false });
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbResult", { win: true });
+      }
+    });
+  });
+
+  // Block Blastペナルティ開始を相手へ通知する
+  socket.on("bbPenalty", () => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbOpponentPenalty", {});
+      }
+    });
+  });
+
+  // Block Blastペナルティ終了を相手へ通知する
+  socket.on("bbPenaltyEnd", () => {
+    const meta = bbSocketMeta.get(socket.id);
+    if (!meta) {
+      return;
+    }
+
+    const room = bbRooms.get(meta.roomId);
+    if (!room || room.players.length < 2) {
+      return;
+    }
+
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit("bbOpponentPenaltyEnd", {});
+      }
+    });
+  });
+
+  // Block Blastロビーへ戻る際にルームから退出させる
+  socket.on("bbLeaveRoom", () => {
+    leaveBBRoom(socket);
+  });
+
   // 切断時に部屋の状態を整理する
   socket.on("disconnect", () => {
     leaveCurrentRoom(socket);
+    leaveBBRoom(socket);
   });
 });
 
