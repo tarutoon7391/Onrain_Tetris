@@ -749,8 +749,8 @@
 
       // サーバー経由でペナルティ開始を相手に通知する
       socket.emit("bbPenalty", {});
-      // ペナルティダメージを相手に与える
-      dealDamageToOpponent(PENALTY_DAMAGE);
+      // ペナルティダメージは置けなくなった自分自身が受ける
+      takeDamage(PENALTY_DAMAGE);
 
       // ペナルティ操作不能時間でカウントダウン開始
       let remaining = PENALTY_DURATION_SECONDS;
