@@ -328,9 +328,68 @@
         width: 100%;
       }
     }
+
+    /* ===== 演出エフェクト ===== */
+
+    /* 画面フラッシュオーバーレイ */
+    #flashOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ef4444;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0;
+    }
+
+    /* 赤フラッシュアニメーション */
+    @keyframes redFlash {
+      0%   { opacity: 0.65; }
+      100% { opacity: 0; }
+    }
+
+    #flashOverlay.flash-active {
+      animation: redFlash 0.5s ease-out forwards;
+    }
+
+    /* ダメージテキストポップアップ */
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+      60%  { opacity: 1; transform: translateX(-50%) translateY(-50px) scale(1.15); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-90px) scale(1.2); }
+    }
+
+    .damage-popup {
+      position: fixed;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #facc15;
+      text-shadow: 0 0 12px rgba(250, 204, 21, 0.9), 2px 2px 6px rgba(0, 0, 0, 0.95);
+      pointer-events: none;
+      z-index: 9999;
+      animation: floatUp 1.3s ease-out forwards;
+      white-space: nowrap;
+    }
+
+    /* シェイクアニメーション */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      15%      { transform: translateX(-8px); }
+      30%      { transform: translateX(8px); }
+      45%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+      75%      { transform: translateX(-3px); }
+      90%      { transform: translateX(3px); }
+    }
+
+    .shake {
+      animation: shake 0.45s ease-out;
+    }
   </style>
 </head>
 <body>
+  <!-- 画面フラッシュ用オーバーレイ -->
+  <div id="flashOverlay"></div>
+
   <!-- ログイン画面 -->
   <div id="loginScreen" class="screen">
     <div class="card">
@@ -576,6 +635,14 @@
     // 盤面データを最後に送信した時刻
     let lastBoardSendTime = 0;
 
+    // ===== 演出エフェクト用変数 =====
+    // パーティクルの配列
+    let particles = [];
+    // ラインフラッシュの対象行インデックス
+    let lineFlashRows = [];
+    // ラインフラッシュの終了時刻（DOMHighResTimeStamp）
+    let lineFlashEndTime = 0;
+
     // 盤面を空で初期化する関数
     function createBoard() {
       return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -685,9 +752,11 @@
       }
     }
 
-    // 揃ったラインを消去し、消去数を返す関数
+    // 揃ったラインを消去し、消去数と消去前の行インデックスを返す関数
     function clearLines() {
       let removed = 0;
+      // 消去した行のインデックスを記録する（演出用）
+      const clearedRowIndices = [];
 
       for (let y = ROWS - 1; y >= 0; y--) {
         const filled = board[y].every((cell) => cell !== 0);
@@ -695,13 +764,14 @@
           continue;
         }
 
+        clearedRowIndices.push(y);
         board.splice(y, 1);
         board.unshift(Array(COLS).fill(0));
         removed++;
         y++;
       }
 
-      return removed;
+      return { removed, clearedRowIndices };
     }
 
     // T-Spin成立判定（簡易版）
@@ -781,7 +851,6 @@
         setStatus(`${removed}ライン消去`, false);
       }
     }
-
     // 現在レベルに応じた落下間隔を返す関数
     function currentDropInterval() {
       const speed = Math.floor(BASE_DROP_MS * Math.pow(LEVEL_SPEED_RATIO, level - 1));
@@ -825,11 +894,118 @@
       }
     }
 
+    // ===== 演出エフェクト関数 =====
+
+    // カラフルなパーティクルを指定行に生成する
+    function spawnParticles(rowIndices) {
+      const colors = ["#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff", "#e040fb", "#ff9f1c", "#ffffff"];
+      rowIndices.forEach((row) => {
+        for (let x = 0; x < COLS; x++) {
+          for (let i = 0; i < 4; i++) {
+            particles.push({
+              x: (x + Math.random()) * BLOCK,
+              y: (row + Math.random()) * BLOCK,
+              vx: (Math.random() - 0.5) * 7,
+              vy: (Math.random() - 1.8) * 5,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              life: 1.0,
+              decay: 0.035 + Math.random() * 0.03,
+              size: 2 + Math.random() * 4,
+            });
+          }
+        }
+      });
+    }
+
+    // パーティクルを更新して盤面キャンバスに描画する
+    function updateAndDrawParticles() {
+      particles = particles.filter((p) => p.life > 0);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.25; // 重力
+        p.life -= p.decay;
+        g.save();
+        g.globalAlpha = Math.max(0, p.life);
+        g.fillStyle = p.color;
+        g.beginPath();
+        g.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        g.fill();
+        g.restore();
+      });
+    }
+
+    // ラインフラッシュを開始する（消えるライン行を白く光らせる）
+    function triggerLineFlash(rows) {
+      lineFlashRows = rows.slice();
+      lineFlashEndTime = performance.now() + 220;
+    }
+
+    // ラインフラッシュを盤面キャンバスに描画する（drawBoard直後に呼ぶ）
+    function drawLineFlash(now) {
+      if (lineFlashRows.length === 0 || now > lineFlashEndTime) return;
+      const alpha = ((lineFlashEndTime - now) / 220) * 0.9;
+      g.save();
+      g.globalAlpha = alpha;
+      g.fillStyle = "#ffffff";
+      lineFlashRows.forEach((y) => {
+        g.fillRect(0, y * BLOCK, COLS * BLOCK, BLOCK);
+      });
+      g.restore();
+    }
+
+    // ダメージテキストをゲームキャンバスの上にポップアップ表示する
+    function showDamagePopup(text, canvasEl) {
+      const rect = canvasEl.getBoundingClientRect();
+      const popup = document.createElement("div");
+      popup.className = "damage-popup";
+      popup.textContent = text;
+      popup.style.left = `${rect.left + rect.width / 2}px`;
+      popup.style.top = `${rect.top + 50}px`;
+      document.body.appendChild(popup);
+      // アニメーション終了後に要素を削除する
+      popup.addEventListener("animationend", () => popup.remove());
+    }
+
+    // 画面全体を赤くフラッシュさせる
+    function triggerScreenFlash() {
+      const overlay = document.getElementById("flashOverlay");
+      overlay.classList.remove("flash-active");
+      // リフロー強制でアニメーションをリセットする
+      void overlay.offsetWidth;
+      overlay.classList.add("flash-active");
+    }
+
+    // 指定要素をシェイクさせる
+    function triggerShake(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.classList.remove("shake");
+      // リフロー強制でアニメーションをリセットする
+      void el.offsetWidth;
+      el.classList.add("shake");
+      el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true });
+    }
+
+    // ライン消去演出をまとめて発動する
+    function triggerLineClearEffect(clearedRowIndices, garbageCount, removed) {
+      // 1. 消えるラインをフラッシュさせる
+      triggerLineFlash(clearedRowIndices);
+      // 2. パーティクルを飛び散らせる
+      spawnParticles(clearedRowIndices);
+      // 3. おじゃまライン数またはライン消去数をポップアップ表示する
+      if (garbageCount > 0) {
+        showDamagePopup(`-${garbageCount} おじゃま`, gameCanvas);
+      } else {
+        showDamagePopup(`${removed}ライン！`, gameCanvas);
+      }
+    }
+
     // 現在ピースを固定して次へ進める関数
     function lockCurrentPiece() {
       const tSpin = isTSpin(current);
       mergePiece();
-      const removed = clearLines();
+      const { removed, clearedRowIndices } = clearLines();
       applyScore(removed, tSpin);
 
       const sendCount = calculateGarbageLines(removed, tSpin);
@@ -838,6 +1014,11 @@
           roomId,
           count: sendCount,
         });
+      }
+
+      // ライン消去演出を発動する
+      if (removed > 0) {
+        triggerLineClearEffect(clearedRowIndices, sendCount, removed);
       }
 
       canHold = true;
@@ -1222,6 +1403,9 @@
 
       if (gameOver) {
         drawBoard();
+        // ゲームオーバー後もエフェクトを継続して描画する
+        drawLineFlash(time);
+        updateAndDrawParticles();
         drawGhostPiece();
         drawCurrentPiece();
         animationId = requestAnimationFrame(update);
@@ -1248,6 +1432,9 @@
       }
 
       drawBoard();
+      // ラインフラッシュとパーティクルをボードの上に描画する
+      drawLineFlash(time);
+      updateAndDrawParticles();
       drawGhostPiece();
       drawCurrentPiece();
 
@@ -1467,6 +1654,9 @@
       pendingGarbage += count;
       updateGarbageStock();
       setStatus(`おじゃま ${count} ライン受信`, false);
+      // 被弾時の演出を発動する（画面赤フラッシュ・受信おじゃま表示シェイク）
+      triggerScreenFlash();
+      triggerShake("garbageStock");
     });
 
     // 勝敗結果受信時の処理
