@@ -207,21 +207,102 @@
       margin-bottom: 4px;
     }
 
-    /* タイプ済み文字 */
+    /* タイプ済みひらがな音節 */
     .char-done {
       color: rgba(100, 220, 140, 0.5);
     }
 
-    /* 現在の入力位置カーソル */
+    /* 現在入力中のひらがな音節 */
     .char-current {
       color: #ffffff;
       background: rgba(16, 185, 129, 0.55);
       border-radius: 2px;
+      padding: 0 1px;
     }
 
-    /* まだ打っていない文字 */
+    /* まだ打っていないひらがな音節 */
     .char-pending {
       color: rgba(220, 220, 240, 0.85);
+    }
+
+    /* ===== ルビ（漢字単語単位）表示 ===== */
+    ruby {
+      ruby-align: center;
+    }
+
+    rt {
+      font-size: 0.55em;
+      color: rgba(160, 220, 180, 0.6);
+    }
+
+    /* 打ち終わった単語 */
+    .word-done {
+      color: rgba(100, 220, 140, 0.5);
+    }
+
+    .word-done rt {
+      color: rgba(100, 220, 140, 0.35);
+    }
+
+    /* 現在入力中の単語 */
+    .word-current {
+      color: #ffffff;
+      background: rgba(16, 185, 129, 0.22);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    .word-current rt {
+      color: var(--accent);
+    }
+
+    /* まだ打っていない単語 */
+    .word-pending {
+      color: rgba(220, 220, 240, 0.85);
+    }
+
+    /* ===== ローマ字入力フィードバック ===== */
+    #romajiDisplay {
+      font-size: 1rem;
+      font-family: "Courier New", "Consolas", monospace;
+      letter-spacing: 0.05em;
+      word-break: break-all;
+      min-height: 1.6em;
+      margin-top: 2px;
+      margin-bottom: 4px;
+    }
+
+    /* 入力済みローマ字 */
+    .romaji-done {
+      color: rgba(100, 220, 140, 0.45);
+    }
+
+    /* 現在の音節で入力済みの部分 */
+    .romaji-typed {
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    /* 現在の音節の残り（候補表示） */
+    .romaji-alts {
+      color: #ffffff;
+      background: rgba(16, 185, 129, 0.5);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    /* まだ入力していないローマ字 */
+    .romaji-pending {
+      color: rgba(220, 220, 240, 0.45);
+    }
+
+    /* 現在音節の代替入力候補 */
+    #altHintDisplay {
+      font-size: 0.8rem;
+      color: var(--warn);
+      min-height: 1.3em;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
     }
 
     /* 進捗バー */
@@ -407,9 +488,15 @@
         <div id="refDisplay"></div>
 
         <!-- 読み（タイプ対象） -->
-        <div class="section-label">読み（ローマ字でタイプしてください）</div>
-        <!-- 文章表示 -->
+        <div class="section-label">読み（ひらがな）</div>
+        <!-- ひらがな音節ハイライト表示 -->
         <div id="textDisplay"></div>
+
+        <!-- ローマ字入力フィードバック -->
+        <div class="section-label">ローマ字</div>
+        <div id="romajiDisplay"></div>
+        <!-- 現在音節の複数表記候補 -->
+        <div id="altHintDisplay"></div>
 
         <!-- 自分の進捗バー -->
         <div class="progress-bar-wrap">
@@ -457,110 +544,348 @@
     // プレイヤー名をローカルストレージから取得する
     const myPlayerName = localStorage.getItem("typingPlayerName") || "ゲスト";
 
-    // ゲーム状態変数
-    let targetText = "";       // 表示用の原文
-    let targetReading = "";    // タイピング対象のひらがな読み
-    let myProgress = 0;        // 自分の現在の文字位置（reading基準）
-    let oppProgress = 0;       // 相手の現在の文字位置（reading基準）
-    let gameActive = false;    // ゲームが進行中かどうか
-    let startTime = null;      // ゲーム開始時刻
-    let isComposing = false;   // IMEで変換中かどうか
+    // ============================
+    // ローマ字→ひらがな変換テーブル（長い順・貪欲マッチ用）
+    // ============================
+    const ROMAJI_TABLE = [
+      // 3文字以上（拗音など）
+      ["sha","しゃ"],["shi","し"],["shu","しゅ"],["sho","しょ"],
+      ["chi","ち"],["cha","ちゃ"],["chu","ちゅ"],["cho","ちょ"],
+      ["tsu","つ"],
+      ["kya","きゃ"],["kyu","きゅ"],["kyo","きょ"],
+      ["nya","にゃ"],["nyu","にゅ"],["nyo","にょ"],
+      ["hya","ひゃ"],["hyu","ひゅ"],["hyo","ひょ"],
+      ["mya","みゃ"],["myu","みゅ"],["myo","みょ"],
+      ["rya","りゃ"],["ryu","りゅ"],["ryo","りょ"],
+      ["gya","ぎゃ"],["gyu","ぎゅ"],["gyo","ぎょ"],
+      ["bya","びゃ"],["byu","びゅ"],["byo","びょ"],
+      ["pya","ぴゃ"],["pyu","ぴゅ"],["pyo","ぴょ"],
+      ["zya","じゃ"],["zyu","じゅ"],["zyo","じょ"],
+      ["tya","ちゃ"],["tyu","ちゅ"],["tyo","ちょ"],
+      ["sya","しゃ"],["syu","しゅ"],["syo","しょ"],
+      // 2文字
+      ["ka","か"],["ki","き"],["ku","く"],["ke","け"],["ko","こ"],
+      ["sa","さ"],["si","し"],["su","す"],["se","せ"],["so","そ"],
+      ["ta","た"],["ti","ち"],["tu","つ"],["te","て"],["to","と"],
+      ["na","な"],["ni","に"],["nu","ぬ"],["ne","ね"],["no","の"],
+      ["ha","は"],["hi","ひ"],["fu","ふ"],["hu","ふ"],["he","へ"],["ho","ほ"],
+      ["ma","ま"],["mi","み"],["mu","む"],["me","め"],["mo","も"],
+      ["ya","や"],["yu","ゆ"],["yo","よ"],
+      ["ra","ら"],["ri","り"],["ru","る"],["re","れ"],["ro","ろ"],
+      ["wa","わ"],["wi","ゐ"],["we","ゑ"],["wo","を"],
+      ["ga","が"],["gi","ぎ"],["gu","ぐ"],["ge","げ"],["go","ご"],
+      ["za","ざ"],["zi","じ"],["zu","ず"],["ze","ぜ"],["zo","ぞ"],
+      ["da","だ"],["di","ぢ"],["du","づ"],["de","で"],["do","ど"],
+      ["ba","ば"],["bi","び"],["bu","ぶ"],["be","べ"],["bo","ぼ"],
+      ["pa","ぱ"],["pi","ぴ"],["pu","ぷ"],["pe","ぺ"],["po","ぽ"],
+      ["ja","じゃ"],["ji","じ"],["ju","じゅ"],["jo","じょ"],
+      // 1文字
+      ["a","あ"],["i","い"],["u","う"],["e","え"],["o","お"],
+      ["n","ん"],
+      [".","。"],[",","、"],["-","ー"],
+    ];
 
-    // 画面切り替え関数
-    function showScreen(id) {
-      ["waitingScreen", "countdownScreen", "gameScreen", "resultScreen"].forEach((sid) => {
-        const el = document.getElementById(sid);
-        if (el) {
-          el.style.display = sid === id ? "flex" : "none";
+    // ひらがな→複数ローマ字表記テーブル（標準 + 代替）
+    const HIRAGANA_ALT_ROMAJI = {
+      "し":  ["shi","si"],
+      "ち":  ["chi","ti"],
+      "つ":  ["tsu","tu"],
+      "ふ":  ["fu","hu"],
+      "じ":  ["ji","zi"],
+      "しゃ":["sha","sya"],
+      "しゅ":["shu","syu"],
+      "しょ":["sho","syo"],
+      "ちゃ":["cha","tya"],
+      "ちゅ":["chu","tyu"],
+      "ちょ":["cho","tyo"],
+      "じゃ":["ja","zya"],
+      "じゅ":["ju","zyu"],
+      "じょ":["jo","zyo"],
+      "づ":  ["du","zu"],
+    };
+
+    // ============================
+    // ローマ字文字列を音節配列へ分解する関数
+    // 各音節: { romaji: string, hiragana: string, alts: string[], isSokuon: bool, isN: bool, nextConsonant: string }
+    // ============================
+    function parseRomajiToSyllables(romaji) {
+      const result = [];
+      let i = 0;
+      const VOWELS = new Set(["a","i","u","e","o"]);
+      while (i < romaji.length) {
+        const c = romaji[i];
+        // 促音（っ）の検出: 'n' 以外の子音が連続する場合
+        if (!VOWELS.has(c) && c !== "n" && i + 1 < romaji.length && romaji[i + 1] === c) {
+          result.push({ romaji: c, hiragana: "っ", alts: null, isSokuon: true, nextConsonant: c });
+          i++;
+          continue;
         }
+        // 通常のローマ字マッチング（長い順で貪欲マッチ）
+        let matched = false;
+        for (const [rom, hira] of ROMAJI_TABLE) {
+          if (romaji.startsWith(rom, i)) {
+            const alts = HIRAGANA_ALT_ROMAJI[hira] ? [...HIRAGANA_ALT_ROMAJI[hira]] : [rom];
+            result.push({
+              romaji: rom,
+              hiragana: hira,
+              alts,
+              isSokuon: false,
+              isN: rom === "n",
+            });
+            i += rom.length;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          // 未知の文字はそのまま1文字扱い
+          result.push({ romaji: c, hiragana: c, alts: [c], isSokuon: false });
+          i++;
+        }
+      }
+      return result;
+    }
+
+    // 指定音節インデックスの有効なローマ字入力候補を返す
+    // っ と ん の特殊ケースを考慮する
+    function computeAlts(idx) {
+      const s = syllables[idx];
+      if (!s) return [];
+      if (s.isSokuon) {
+        // っ: 次の子音1文字 または xtu/ltu/xtsu/ltsu
+        return [s.nextConsonant, "xtu","ltu","xtsu","ltsu"];
+      }
+      if (s.isN) {
+        // ん: 次の音節が母音・n系で始まる場合は nn 必須、それ以外は n も可
+        const next = syllables[idx + 1];
+        if (next) {
+          const nextFirst = (next.alts ? next.alts[0] : next.romaji)[0];
+          if ("aiueony".includes(nextFirst)) {
+            return ["nn"];
+          }
+        }
+        return ["n","nn"];
+      }
+      return s.alts || [s.romaji];
+    }
+
+    // ============================
+    // ゲーム状態変数
+    // ============================
+    let targetText    = "";   // 表示用原文
+    let targetReading = "";   // タイピング用ローマ字（サーバー canonical）
+    let targetWords   = [];   // ルビ表示用単語配列 [{text, reading}]
+    let syllables     = [];   // パース済み音節配列
+    let currentSyllableIdx = 0;  // 現在の音節インデックス
+    let currentTyped       = ""; // 現在の音節で入力済みのローマ字
+    let myRomajiProgress   = 0;  // サーバー送信用のローマ字文字数進捗
+    let oppProgress        = 0;  // 相手の進捗（ローマ字文字数）
+    let gameActive    = false;
+    let startTime     = null;
+    let isComposing   = false;
+
+    // ============================
+    // 画面切り替え関数
+    // ============================
+    function showScreen(id) {
+      ["waitingScreen","countdownScreen","gameScreen","resultScreen"].forEach((sid) => {
+        const el = document.getElementById(sid);
+        if (el) el.style.display = sid === id ? "flex" : "none";
       });
     }
 
-    // 原文（参考用）を表示する関数
+    // ============================
+    // HTMLエスケープ関数
+    // ============================
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/ /g,"&nbsp;");
+    }
+
+    // ============================
+    // 現在の音節ひらがな位置（文字数）を返す
+    // ============================
+    function getHiraganaPosition(syllIdx) {
+      let pos = 0;
+      for (let i = 0; i < syllIdx && i < syllables.length; i++) {
+        pos += [...syllables[i].hiragana].length;
+      }
+      return pos;
+    }
+
+    // ============================
+    // ルビ付き原文表示を更新する（漢字単語単位ハイライト）
+    // ============================
     function updateRefDisplay() {
       const el = document.getElementById("refDisplay");
       if (!el) return;
-      el.textContent = targetText;
+      if (!targetWords.length) {
+        el.textContent = targetText;
+        return;
+      }
+      // 現在のひらがな位置から現在の単語インデックスを求める
+      const hiraPos = getHiraganaPosition(currentSyllableIdx);
+      let cumHira = 0;
+      let currentWordIdx = targetWords.length;
+      for (let w = 0; w < targetWords.length; w++) {
+        const wLen = [...targetWords[w].reading].length;
+        if (hiraPos < cumHira + wLen) {
+          currentWordIdx = w;
+          break;
+        }
+        cumHira += wLen;
+      }
+      // ルビ付きHTMLを組み立てる
+      let html = "";
+      for (let w = 0; w < targetWords.length; w++) {
+        const word = targetWords[w];
+        const text = escapeHtml(word.text);
+        const reading = escapeHtml(word.reading);
+        let cls;
+        if (w < currentWordIdx) {
+          cls = "word-done";
+        } else if (w === currentWordIdx) {
+          cls = "word-current";
+        } else {
+          cls = "word-pending";
+        }
+        if (word.reading === "") {
+          // 句読点などルビ不要な文字
+          html += `<span class="${cls}">${text}</span>`;
+        } else {
+          html += `<ruby class="${cls}"><rb>${text}</rb><rt>${reading}</rt></ruby>`;
+        }
+      }
+      el.innerHTML = html;
     }
 
-    // 読み表示を更新する関数（自分用）
+    // ============================
+    // ひらがな読み表示を更新する（音節単位ハイライト）
+    // ============================
     function updateTextDisplay() {
       const el = document.getElementById("textDisplay");
-      if (!el || !targetReading) return;
-
+      if (!el || !syllables.length) return;
       let html = "";
-      for (let i = 0; i < targetReading.length; i++) {
-        const ch = escapeHtml(targetReading[i]);
-        if (i < myProgress) {
-          html += `<span class="char-done">${ch}</span>`;
-        } else if (i === myProgress) {
-          html += `<span class="char-current">${ch}</span>`;
+      for (let i = 0; i < syllables.length; i++) {
+        const h = escapeHtml(syllables[i].hiragana);
+        if (i < currentSyllableIdx) {
+          html += `<span class="char-done">${h}</span>`;
+        } else if (i === currentSyllableIdx) {
+          html += `<span class="char-current">${h}</span>`;
         } else {
-          html += `<span class="char-pending">${ch}</span>`;
+          html += `<span class="char-pending">${h}</span>`;
         }
       }
       el.innerHTML = html;
+      // 現在位置が見えるようにスクロールする
+      const cur = el.querySelector(".char-current");
+      if (cur) cur.scrollIntoView({ block: "nearest" });
+    }
 
-      // 現在の入力位置が見えるようにスクロールする
-      const currentEl = el.querySelector(".char-current");
-      if (currentEl) {
-        currentEl.scrollIntoView({ block: "nearest" });
+    // ============================
+    // ローマ字入力フィードバック表示を更新する
+    // ============================
+    function updateRomajiDisplay() {
+      const el    = document.getElementById("romajiDisplay");
+      const altEl = document.getElementById("altHintDisplay");
+      if (!el || !syllables.length) return;
+
+      const alts = computeAlts(currentSyllableIdx);
+      // 入力済み部分（完了音節のローマ字を結合）
+      let done = "";
+      for (let i = 0; i < currentSyllableIdx; i++) {
+        done += syllables[i].romaji;
+      }
+      // 残り部分（次の音節以降の canonical ローマ字を結合）
+      let pending = "";
+      for (let i = currentSyllableIdx + 1; i < syllables.length; i++) {
+        pending += syllables[i].romaji;
+      }
+      // 現在音節: 入力済み部分と残り候補を組み立てる
+      let currentHtml = "";
+      if (currentSyllableIdx < syllables.length) {
+        const typed = escapeHtml(currentTyped);
+        // 各候補の残り部分を取得する
+        const remaining = alts
+          .filter(a => a.startsWith(currentTyped))
+          .map(a => escapeHtml(a.slice(currentTyped.length)));
+        const uniqueRemaining = [...new Set(remaining)];
+        const remainStr = uniqueRemaining.join("/");
+        currentHtml =
+          `<span class="romaji-typed">${typed}</span>` +
+          `<span class="romaji-alts">${remainStr}</span>`;
+      }
+
+      el.innerHTML =
+        `<span class="romaji-done">${escapeHtml(done)}</span>` +
+        currentHtml +
+        `<span class="romaji-pending">${escapeHtml(pending)}</span>`;
+
+      // 複数表記がある場合はヒントを表示する
+      if (altEl) {
+        if (alts.length > 1 && currentSyllableIdx < syllables.length) {
+          const hintAlts = alts.map(a => escapeHtml(a)).join(" / ");
+          altEl.textContent = `入力候補: ${hintAlts}`;
+        } else {
+          altEl.textContent = "";
+        }
       }
     }
 
-    // 相手のテキスト表示を更新する関数
+    // ============================
+    // 相手のテキスト表示を更新する（ひらがな音節表示）
+    // ============================
     function updateOpponentTextDisplay() {
       const el = document.getElementById("opponentTextDisplay");
-      if (!el || !targetReading) return;
-
-      // 相手の前後の文字だけ表示する（全文だと重いため前後20文字程度に絞る）
-      const start = Math.max(0, oppProgress - 10);
-      const end = Math.min(targetReading.length, oppProgress + 30);
-      const slice = targetReading.slice(start, end);
-
+      if (!el || !syllables.length) return;
+      // 相手のローマ字進捗を音節インデックスへ変換する
+      let oppSyllIdx = 0;
+      let cumRomaji  = 0;
+      for (let i = 0; i < syllables.length; i++) {
+        cumRomaji += syllables[i].romaji.length;
+        if (cumRomaji > oppProgress) break;
+        oppSyllIdx = i + 1;
+      }
+      // 相手の前後の音節だけ表示する
+      const start = Math.max(0, oppSyllIdx - 8);
+      const end   = Math.min(syllables.length, oppSyllIdx + 20);
       let html = "";
-      for (let i = 0; i < slice.length; i++) {
-        const absIdx = start + i;
-        const ch = escapeHtml(slice[i]);
-        if (absIdx < oppProgress) {
-          html += `<span class="opp-char-done">${ch}</span>`;
-        } else if (absIdx === oppProgress) {
-          html += `<span class="opp-char-current">${ch}</span>`;
+      for (let i = start; i < end; i++) {
+        const h = escapeHtml(syllables[i].hiragana);
+        if (i < oppSyllIdx) {
+          html += `<span class="opp-char-done">${h}</span>`;
+        } else if (i === oppSyllIdx) {
+          html += `<span class="opp-char-current">${h}</span>`;
         } else {
-          html += `<span class="opp-char-pending">${ch}</span>`;
+          html += `<span class="opp-char-pending">${h}</span>`;
         }
       }
       el.innerHTML = html;
     }
 
-    // 進捗バーとラベルを更新する関数
+    // ============================
+    // 進捗バーとラベルを更新する
+    // ============================
     function updateProgressUI() {
       const total = targetReading.length;
+      const myPct = total > 0 ? Math.round((myRomajiProgress / total) * 100) : 0;
+      document.getElementById("myProgressBar").style.width  = `${myPct}%`;
+      document.getElementById("myProgressLabel").textContent = `${currentSyllableIdx} / ${syllables.length} 音節`;
+      document.getElementById("myProgressText").textContent  = `${myPct}%`;
 
-      // 自分の進捗を更新する
-      const myPct = total > 0 ? Math.round((myProgress / total) * 100) : 0;
-      document.getElementById("myProgressBar").style.width = `${myPct}%`;
-      document.getElementById("myProgressLabel").textContent = `${myProgress} / ${total} 文字`;
-      document.getElementById("myProgressText").textContent = `${myPct}%`;
-
-      // 相手の進捗を更新する
       const oppPct = total > 0 ? Math.round((oppProgress / total) * 100) : 0;
-      document.getElementById("oppProgressBar").style.width = `${oppPct}%`;
-      document.getElementById("oppProgressLabel").textContent = `${oppProgress} / ${total} 文字`;
-      document.getElementById("oppProgressText").textContent = `${oppPct}%`;
+      document.getElementById("oppProgressBar").style.width  = `${oppPct}%`;
+      document.getElementById("oppProgressLabel").textContent = `${oppPct}%`;
+      document.getElementById("oppProgressText").textContent  = `${oppPct}%`;
     }
 
-    // HTMLエスケープ関数
-    function escapeHtml(ch) {
-      if (ch === "&") return "&amp;";
-      if (ch === "<") return "&lt;";
-      if (ch === ">") return "&gt;";
-      if (ch === '"') return "&quot;";
-      if (ch === " ") return "&nbsp;";
-      return ch;
-    }
-
+    // ============================
     // 入力フィールドにフォーカスを当てる
+    // ============================
     function focusInput() {
       document.getElementById("typingInput").focus();
     }
@@ -571,32 +896,84 @@
     // 入力フィールドの参照を取得する
     const typingInput = document.getElementById("typingInput");
 
-    // IME変換開始：変換中フラグをセットする
-    typingInput.addEventListener("compositionstart", () => {
-      isComposing = true;
-    });
+    // IME変換開始: 変換中フラグをセットする
+    typingInput.addEventListener("compositionstart", () => { isComposing = true; });
 
-    // IME変換確定：フラグをクリアし入力フィールドをリセットする
+    // IME変換確定: フラグをクリアし入力フィールドをリセットする
     // 読みはローマ字（ASCII）なので日本語入力は不要のため内容を破棄する
     typingInput.addEventListener("compositionend", () => {
       isComposing = false;
       typingInput.value = "";
     });
 
-    // inputイベント：IME変換中でない場合のみ入力フィールドをリセットする
-    // IME変換中にvalue=""すると変換バッファが破壊されIME入力が壊れるため、
-    // e.isComposingがtrueの間はリセットをスキップする
+    // inputイベント: IME変換中でない場合のみ入力フィールドをリセットする
     typingInput.addEventListener("input", (e) => {
-      if (!e.isComposing) {
-        e.target.value = "";
-      }
+      if (!e.isComposing) e.target.value = "";
     });
 
-    // documentのkeydownで1文字ずつ判定する（非表示inputへのフォーカスに依存しない方式）
-    document.addEventListener("keydown", (e) => {
-      if (!gameActive || !targetReading) return;
+    // ============================
+    // キー入力処理関数（音節単位・複数ローマ字対応）
+    // ============================
+    function processKey(key) {
+      if (currentSyllableIdx >= syllables.length) return;
 
-      // IME変換中（ネイティブフラグおよび手動フラグ）は処理しない
+      const s    = syllables[currentSyllableIdx];
+      const alts = computeAlts(currentSyllableIdx);
+      const newTyped = currentTyped + key;
+
+      // 有効なプレフィックスを持つ候補を絞り込む
+      const validAlts = alts.filter(a => a.startsWith(newTyped));
+
+      if (validAlts.length === 0) {
+        // 現在の入力と合わない場合は currentTyped をリセットして再試行する
+        if (currentTyped !== "") {
+          currentTyped = "";
+          processKey(key);
+        }
+        return;
+      }
+
+      currentTyped = newTyped;
+
+      // 完全一致する候補があれば音節を進める
+      if (validAlts.some(a => a === newTyped)) {
+        const isSokuonDoubling = s.isSokuon && newTyped.length === 1;
+        // 音節を確定して次へ進む
+        myRomajiProgress += s.romaji.length;
+        currentSyllableIdx++;
+        currentTyped = "";
+
+        // 進捗をサーバーへ送信する
+        socket.emit("typingProgress", { progress: myRomajiProgress });
+
+        // UIを更新する
+        updateTextDisplay();
+        updateRefDisplay();
+        updateRomajiDisplay();
+        updateProgressUI();
+
+        // っ を次の子音で入力した場合は同じキーを次の音節へ転送する
+        if (isSokuonDoubling) {
+          processKey(key);
+          return;
+        }
+
+        // 全音節入力完了チェック
+        if (currentSyllableIdx >= syllables.length) {
+          gameActive = false;
+          socket.emit("typingComplete");
+        }
+      } else {
+        // まだ途中 → 表示だけ更新する
+        updateRomajiDisplay();
+      }
+    }
+
+    // documentのkeydownで1文字ずつ判定する
+    document.addEventListener("keydown", (e) => {
+      if (!gameActive || !syllables.length) return;
+
+      // IME変換中は処理しない
       if (e.isComposing || isComposing) return;
 
       // Backspace・Tab・Escapeはデフォルト動作を抑制して無視する
@@ -606,47 +983,27 @@
       }
 
       // スペースキーによるページスクロールを抑制する
-      if (e.key === " ") {
-        e.preventDefault();
-      }
+      if (e.key === " ") e.preventDefault();
 
       // 1文字かつASCII印字可能文字（コード32〜126）のみ受け付ける
-      // key.length !== 1 で制御キー（Enter, ArrowLeft等）を除外し、
-      // charCodeAt チェックで日本語等の非ASCII文字（length===1だがコード>126）を除外する
       if (e.key.length !== 1) return;
       const code = e.key.charCodeAt(0);
       if (code < 32 || code > 126) return;
 
-      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視）
-      if (e.key !== targetReading[myProgress]) return;
-
-      myProgress++;
-
-      // 進捗をサーバーへ送信する
-      socket.emit("typingProgress", { progress: myProgress });
-
-      // UIを更新する
-      updateTextDisplay();
-      updateProgressUI();
-
-      // 全文字入力完了チェック
-      if (myProgress >= targetReading.length) {
-        gameActive = false;
-        socket.emit("typingComplete");
-      }
+      processKey(e.key);
     });
 
+    // ============================
     // カウントダウンを表示する関数
+    // ============================
     function startCountdown(callback) {
       showScreen("countdownScreen");
       const countEl = document.getElementById("countdown");
       const startEl = document.getElementById("startLabel");
       countEl.style.display = "block";
       startEl.style.display = "none";
-
       let count = 3;
       countEl.textContent = count;
-
       const timer = setInterval(() => {
         count--;
         if (count > 0) {
@@ -663,25 +1020,31 @@
       }, 800);
     }
 
+    // ============================
     // ゲームを開始する関数
+    // ============================
     function startGame() {
-      myProgress = 0;
-      oppProgress = 0;
-      gameActive = true;
-      startTime = Date.now();
+      currentSyllableIdx = 0;
+      currentTyped       = "";
+      myRomajiProgress   = 0;
+      oppProgress        = 0;
+      gameActive         = true;
+      startTime          = Date.now();
 
-      // プレイヤー名を表示する
       document.getElementById("myNameDisplay").textContent = myPlayerName;
 
       showScreen("gameScreen");
       updateRefDisplay();
       updateTextDisplay();
+      updateRomajiDisplay();
       updateProgressUI();
       updateOpponentTextDisplay();
       focusInput();
     }
 
-    // ===== Socket.ioイベントハンドラ =====
+    // ============================
+    // Socket.ioイベントハンドラ
+    // ============================
 
     // 接続時にマッチング要求を送信する
     socket.on("connect", () => {
@@ -696,16 +1059,17 @@
 
     // 対戦開始通知を受け取る
     socket.on("typingMatchStart", (payload) => {
-      targetText = payload.text;
+      targetText    = payload.text;
       targetReading = payload.reading;
+      targetWords   = payload.words || [];
+      syllables     = parseRomajiToSyllables(targetReading);
+
       const opponentName = payload.opponentName || "相手";
       document.getElementById("opponentNameDisplay").textContent = opponentName;
       document.getElementById("myNameDisplay").textContent = myPlayerName;
 
       // カウントダウン後にゲームを開始する
-      startCountdown(() => {
-        startGame();
-      });
+      startCountdown(() => startGame());
     });
 
     // 相手の進捗更新を受け取る
@@ -721,17 +1085,16 @@
       showScreen("resultScreen");
 
       const resultEl = document.getElementById("resultText");
-      const timeEl = document.getElementById("resultTime");
+      const timeEl   = document.getElementById("resultTime");
 
       if (payload.win) {
-        resultEl.className = "result-win";
+        resultEl.className   = "result-win";
         resultEl.textContent = "🏆 WIN！";
       } else {
-        resultEl.className = "result-lose";
+        resultEl.className   = "result-lose";
         resultEl.textContent = "💀 LOSE...";
       }
 
-      // かかった時間を表示する
       if (startTime) {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
         timeEl.textContent = `タイム: ${elapsed} 秒`;
