@@ -584,7 +584,8 @@
     });
 
     // inputイベント：IME変換中でない場合のみ入力フィールドをリセットする
-    // IME変換中に値をリセットすると変換が壊れるため変換中はスキップする
+    // IME変換中にvalue=""すると変換バッファが破壊されIME入力が壊れるため、
+    // e.isComposingがtrueの間はリセットをスキップする
     typingInput.addEventListener("input", (e) => {
       if (!e.isComposing) {
         e.target.value = "";
@@ -610,6 +611,8 @@
       }
 
       // 1文字かつASCII印字可能文字（コード32〜126）のみ受け付ける
+      // key.length !== 1 で制御キー（Enter, ArrowLeft等）を除外し、
+      // charCodeAt チェックで日本語等の非ASCII文字（length===1だがコード>126）を除外する
       if (e.key.length !== 1) return;
       const code = e.key.charCodeAt(0);
       if (code < 32 || code > 126) return;
