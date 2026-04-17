@@ -572,7 +572,7 @@
       'じょ': ['zyo', 'jyo'],
       // ふ
       'ふ': ['hu'],
-      // 促音（xtu / ltu で直接入力）
+      // 促音（xtu / ltu で直接入力、またはコンソナント重複が通常の方法）
       'っ': ['ltu', 'xtu', 'ltsu', 'xtsu'],
       // カタカナ（ひらがなと同様）
       'シ': ['si'],
@@ -887,6 +887,7 @@
       const candidate = typedInCurrentUnit + e.key;
 
       // 現在のユニットの全候補（activeRomajiを先頭に、残りの代替を続ける）
+      // 1キーストロークごとに実行されるが、alts配列は短いため性能上の問題はない
       const allOptions = [unit.activeRomaji, ...unit.alts.filter(a => a !== unit.activeRomaji)];
 
       // 完全一致チェック：ユニットの入力が完了した場合
@@ -917,7 +918,8 @@
       const prefixMatch = allOptions.find(opt => opt.startsWith(candidate));
       if (prefixMatch) {
         typedInCurrentUnit = candidate;
-        // 現在のactiveRomajiが候補から外れた場合は、一致する代替表記に切り替える
+        // activeRomajiがcandidateの前方一致でなくなった場合（別の入力方法に切り替えた場合）、
+        // 前方一致する最初の候補に切り替える
         if (!unit.activeRomaji.startsWith(candidate)) {
           unit.activeRomaji = prefixMatch;
         }
