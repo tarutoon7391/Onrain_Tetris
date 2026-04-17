@@ -496,14 +496,16 @@
     const myPlayerName = localStorage.getItem("typingPlayerName") || "ゲスト";
 
     // ゲーム状態変数
-    let targetText = "";       // 表示用の原文
-    let targetReading = "";    // タイピング対象のローマ字読み
-    let targetTokens = [];     // ルビ表示用トークン列
-    let myProgress = 0;        // 自分の現在の文字位置（reading基準）
-    let oppProgress = 0;       // 相手の現在の文字位置（reading基準）
-    let gameActive = false;    // ゲームが進行中かどうか
-    let startTime = null;      // ゲーム開始時刻
-    let isComposing = false;   // IMEで変換中かどうか
+    let targetText = "";            // 表示用の原文
+    let targetReading = "";         // タイピング対象のローマ字読み（サーバー送信値の基準）
+    let targetTokens = [];          // ルビ表示用トークン列
+    let myProgress = 0;             // 自分の現在の文字位置（reading基準、サーバー送信用）
+    let oppProgress = 0;            // 相手の現在の文字位置（reading基準）
+    let gameActive = false;         // ゲームが進行中かどうか
+    let startTime = null;           // ゲーム開始時刻
+    let isComposing = false;        // IMEで変換中かどうか
+    let completedUnitIdx = 0;       // 完了したかなユニットの数
+    let typedInCurrentUnit = "";    // 現在入力中のユニットで打ち込んだ文字列
 
     // ルビ表示で使うかな→ローマ字長テーブル
     const KANA_ROMAJI_LEN = {
@@ -547,6 +549,49 @@
     // 小書きかな（複合かな判定用）
     const SMALL_KANA = new Set(['ゃ','ゅ','ょ','ャ','ュ','ョ']);
 
+    // ひらがな・カタカナの代替ローマ字表記テーブル
+    // キー: かな文字列（単独または複合かな）、値: 代替ローマ字の配列
+    // デフォルト表記はサーバーの reading 文字列から取得するため、ここには代替のみ列挙する
+    const KANA_ALT_ROMAJI = {
+      // し行
+      'し': ['si'],
+      'しゃ': ['sya'],
+      'しゅ': ['syu'],
+      'しょ': ['syo'],
+      // ち行
+      'ち': ['ti'],
+      'ちゃ': ['tya'],
+      'ちゅ': ['tyu'],
+      'ちょ': ['tyo'],
+      // つ
+      'つ': ['tu'],
+      // じ行
+      'じ': ['zi'],
+      'じゃ': ['zya', 'jya'],
+      'じゅ': ['zyu', 'jyu'],
+      'じょ': ['zyo', 'jyo'],
+      // ふ
+      'ふ': ['hu'],
+      // 促音（xtu / ltu で直接入力）
+      'っ': ['ltu', 'xtu', 'ltsu', 'xtsu'],
+      // カタカナ（ひらがなと同様）
+      'シ': ['si'],
+      'シャ': ['sya'],
+      'シュ': ['syu'],
+      'ショ': ['syo'],
+      'チ': ['ti'],
+      'チャ': ['tya'],
+      'チュ': ['tyu'],
+      'チョ': ['tyo'],
+      'ツ': ['tu'],
+      'ジ': ['zi'],
+      'ジャ': ['zya', 'jya'],
+      'ジュ': ['zyu', 'jyu'],
+      'ジョ': ['zyo', 'jyo'],
+      'フ': ['hu'],
+      'ッ': ['ltu', 'xtu', 'ltsu', 'xtsu'],
+    };
+
     // 複合かな（きゃ、しゃなど）のローマ字長を返す
     function getCompoundRomajiLen(base) {
       if (base === 'じ' || base === 'ジ') return 2; // ja/ju/jo
@@ -554,10 +599,13 @@
     }
 
     // ===== ルビ表示用データ構造 =====
-    // kanaUnits: [{chars, romajiEnd, tokenIdx}]
-    //   chars     … 表示するかな文字列（複合かなはまとめて1ユニット）
-    //   romajiEnd … このユニットまで入力した時点のreading累積位置
-    //   tokenIdx  … 対応するtokenDataのインデックス
+    // kanaUnits: [{chars, romajiEnd, tokenIdx, defaultRomaji, alts, activeRomaji}]
+    //   chars         … 表示するかな文字列（複合かなはまとめて1ユニット）
+    //   romajiEnd     … このユニットまで入力した時点のreading累積位置（サーバー送信用）
+    //   tokenIdx      … 対応するtokenDataのインデックス
+    //   defaultRomaji … サーバーのreading文字列から取得したデフォルトローマ字
+    //   alts          … 代替ローマ字の配列（KANA_ALT_ROMAJIより）
+    //   activeRomaji  … 現在有効なローマ字表記（入力に応じて切り替わる）
     let kanaUnits = [];
     // tokenData: [{text, isKanji, unitStart, unitEnd}]
     let tokenData = [];
@@ -580,18 +628,34 @@
         while (i < kanaStr.length) {
           const ch = kanaStr[i];
           const next = i + 1 < kanaStr.length ? kanaStr[i + 1] : null;
+
+          let unitChars, unitLen;
           if (next && SMALL_KANA.has(next)) {
             // 複合かな（きゃ・しゅ・じょ など）
-            const len = getCompoundRomajiLen(ch);
-            rPos += len;
-            kanaUnits.push({ chars: ch + next, romajiEnd: rPos, tokenIdx: ti });
+            unitChars = ch + next;
+            unitLen = getCompoundRomajiLen(ch);
             i += 2;
           } else {
-            const len = KANA_ROMAJI_LEN[ch] !== undefined ? KANA_ROMAJI_LEN[ch] : 1;
-            rPos += len;
-            kanaUnits.push({ chars: ch, romajiEnd: rPos, tokenIdx: ti });
+            unitChars = ch;
+            unitLen = KANA_ROMAJI_LEN[ch] !== undefined ? KANA_ROMAJI_LEN[ch] : 1;
             i += 1;
           }
+
+          const readingStart = rPos;
+          rPos += unitLen;
+          // デフォルトのローマ字はサーバーの reading 文字列から取得する
+          const defaultRomaji = targetReading.slice(readingStart, rPos);
+          // 代替ローマ字の一覧（デフォルトは含まない）
+          const alts = KANA_ALT_ROMAJI[unitChars] || [];
+
+          kanaUnits.push({
+            chars: unitChars,
+            romajiEnd: rPos,
+            tokenIdx: ti,
+            defaultRomaji,            // サーバーの reading に対応するデフォルト表記
+            alts,                     // 代替ローマ字の配列
+            activeRomaji: defaultRomaji, // 現在有効なローマ字表記（初期値はデフォルト）
+          });
         }
 
         const unitEnd = kanaUnits.length;
@@ -608,17 +672,16 @@
         const { text, isKanji, unitStart, unitEnd } = tokenData[ti];
 
         if (isKanji) {
-          const lastRomajiEnd = kanaUnits[unitEnd - 1].romajiEnd;
-          const kanjiClass = myProgress >= lastRomajiEnd ? 'kanji-done' : 'kanji-pending';
+          // トークン全ユニット完了時に漢字を緑色にする
+          const kanjiClass = completedUnitIdx >= unitEnd ? 'kanji-done' : 'kanji-pending';
 
           let rtHtml = '';
           for (let ui = unitStart; ui < unitEnd; ui++) {
             const unit = kanaUnits[ui];
-            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
             let cls;
-            if (myProgress >= unit.romajiEnd) {
+            if (completedUnitIdx > ui) {
               cls = 'kana-done';
-            } else if (myProgress >= unitRomajiStart) {
+            } else if (completedUnitIdx === ui) {
               cls = 'kana-current';
             } else {
               cls = 'kana-pending';
@@ -630,11 +693,10 @@
           // 非漢字トークン：かなユニットごとにspanを出力
           for (let ui = unitStart; ui < unitEnd; ui++) {
             const unit = kanaUnits[ui];
-            const unitRomajiStart = ui > 0 ? kanaUnits[ui - 1].romajiEnd : 0;
             let cls;
-            if (myProgress >= unit.romajiEnd) {
+            if (completedUnitIdx > ui) {
               cls = 'kana-done';
-            } else if (myProgress >= unitRomajiStart) {
+            } else if (completedUnitIdx === ui) {
               cls = 'kana-current';
             } else {
               cls = 'kana-pending';
@@ -663,23 +725,46 @@
       });
     }
 
+    // ローマ字表示用HTMLをかなユニットから動的に生成する
+    function buildTextDisplayHtml() {
+      let html = '';
+      for (let ui = 0; ui < kanaUnits.length; ui++) {
+        const unit = kanaUnits[ui];
+        const romaji = unit.activeRomaji;
+
+        if (ui < completedUnitIdx) {
+          // 完了済みのユニット：選択されたローマ字を「打鍵済み」スタイルで表示する
+          for (const ch of romaji) {
+            html += `<span class="char-done">${escapeHtml(ch)}</span>`;
+          }
+        } else if (ui === completedUnitIdx) {
+          // 現在入力中のユニット：打鍵済み部分・カーソル・未打鍵部分に分けて表示する
+          for (let ci = 0; ci < romaji.length; ci++) {
+            const ch = escapeHtml(romaji[ci]);
+            if (ci < typedInCurrentUnit.length) {
+              html += `<span class="char-done">${ch}</span>`;
+            } else if (ci === typedInCurrentUnit.length) {
+              html += `<span class="char-current">${ch}</span>`;
+            } else {
+              html += `<span class="char-pending">${ch}</span>`;
+            }
+          }
+        } else {
+          // 未入力のユニット：現在のactiveRomajiをそのまま表示する
+          for (const ch of romaji) {
+            html += `<span class="char-pending">${escapeHtml(ch)}</span>`;
+          }
+        }
+      }
+      return html;
+    }
+
     // 読み表示を更新する関数（自分用）
     function updateTextDisplay() {
       const el = document.getElementById("textDisplay");
-      if (!el || !targetReading) return;
+      if (!el || !kanaUnits.length) return;
 
-      let html = "";
-      for (let i = 0; i < targetReading.length; i++) {
-        const ch = escapeHtml(targetReading[i]);
-        if (i < myProgress) {
-          html += `<span class="char-done">${ch}</span>`;
-        } else if (i === myProgress) {
-          html += `<span class="char-current">${ch}</span>`;
-        } else {
-          html += `<span class="char-pending">${ch}</span>`;
-        }
-      }
-      el.innerHTML = html;
+      el.innerHTML = buildTextDisplayHtml();
 
       // 現在の入力位置が見えるようにスクロールする
       const currentEl = el.querySelector(".char-current");
@@ -774,7 +859,7 @@
 
     // documentのkeydownで1文字ずつ判定する（非表示inputへのフォーカスに依存しない方式）
     document.addEventListener("keydown", (e) => {
-      if (!gameActive || !targetReading) return;
+      if (!gameActive || !kanaUnits.length) return;
 
       // IME変換中（ネイティブフラグおよび手動フラグ）は処理しない
       if (e.isComposing || isComposing) return;
@@ -791,30 +876,57 @@
       }
 
       // 1文字かつASCII印字可能文字（コード32〜126）のみ受け付ける
-      // key.length !== 1 で制御キー（Enter, ArrowLeft等）を除外し、
-      // charCodeAt チェックで日本語等の非ASCII文字（length===1だがコード>126）を除外する
       if (e.key.length !== 1) return;
       const code = e.key.charCodeAt(0);
       if (code < 32 || code > 126) return;
 
-      // 正しい文字が入力された場合のみ進める（ミスタイプはそのまま無視）
-      if (e.key !== targetReading[myProgress]) return;
+      // 全ユニット完了済みの場合は処理しない
+      if (completedUnitIdx >= kanaUnits.length) return;
 
-      myProgress++;
+      const unit = kanaUnits[completedUnitIdx];
+      const candidate = typedInCurrentUnit + e.key;
 
-      // 進捗をサーバーへ送信する
-      socket.emit("typingProgress", { progress: myProgress });
+      // 現在のユニットの全候補（activeRomajiを先頭に、残りの代替を続ける）
+      const allOptions = [unit.activeRomaji, ...unit.alts.filter(a => a !== unit.activeRomaji)];
 
-      // UIを更新する
-      updateTextDisplay();
-      updateRubyDisplay();
-      updateProgressUI();
+      // 完全一致チェック：ユニットの入力が完了した場合
+      const fullMatch = allOptions.find(opt => opt === candidate);
+      if (fullMatch) {
+        // 選択されたローマ字を記録してユニットを完了する
+        unit.activeRomaji = fullMatch;
+        typedInCurrentUnit = "";
+        completedUnitIdx++;
+        // サーバー送信用の進捗をreading上の位置に合わせて更新する
+        myProgress = kanaUnits[completedUnitIdx - 1].romajiEnd;
+        socket.emit("typingProgress", { progress: myProgress });
 
-      // 全文字入力完了チェック
-      if (myProgress >= targetReading.length) {
-        gameActive = false;
-        socket.emit("typingComplete");
+        // UIを更新する
+        updateTextDisplay();
+        updateRubyDisplay();
+        updateProgressUI();
+
+        // 全ユニット入力完了チェック
+        if (completedUnitIdx >= kanaUnits.length) {
+          gameActive = false;
+          socket.emit("typingComplete");
+        }
+        return;
       }
+
+      // 前方一致チェック：入力中の候補を絞り込む
+      const prefixMatch = allOptions.find(opt => opt.startsWith(candidate));
+      if (prefixMatch) {
+        typedInCurrentUnit = candidate;
+        // 現在のactiveRomajiが候補から外れた場合は、一致する代替表記に切り替える
+        if (!unit.activeRomaji.startsWith(candidate)) {
+          unit.activeRomaji = prefixMatch;
+        }
+        // ローマ字表示のみ更新する（ルビ表示・進捗バーは変更不要）
+        updateTextDisplay();
+        return;
+      }
+
+      // どの候補にも一致しないキーはミスタイプとして無視する
     });
 
     // カウントダウンを表示する関数
@@ -848,6 +960,12 @@
     function startGame() {
       myProgress = 0;
       oppProgress = 0;
+      completedUnitIdx = 0;       // 完了ユニット数をリセットする
+      typedInCurrentUnit = "";    // 現在ユニットの入力状態をリセットする
+      // 各ユニットのactiveRomajiをデフォルト表記に戻す
+      for (const unit of kanaUnits) {
+        unit.activeRomaji = unit.defaultRomaji;
+      }
       gameActive = true;
       startTime = Date.now();
 
