@@ -549,46 +549,46 @@
     // 小書きかな（複合かな判定用）
     const SMALL_KANA = new Set(['ゃ','ゅ','ょ','ャ','ュ','ョ']);
 
-    // ひらがな・カタカナの代替ローマ字表記テーブル
-    // キー: かな文字列（単独または複合かな）、値: 代替ローマ字の配列
-    // デフォルト表記はサーバーの reading 文字列から取得するため、ここには代替のみ列挙する
-    const KANA_ALT_ROMAJI = {
+    // ひらがな・カタカナの全ローマ字表記テーブル（照合テーブル）
+    // キー: かな文字列（単独または複合かな）、値: 有効なすべてのローマ字の配列
+    // デフォルト表記・代替表記を区別せず、両方を登録して必ずどちらでも入力できるようにする
+    const KANA_ALL_ROMAJI = {
       // し行
-      'し': ['si'],
-      'しゃ': ['sya'],
-      'しゅ': ['syu'],
-      'しょ': ['syo'],
+      'し': ['shi', 'si'],
+      'しゃ': ['sha', 'sya'],
+      'しゅ': ['shu', 'syu'],
+      'しょ': ['sho', 'syo'],
       // ち行
-      'ち': ['ti'],
-      'ちゃ': ['tya'],
-      'ちゅ': ['tyu'],
-      'ちょ': ['tyo'],
+      'ち': ['chi', 'ti'],
+      'ちゃ': ['cha', 'tya'],
+      'ちゅ': ['chu', 'tyu'],
+      'ちょ': ['cho', 'tyo'],
       // つ
-      'つ': ['tu'],
+      'つ': ['tsu', 'tu'],
       // じ行
-      'じ': ['zi'],
-      'じゃ': ['zya', 'jya'],
-      'じゅ': ['zyu', 'jyu'],
-      'じょ': ['zyo', 'jyo'],
+      'じ': ['ji', 'zi'],
+      'じゃ': ['ja', 'jya', 'zya'],
+      'じゅ': ['ju', 'jyu', 'zyu'],
+      'じょ': ['jo', 'jyo', 'zyo'],
       // ふ
-      'ふ': ['hu'],
+      'ふ': ['fu', 'hu'],
       // 促音（xtu / ltu で直接入力、またはコンソナント重複が通常の方法）
       'っ': ['ltu', 'xtu', 'ltsu', 'xtsu'],
       // カタカナ（ひらがなと同様）
-      'シ': ['si'],
-      'シャ': ['sya'],
-      'シュ': ['syu'],
-      'ショ': ['syo'],
-      'チ': ['ti'],
-      'チャ': ['tya'],
-      'チュ': ['tyu'],
-      'チョ': ['tyo'],
-      'ツ': ['tu'],
-      'ジ': ['zi'],
-      'ジャ': ['zya', 'jya'],
-      'ジュ': ['zyu', 'jyu'],
-      'ジョ': ['zyo', 'jyo'],
-      'フ': ['hu'],
+      'シ': ['shi', 'si'],
+      'シャ': ['sha', 'sya'],
+      'シュ': ['shu', 'syu'],
+      'ショ': ['sho', 'syo'],
+      'チ': ['chi', 'ti'],
+      'チャ': ['cha', 'tya'],
+      'チュ': ['chu', 'tyu'],
+      'チョ': ['cho', 'tyo'],
+      'ツ': ['tsu', 'tu'],
+      'ジ': ['ji', 'zi'],
+      'ジャ': ['ja', 'jya', 'zya'],
+      'ジュ': ['ju', 'jyu', 'zyu'],
+      'ジョ': ['jo', 'jyo', 'zyo'],
+      'フ': ['fu', 'hu'],
       'ッ': ['ltu', 'xtu', 'ltsu', 'xtsu'],
     };
 
@@ -604,7 +604,7 @@
     //   romajiEnd     … このユニットまで入力した時点のreading累積位置（サーバー送信用）
     //   tokenIdx      … 対応するtokenDataのインデックス
     //   defaultRomaji … サーバーのreading文字列から取得したデフォルトローマ字
-    //   alts          … 代替ローマ字の配列（KANA_ALT_ROMAJIより）
+    //   alts          … 有効なすべてのローマ字表記の配列（KANA_ALL_ROMAJIより。デフォルトを含む）
     //   activeRomaji  … 現在有効なローマ字表記（入力に応じて切り替わる）
     let kanaUnits = [];
     // tokenData: [{text, isKanji, unitStart, unitEnd}]
@@ -645,15 +645,20 @@
           rPos += unitLen;
           // デフォルトのローマ字はサーバーの reading 文字列から取得する
           const defaultRomaji = targetReading.slice(readingStart, rPos);
-          // 代替ローマ字の一覧（デフォルトは含まない）
-          const alts = KANA_ALT_ROMAJI[unitChars] || [];
+          // このユニットで有効なすべてのローマ字表記
+          // テーブルに登録されている場合はその全表記を使い、登録外の場合はデフォルトのみ
+          // defaultRomaji をテーブルに含まれていない場合でも必ず先頭に入れて網羅する
+          const tableForms = KANA_ALL_ROMAJI[unitChars];
+          const alts = tableForms
+            ? [...new Set([defaultRomaji, ...tableForms])]
+            : [defaultRomaji];
 
           kanaUnits.push({
             chars: unitChars,
             romajiEnd: rPos,
             tokenIdx: ti,
             defaultRomaji,            // サーバーの reading に対応するデフォルト表記
-            alts,                     // 代替ローマ字の配列
+            alts,                     // 有効なすべてのローマ字表記（デフォルトを含む）
             activeRomaji: defaultRomaji, // 現在有効なローマ字表記（初期値はデフォルト）
           });
         }
@@ -886,9 +891,9 @@
       const unit = kanaUnits[completedUnitIdx];
       const candidate = typedInCurrentUnit + e.key;
 
-      // 現在のユニットの全候補（activeRomajiを先頭に、残りの代替を続ける）
+      // 現在のユニットの全候補（alts にはデフォルト表記と代替表記がすべて入っている）
       // 1キーストロークごとに実行されるが、alts配列は短いため性能上の問題はない
-      const allOptions = [unit.activeRomaji, ...unit.alts.filter(a => a !== unit.activeRomaji)];
+      const allOptions = unit.alts;
 
       // 完全一致チェック：ユニットの入力が完了した場合
       const fullMatch = allOptions.find(opt => opt === candidate);
