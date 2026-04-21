@@ -383,6 +383,7 @@ function cgDrawCards(state, playerIndex, count) {
 }
 
 // ターン開始処理（マナ補充・フィールドリセット・5枚ドロー）
+// ゴールドはターン内で使い切る設計のため毎ターン開始時に0へリセットする
 function cgStartTurn(state, playerIndex) {
   state.maxMana[playerIndex] = Math.min(state.maxMana[playerIndex] + 1, 10);
   state.mana[playerIndex] = state.maxMana[playerIndex];
