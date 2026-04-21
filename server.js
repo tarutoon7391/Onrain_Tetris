@@ -306,15 +306,52 @@ function leaveBBRoom(socket) {
 
 // カード定義（id, 名前, マナコスト, 効果種別, 効果量, ショップ購入コスト, 絵文字）
 const CARD_DEFS = {
-  attack1:  { id: 'attack1',  name: '攻撃',     cost: 1, effect: 'damage', value: 3, shopCost: 3, emoji: '⚔️' },
-  attack2:  { id: 'attack2',  name: '強撃',     cost: 2, effect: 'damage', value: 7, shopCost: 6, emoji: '🗡️' },
-  defense1: { id: 'defense1', name: '防御',     cost: 1, effect: 'block',  value: 5, shopCost: 4, emoji: '🛡️' },
-  draw1:    { id: 'draw1',    name: 'ドロー',   cost: 1, effect: 'draw',   value: 2, shopCost: 4, emoji: '📚' },
-  gold:     { id: 'gold',     name: 'ゴールド', cost: 1, effect: 'gold',   value: 5, shopCost: 3, emoji: '🪙' },
+  // ===== 初期カード（ショップ非売品）=====
+  attack1:   { id: 'attack1',   name: '攻撃',     cost: 1,  effect: 'damage',  value: 3,  shopCost: 3,  emoji: '⚔️' },
+  gold:      { id: 'gold',      name: 'ゴールド', cost: 1,  effect: 'gold',    value: 5,  shopCost: 3,  emoji: '🪙' },
+
+  // ===== 攻撃カード =====
+  attack2:   { id: 'attack2',   name: '強撃',     cost: 2,  effect: 'damage',  value: 7,  shopCost: 6,  emoji: '🗡️' },
+  strike2:   { id: 'strike2',   name: '強撃Ⅱ',   cost: 2,  effect: 'damage',  value: 6,  shopCost: 4,  emoji: '⚔️' },
+  combo:     { id: 'combo',     name: '連撃',     cost: 3,  effect: 'combo',   value: 4,  shopCost: 6,  emoji: '👊' },
+  poison:    { id: 'poison',    name: '毒矢',     cost: 3,  effect: 'poison',  value: 4,  shopCost: 6,  emoji: '🏹' },
+  greatsword:{ id: 'greatsword',name: '大剣',     cost: 4,  effect: 'damage',  value: 12, shopCost: 8,  emoji: '🗡️' },
+  storm:     { id: 'storm',     name: '嵐',       cost: 5,  effect: 'storm',   value: 3,  shopCost: 10, emoji: '🌩️' },
+  finisher:  { id: 'finisher',  name: '必殺剣',   cost: 7,  effect: 'damage',  value: 20, shopCost: 14, emoji: '💥' },
+  phoenix:   { id: 'phoenix',   name: '不死鳥',   cost: 10, effect: 'phoenix', value: 15, healValue: 10, shopCost: 20, emoji: '🦅' },
+
+  // ===== 防御・回復カード =====
+  block1:    { id: 'block1',    name: '防御',     cost: 1,  effect: 'block',   value: 3,  shopCost: 2,  emoji: '🛡️' },
+  defense1:  { id: 'defense1',  name: '盾',       cost: 1,  effect: 'block',   value: 5,  shopCost: 4,  emoji: '🛡️' },
+  fortify:   { id: 'fortify',   name: '鉄壁',     cost: 3,  effect: 'block',   value: 8,  shopCost: 6,  emoji: '🏰' },
+  reflect:   { id: 'reflect',   name: '反射',     cost: 3,  effect: 'reflect', value: 0,  shopCost: 6,  emoji: '🪞' },
+  heal:      { id: 'heal',      name: '回復',     cost: 3,  effect: 'heal',    value: 8,  shopCost: 6,  emoji: '💊' },
+
+  // ===== ドロー・ユーティリティカード =====
+  draw1:     { id: 'draw1',     name: 'ドロー',   cost: 1,  effect: 'draw',    value: 2,  shopCost: 2,  emoji: '📚' },
+  library:   { id: 'library',   name: '図書館',   cost: 2,  effect: 'draw',    value: 3,  shopCost: 4,  emoji: '📖' },
+  copy:      { id: 'copy',      name: '複製',     cost: 3,  effect: 'copy',    value: 0,  shopCost: 6,  emoji: '♾️' },
+  scry:      { id: 'scry',      name: '予知',     cost: 1,  effect: 'scry',    value: 0,  shopCost: 2,  emoji: '🔮' },
+
+  // ===== ゴールドカード =====
+  gold2:     { id: 'gold2',     name: '金塊',     cost: 2,  effect: 'gold',    value: 8,  shopCost: 4,  emoji: '💰' },
+  invest:    { id: 'invest',    name: '投資',     cost: 3,  effect: 'invest',  value: 15, shopCost: 6,  emoji: '📈' },
 };
 
-// ショップに並ぶカードのプール
-const CG_SHOP_POOL = ['attack1', 'attack2', 'defense1', 'draw1', 'gold'];
+// 毒の1ターンあたりダメージ量
+const POISON_DMG_PER_TURN = 2;
+// 予知（scry）で提示するカード枚数
+const SCRY_CARD_COUNT = 3;
+// プレイヤーの最大HP
+const CG_MAX_HP = 20;
+
+// ショップに並ぶカードのプール（初期カードの attack1・gold は含めない）
+const CG_SHOP_POOL = [
+  'attack2', 'strike2', 'combo', 'poison', 'greatsword', 'storm', 'finisher', 'phoenix',
+  'defense1', 'block1', 'fortify', 'reflect', 'heal',
+  'draw1', 'library', 'copy', 'scry',
+  'gold2', 'invest',
+];
 
 // 初期デッキ構成（攻撃×4・ゴールド×6）
 const CG_INITIAL_DECK = [
@@ -369,6 +406,16 @@ function initCGGameState() {
     trashCount: [0, 0],
     // 現在の削除コスト（初回5コイン、削除するたびに5コイン増加）
     trashCost: [5, 5],
+    // 毒カウンター（毎ターン開始時にダメージを与え1減少する）
+    poison: [0, 0],
+    // 次ターン開始時に加算されるゴールド（invest の効果）
+    pendingGold: [0, 0],
+    // 反射フラグ（受けたダメージの半分を返す）
+    reflect: [false, false],
+    // コピーフラグ（次に使用するカードを2回発動する）
+    copyNext: [false, false],
+    // 予知（scry）選択待ちカードリスト
+    scryCards: [null, null],
   };
 }
 
@@ -393,6 +440,22 @@ function cgStartTurn(state, playerIndex) {
   state.mana[playerIndex] = state.maxMana[playerIndex];
   state.gold[playerIndex] = 0;
   state.field[playerIndex] = [];
+
+  // 毒ダメージを処理する（毒カウンターが残っている場合はPOISON_DMG_PER_TURNダメージを与えて1減少）
+  if (state.poison[playerIndex] > 0) {
+    const poisonDmg = POISON_DMG_PER_TURN;
+    const absorbed = Math.min(state.block[playerIndex], poisonDmg);
+    state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbed);
+    state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - (poisonDmg - absorbed));
+    state.poison[playerIndex] -= 1;
+  }
+
+  // 前ターンに invest で積み立てたゴールドを加算する
+  if (state.pendingGold[playerIndex] > 0) {
+    state.gold[playerIndex] += state.pendingGold[playerIndex];
+    state.pendingGold[playerIndex] = 0;
+  }
+
   cgDrawCards(state, playerIndex, 5);
 }
 
@@ -1086,27 +1149,98 @@ io.on("connection", (socket) => {
     state.mana[playerIndex] -= card.cost;
     state.field[playerIndex].push(cardId);
 
-    // カードの効果を適用する
     const oppIndex = 1 - playerIndex;
-    if (card.effect === 'damage') {
-      // ブロックでダメージを軽減し残りをHPへ適用する
-      const absorbed = Math.min(state.block[oppIndex], card.value);
+
+    // コピーフラグが有効な場合は効果を2回適用する（scryは例外で1回のみ）
+    const repeatCount = state.copyNext[playerIndex] && card.effect !== 'scry' ? 2 : 1;
+    if (card.effect !== 'copy') {
+      state.copyNext[playerIndex] = false;
+    }
+
+    // ダメージを相手に与えるヘルパー関数（ブロック・反射を考慮する）
+    function applyDamageToOpp(dmg) {
+      const absorbed = Math.min(state.block[oppIndex], dmg);
       state.block[oppIndex] = Math.max(0, state.block[oppIndex] - absorbed);
-      const actualDamage = card.value - absorbed;
-      state.hp[oppIndex] = Math.max(0, state.hp[oppIndex] - actualDamage);
-    } else if (card.effect === 'block') {
-      state.block[playerIndex] += card.value;
-    } else if (card.effect === 'draw') {
-      cgDrawCards(state, playerIndex, card.value);
-    } else if (card.effect === 'gold') {
-      state.gold[playerIndex] += card.value;
+      const actualDmg = dmg - absorbed;
+      state.hp[oppIndex] = Math.max(0, state.hp[oppIndex] - actualDmg);
+      // 相手の反射フラグが有効な場合はダメージの半分を攻撃側に返す
+      if (state.reflect[oppIndex] && actualDmg > 0) {
+        const reflectDmg = Math.floor(actualDmg / 2);
+        if (reflectDmg > 0) {
+          const absorbedSelf = Math.min(state.block[playerIndex], reflectDmg);
+          state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbedSelf);
+          state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - (reflectDmg - absorbedSelf));
+        }
+        state.reflect[oppIndex] = false;
+      }
+    }
+
+    // カードの効果をrepeatCount回適用する
+    for (let r = 0; r < repeatCount; r++) {
+      if (card.effect === 'damage') {
+        // ブロックでダメージを軽減し残りをHPへ適用する
+        applyDamageToOpp(card.value);
+      } else if (card.effect === 'combo') {
+        // card.value のダメージを2回与える（各ヒットでブロックを消費する）
+        applyDamageToOpp(card.value);
+        applyDamageToOpp(card.value);
+      } else if (card.effect === 'poison') {
+        // 4ダメージ＋毒カウンターに2を加算する（毎ターン2ダメージ×3ターン）
+        applyDamageToOpp(4);
+        state.poison[oppIndex] += 2;
+      } else if (card.effect === 'storm') {
+        // 手札枚数×3ダメージ（使用後の手札枚数で計算する）
+        const stormDmg = state.hand[playerIndex].length * card.value;
+        applyDamageToOpp(stormDmg);
+      } else if (card.effect === 'phoenix') {
+        // card.value のダメージ＋card.healValue 分のHP回復
+        applyDamageToOpp(card.value);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue);
+      } else if (card.effect === 'block') {
+        state.block[playerIndex] += card.value;
+      } else if (card.effect === 'reflect') {
+        // 次に受けるダメージの半分を返す反射フラグを立てる
+        state.reflect[playerIndex] = true;
+      } else if (card.effect === 'heal') {
+        // HPを card.value 分回復する（最大CG_MAX_HPまで）
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value);
+      } else if (card.effect === 'draw') {
+        cgDrawCards(state, playerIndex, card.value);
+      } else if (card.effect === 'copy') {
+        // 次に使用するカードを2回発動するフラグを立てる
+        state.copyNext[playerIndex] = true;
+      } else if (card.effect === 'scry') {
+        // デッキトップから最大SCRY_CARD_COUNT枚を取り出しクライアントへ送り選択を待つ
+        const scryCards = [];
+        for (let i = 0; i < SCRY_CARD_COUNT; i++) {
+          if (state.deck[playerIndex].length === 0) {
+            if (state.discard[playerIndex].length === 0) break;
+            state.deck[playerIndex] = cgShuffle(state.discard[playerIndex]);
+            state.discard[playerIndex] = [];
+          }
+          if (state.deck[playerIndex].length > 0) {
+            scryCards.push(state.deck[playerIndex].pop());
+          }
+        }
+        state.scryCards[playerIndex] = scryCards;
+        // クライアントに選択肢を送る
+        io.to(socket.id).emit('cgScryChoice', { cards: scryCards });
+        sendCGState(room);
+        return; // cgScryPickイベントを待つ
+      } else if (card.effect === 'gold') {
+        state.gold[playerIndex] += card.value;
+      } else if (card.effect === 'invest') {
+        // 次ターン開始時に加算されるゴールドを積み立てる
+        state.pendingGold[playerIndex] += card.value;
+      }
     }
 
     // HPが0になったら勝敗を通知する
-    if (state.hp[oppIndex] <= 0) {
+    if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
       room.resultSent = true;
-      io.to(socket.id).emit('cgResult', { win: true });
-      io.to(room.players[oppIndex]).emit('cgResult', { win: false });
+      const p0win = state.hp[oppIndex] <= 0;
+      io.to(room.players[0]).emit('cgResult', { win: p0win });
+      io.to(room.players[1]).emit('cgResult', { win: !p0win });
       return;
     }
 
@@ -1243,6 +1377,38 @@ io.on("connection", (socket) => {
   // カードゲームロビーへ戻る際にルームから退出させる
   socket.on('cgLeaveRoom', () => {
     leaveCGRoom(socket);
+  });
+
+  // 予知（scry）選択処理（デッキトップ3枚から1枚を選んで手札に加える）
+  socket.on('cgScryPick', (payload) => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    // 自分のターンのプレイフェーズ中かつ選択待ちカードが存在することを確認する
+    if (state.activePlayer !== playerIndex || state.phase !== 'play') return;
+    const scryCards = state.scryCards[playerIndex];
+    if (!scryCards || scryCards.length === 0) return;
+
+    const chosen = Number(payload?.chosen);
+    if (!Number.isInteger(chosen) || chosen < 0 || chosen >= scryCards.length) return;
+
+    // 選択したカードを手札に加え、残りを捨て札へ移動する
+    scryCards.forEach((cardId, i) => {
+      if (i === chosen) {
+        state.hand[playerIndex].push(cardId);
+      } else {
+        state.discard[playerIndex].push(cardId);
+      }
+    });
+    state.scryCards[playerIndex] = null;
+
+    sendCGState(room);
   });
 
   // 切断時に部屋の状態を整理する

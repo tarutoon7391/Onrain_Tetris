@@ -629,23 +629,66 @@
     </div>
   </div>
 
+  <!-- 予知（scry）選択モーダル -->
+  <div class="modal-overlay" id="scryModal">
+    <div class="modal-box">
+      <div class="modal-title">🔮 予知 — カードを1枚選んで手札に加える</div>
+      <div class="modal-subtitle">残りのカードは捨て札になります</div>
+      <div class="modal-cards" id="scryCardList"></div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     // ===== カード定義（サーバーと同じ内容） =====
     const CARD_DEFS = {
-      attack1:  { id: 'attack1',  name: '攻撃',     cost: 1, effect: 'damage', value: 3, shopCost: 3, emoji: '⚔️' },
-      attack2:  { id: 'attack2',  name: '強撃',     cost: 2, effect: 'damage', value: 7, shopCost: 6, emoji: '🗡️' },
-      defense1: { id: 'defense1', name: '防御',     cost: 1, effect: 'block',  value: 5, shopCost: 4, emoji: '🛡️' },
-      draw1:    { id: 'draw1',    name: 'ドロー',   cost: 1, effect: 'draw',   value: 2, shopCost: 4, emoji: '📚' },
-      gold:     { id: 'gold',     name: 'ゴールド', cost: 1, effect: 'gold',   value: 5, shopCost: 3, emoji: '🪙' },
+      // ===== 初期カード（ショップ非売品）=====
+      attack1:    { id: 'attack1',    name: '攻撃',     cost: 1,  effect: 'damage',  value: 3,  shopCost: 3,  emoji: '⚔️' },
+      gold:       { id: 'gold',       name: 'ゴールド', cost: 1,  effect: 'gold',    value: 5,  shopCost: 3,  emoji: '🪙' },
+
+      // ===== 攻撃カード =====
+      attack2:    { id: 'attack2',    name: '強撃',     cost: 2,  effect: 'damage',  value: 7,  shopCost: 6,  emoji: '🗡️' },
+      strike2:    { id: 'strike2',    name: '強撃Ⅱ',   cost: 2,  effect: 'damage',  value: 6,  shopCost: 4,  emoji: '⚔️' },
+      combo:      { id: 'combo',      name: '連撃',     cost: 3,  effect: 'combo',   value: 4,  shopCost: 6,  emoji: '👊' },
+      poison:     { id: 'poison',     name: '毒矢',     cost: 3,  effect: 'poison',  value: 4,  shopCost: 6,  emoji: '🏹' },
+      greatsword: { id: 'greatsword', name: '大剣',     cost: 4,  effect: 'damage',  value: 12, shopCost: 8,  emoji: '🗡️' },
+      storm:      { id: 'storm',      name: '嵐',       cost: 5,  effect: 'storm',   value: 3,  shopCost: 10, emoji: '🌩️' },
+      finisher:   { id: 'finisher',   name: '必殺剣',   cost: 7,  effect: 'damage',  value: 20, shopCost: 14, emoji: '💥' },
+      phoenix:    { id: 'phoenix',    name: '不死鳥',   cost: 10, effect: 'phoenix', value: 15, healValue: 10, shopCost: 20, emoji: '🦅' },
+
+      // ===== 防御・回復カード =====
+      block1:     { id: 'block1',     name: '防御',     cost: 1,  effect: 'block',   value: 3,  shopCost: 2,  emoji: '🛡️' },
+      defense1:   { id: 'defense1',   name: '盾',       cost: 1,  effect: 'block',   value: 5,  shopCost: 4,  emoji: '🛡️' },
+      fortify:    { id: 'fortify',    name: '鉄壁',     cost: 3,  effect: 'block',   value: 8,  shopCost: 6,  emoji: '🏰' },
+      reflect:    { id: 'reflect',    name: '反射',     cost: 3,  effect: 'reflect', value: 0,  shopCost: 6,  emoji: '🪞' },
+      heal:       { id: 'heal',       name: '回復',     cost: 3,  effect: 'heal',    value: 8,  shopCost: 6,  emoji: '💊' },
+
+      // ===== ドロー・ユーティリティカード =====
+      draw1:      { id: 'draw1',      name: 'ドロー',   cost: 1,  effect: 'draw',    value: 2,  shopCost: 2,  emoji: '📚' },
+      library:    { id: 'library',    name: '図書館',   cost: 2,  effect: 'draw',    value: 3,  shopCost: 4,  emoji: '📖' },
+      copy:       { id: 'copy',       name: '複製',     cost: 3,  effect: 'copy',    value: 0,  shopCost: 6,  emoji: '♾️' },
+      scry:       { id: 'scry',       name: '予知',     cost: 1,  effect: 'scry',    value: 0,  shopCost: 2,  emoji: '🔮' },
+
+      // ===== ゴールドカード =====
+      gold2:      { id: 'gold2',      name: '金塊',     cost: 2,  effect: 'gold',    value: 8,  shopCost: 4,  emoji: '💰' },
+      invest:     { id: 'invest',     name: '投資',     cost: 3,  effect: 'invest',  value: 15, shopCost: 6,  emoji: '📈' },
     };
 
     // カード効果の説明文を返す関数
     function cardEffectText(card) {
-      if (card.effect === 'damage') return `${card.value} ダメージ`;
-      if (card.effect === 'block')  return `${card.value} ブロック`;
-      if (card.effect === 'draw')   return `${card.value} 枚ドロー`;
-      if (card.effect === 'gold')   return `+${card.value} ゴールド`;
+      if (card.effect === 'damage')  return `${card.value} ダメージ`;
+      if (card.effect === 'block')   return `${card.value} ブロック`;
+      if (card.effect === 'draw')    return `${card.value} 枚ドロー`;
+      if (card.effect === 'gold')    return `+${card.value} ゴールド`;
+      if (card.effect === 'combo')   return `${card.value} ダメージ × 2回`;
+      if (card.effect === 'poison')  return `${card.value} ダメージ＋毒（2×3ターン）`;
+      if (card.effect === 'storm')   return `手札枚数 × ${card.value} ダメージ`;
+      if (card.effect === 'phoenix') return `${card.value} ダメージ＋HP${card.healValue}回復`;
+      if (card.effect === 'reflect') return `次に受けたダメージの半分を返す`;
+      if (card.effect === 'heal')    return `HP${card.value}回復`;
+      if (card.effect === 'copy')    return `次のカードを2回発動`;
+      if (card.effect === 'scry')    return `デッキトップ3枚から1枚を手札に`;
+      if (card.effect === 'invest')  return `次ターン開始時+${card.value}ゴールド`;
       return '';
     }
 
@@ -948,6 +991,30 @@
     // キャンセルボタンでモーダルを閉じる
     document.getElementById('cancelTrashBtn').addEventListener('click', closeTrashModal);
 
+    // ===== 予知（scry）モーダル関連 =====
+
+    // scry選択モーダルを開き候補カードを一覧表示する関数
+    function openScryModal(cards) {
+      const list = document.getElementById('scryCardList');
+      list.innerHTML = '';
+      cards.forEach((cardId, i) => {
+        const cardEl = createCardElement(cardId, {});
+        if (cardEl) {
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgScryPick', { chosen: i });
+            closeScryModal();
+          });
+          list.appendChild(cardEl);
+        }
+      });
+      document.getElementById('scryModal').classList.add('open');
+    }
+
+    // scry選択モーダルを閉じる関数
+    function closeScryModal() {
+      document.getElementById('scryModal').classList.remove('open');
+    }
+
     // ===== Socket.ioイベントハンドラ =====
 
     // 待機通知
@@ -979,6 +1046,11 @@
     // 勝敗通知
     socket.on('cgResult', (payload) => {
       showResult(payload.win);
+    });
+
+    // 予知（scry）選択肢通知
+    socket.on('cgScryChoice', (payload) => {
+      openScryModal(payload.cards);
     });
 
     // ===== ボタンイベント =====
