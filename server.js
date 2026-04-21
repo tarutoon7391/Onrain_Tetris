@@ -302,6 +302,225 @@ function leaveBBRoom(socket) {
   });
 }
 
+// ===== カードゲーム用定数 =====
+
+// カード定義（id, 名前, マナコスト, 効果種別, 効果量, ショップ購入コスト, 絵文字）
+const CARD_DEFS = {
+  attack1:  { id: 'attack1',  name: '攻撃',     cost: 1, effect: 'damage', value: 3, shopCost: 3, emoji: '⚔️' },
+  attack2:  { id: 'attack2',  name: '強撃',     cost: 2, effect: 'damage', value: 7, shopCost: 6, emoji: '🗡️' },
+  defense1: { id: 'defense1', name: '防御',     cost: 1, effect: 'block',  value: 5, shopCost: 4, emoji: '🛡️' },
+  draw1:    { id: 'draw1',    name: 'ドロー',   cost: 1, effect: 'draw',   value: 2, shopCost: 4, emoji: '📚' },
+  gold:     { id: 'gold',     name: 'ゴールド', cost: 0, effect: 'gold',   value: 3, shopCost: 3, emoji: '🪙' },
+};
+
+// ショップに並ぶカードのプール
+const CG_SHOP_POOL = ['attack1', 'attack2', 'defense1', 'draw1', 'gold'];
+
+// 初期デッキ構成（攻撃×4・ゴールド×6）
+const CG_INITIAL_DECK = [
+  'attack1', 'attack1', 'attack1', 'attack1',
+  'gold', 'gold', 'gold', 'gold', 'gold', 'gold',
+];
+
+// ===== カードゲーム用ルーム管理 =====
+
+// カードゲームルーム情報を保持するマップ
+const cgRooms = new Map();
+
+// カードゲーム用ソケットごとの所属ルーム情報を保持するマップ
+const cgSocketMeta = new Map();
+
+// カードゲーム用待機中ルームIDを保持する
+let cgWaitingRoomId = null;
+
+// 配列をFisher-Yatesアルゴリズムでシャッフルする関数
+function cgShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ショップに並べる3枚のカードをランダムに生成する関数
+function generateCGShop() {
+  return cgShuffle([...CG_SHOP_POOL]).slice(0, 3);
+}
+
+// ゲーム初期状態を生成する関数
+function initCGGameState() {
+  const deck0 = cgShuffle([...CG_INITIAL_DECK]);
+  const deck1 = cgShuffle([...CG_INITIAL_DECK]);
+  return {
+    hp: [20, 20],
+    block: [0, 0],
+    mana: [0, 0],
+    maxMana: [0, 0],
+    gold: [0, 0],
+    deck: [deck0, deck1],
+    hand: [[], []],
+    discard: [[], []],
+    field: [[], []],
+    activePlayer: 0,
+    phase: 'play',
+    shop: [],
+  };
+}
+
+// プレイヤーにカードを引かせる関数（デッキが空の場合は捨て札をシャッフルして補充する）
+function cgDrawCards(state, playerIndex, count) {
+  for (let i = 0; i < count; i++) {
+    if (state.deck[playerIndex].length === 0) {
+      if (state.discard[playerIndex].length === 0) break;
+      state.deck[playerIndex] = cgShuffle(state.discard[playerIndex]);
+      state.discard[playerIndex] = [];
+    }
+    if (state.deck[playerIndex].length > 0) {
+      state.hand[playerIndex].push(state.deck[playerIndex].pop());
+    }
+  }
+}
+
+// ターン開始処理（マナ補充・フィールドリセット・5枚ドロー）
+function cgStartTurn(state, playerIndex) {
+  state.maxMana[playerIndex] = Math.min(state.maxMana[playerIndex] + 1, 10);
+  state.mana[playerIndex] = state.maxMana[playerIndex];
+  state.gold[playerIndex] = 0;
+  state.field[playerIndex] = [];
+  cgDrawCards(state, playerIndex, 5);
+}
+
+// カードゲーム用ルームIDを生成する関数
+function createCGRoomId() {
+  return `cg-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// 新しいカードゲームルームを作成する関数
+function createCGRoom() {
+  const roomId = createCGRoomId();
+  const room = {
+    id: roomId,
+    players: [],
+    playerNames: {},
+    started: false,
+    resultSent: false,
+    state: null,
+  };
+  cgRooms.set(roomId, room);
+  cgWaitingRoomId = roomId;
+  return room;
+}
+
+// 参加可能なカードゲームルームを取得する関数
+function getJoinableCGRoom() {
+  if (!cgWaitingRoomId) return createCGRoom();
+  const room = cgRooms.get(cgWaitingRoomId);
+  if (!room || room.players.length >= 2) return createCGRoom();
+  return room;
+}
+
+// カードゲームの状態を各プレイヤーへ送信する関数（相手の手札は枚数のみ開示する）
+function sendCGState(room) {
+  const state = room.state;
+  room.players.forEach((socketId, index) => {
+    const opp = 1 - index;
+    io.to(socketId).emit('cgStateUpdate', {
+      myHp: state.hp[index],
+      myBlock: state.block[index],
+      myMana: state.mana[index],
+      myMaxMana: state.maxMana[index],
+      myGold: state.gold[index],
+      myHand: state.hand[index],
+      myDeckCount: state.deck[index].length,
+      myDiscardCount: state.discard[index].length,
+      myField: state.field[index],
+      oppHp: state.hp[opp],
+      oppBlock: state.block[opp],
+      oppHandCount: state.hand[opp].length,
+      oppDeckCount: state.deck[opp].length,
+      oppDiscardCount: state.discard[opp].length,
+      oppField: state.field[opp],
+      activePlayer: state.activePlayer + 1,
+      myPlayerNumber: index + 1,
+      phase: state.phase,
+      // ショップフェーズかつ自分のターンのときだけショップ情報を送る
+      shop: (state.phase === 'shop' && state.activePlayer === index) ? state.shop : [],
+    });
+  });
+}
+
+// カードゲームルームへプレイヤーを参加させる関数
+function joinCGRoom(socket, playerName) {
+  const room = getJoinableCGRoom();
+  room.players.push(socket.id);
+  room.playerNames[socket.id] = playerName;
+  socket.join(room.id);
+
+  const playerNumber = room.players.length;
+  cgSocketMeta.set(socket.id, { roomId: room.id, playerNumber });
+
+  if (room.players.length >= 2) {
+    room.started = true;
+    cgWaitingRoomId = null;
+
+    // ゲーム初期状態を生成し先攻のターンを開始する
+    room.state = initCGGameState();
+    cgStartTurn(room.state, 0);
+
+    room.players.forEach((socketId, index) => {
+      const opponentId = room.players[1 - index];
+      const myName = room.playerNames[socketId] || `プレイヤー${index + 1}`;
+      const opponentName = room.playerNames[opponentId] || `プレイヤー${2 - index}`;
+      io.to(socketId).emit('cgMatchStart', {
+        roomId: room.id,
+        playerNumber: index + 1,
+        myName,
+        opponentName,
+      });
+    });
+
+    sendCGState(room);
+  } else {
+    // 1人目は待機状態を通知する
+    io.to(socket.id).emit('cgWaiting', { roomId: room.id, playerNumber: 1 });
+  }
+}
+
+// カードゲームルームからプレイヤーを退出させる共通処理関数
+function leaveCGRoom(socket) {
+  const meta = cgSocketMeta.get(socket.id);
+  if (!meta) return;
+
+  const room = cgRooms.get(meta.roomId);
+  cgSocketMeta.delete(socket.id);
+
+  if (!room) {
+    if (cgWaitingRoomId === meta.roomId) cgWaitingRoomId = null;
+    return;
+  }
+
+  room.players = room.players.filter((id) => id !== socket.id);
+  delete room.playerNames[socket.id];
+
+  if (room.players.length === 0) {
+    cgRooms.delete(room.id);
+    if (cgWaitingRoomId === room.id) cgWaitingRoomId = null;
+    return;
+  }
+
+  // 勝敗確定済みの場合は切断通知を送らない
+  if (room.resultSent) return;
+
+  room.started = false;
+  cgWaitingRoomId = room.id;
+
+  // 残ったプレイヤーに相手切断を通知する
+  room.players.forEach((socketId) => {
+    io.to(socketId).emit('cgOpponentLeft', { roomId: room.id });
+  });
+}
+
 // ===== タイピングバトル用ルーム管理 =====
 
 // タイピングバトル用ルーム情報を保持するマップ
@@ -815,11 +1034,161 @@ io.on("connection", (socket) => {
     leaveTypingRoom(socket);
   });
 
+  // ===== カードゲーム用イベントハンドラ =====
+
+  // カードゲームマッチング要求を受け取りルームへ参加させる
+  socket.on('cgJoinMatch', (payload) => {
+    const raw = typeof payload?.playerName === 'string' ? payload.playerName : '';
+    const playerName = raw.trim().slice(0, 20) || 'ゲスト';
+    joinCGRoom(socket, playerName);
+  });
+
+  // カードを使用する処理（手札からフィールドへ移動し効果を適用する）
+  socket.on('cgPlayCard', (payload) => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    // 自分のターンかつプレイフェーズであることを確認する
+    if (state.activePlayer !== playerIndex || state.phase !== 'play') return;
+
+    const handIndex = Number(payload?.handIndex);
+    if (!Number.isInteger(handIndex) || handIndex < 0 || handIndex >= state.hand[playerIndex].length) return;
+
+    const cardId = state.hand[playerIndex][handIndex];
+    const card = CARD_DEFS[cardId];
+    if (!card) return;
+
+    // マナが足りているか確認する
+    if (state.mana[playerIndex] < card.cost) return;
+
+    // カードを手札から取り出しフィールドへ移動する
+    state.hand[playerIndex].splice(handIndex, 1);
+    state.mana[playerIndex] -= card.cost;
+    state.field[playerIndex].push(cardId);
+
+    // カードの効果を適用する
+    const oppIndex = 1 - playerIndex;
+    if (card.effect === 'damage') {
+      // ブロックでダメージを軽減し残りをHPへ適用する
+      const absorbed = Math.min(state.block[oppIndex], card.value);
+      state.block[oppIndex] = Math.max(0, state.block[oppIndex] - absorbed);
+      const actualDamage = card.value - absorbed;
+      state.hp[oppIndex] = Math.max(0, state.hp[oppIndex] - actualDamage);
+    } else if (card.effect === 'block') {
+      state.block[playerIndex] += card.value;
+    } else if (card.effect === 'draw') {
+      cgDrawCards(state, playerIndex, card.value);
+    } else if (card.effect === 'gold') {
+      state.gold[playerIndex] += card.value;
+    }
+
+    // HPが0になったら勝敗を通知する
+    if (state.hp[oppIndex] <= 0) {
+      room.resultSent = true;
+      io.to(socket.id).emit('cgResult', { win: true });
+      io.to(room.players[oppIndex]).emit('cgResult', { win: false });
+      return;
+    }
+
+    sendCGState(room);
+  });
+
+  // ターン終了処理（手札・フィールドを捨て札へ移動しショップフェーズへ移行する）
+  socket.on('cgEndTurn', () => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    if (state.activePlayer !== playerIndex || state.phase !== 'play') return;
+
+    // 手札とフィールドのカードをすべて捨て札に移動する
+    state.discard[playerIndex].push(...state.hand[playerIndex], ...state.field[playerIndex]);
+    state.hand[playerIndex] = [];
+    state.field[playerIndex] = [];
+
+    // ショップフェーズへ移行する
+    state.phase = 'shop';
+    state.shop = generateCGShop();
+
+    sendCGState(room);
+  });
+
+  // カードを購入する処理（ゴールドを消費してデッキにカードを加える）
+  socket.on('cgBuyCard', (payload) => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+
+    const shopIndex = Number(payload?.shopIndex);
+    if (!Number.isInteger(shopIndex) || shopIndex < 0 || shopIndex >= state.shop.length) return;
+
+    const cardId = state.shop[shopIndex];
+    const card = CARD_DEFS[cardId];
+    if (!card) return;
+
+    // ゴールドが足りているか確認する
+    if (state.gold[playerIndex] < card.shopCost) return;
+
+    // カードを購入し捨て札に加える
+    state.gold[playerIndex] -= card.shopCost;
+    state.discard[playerIndex].push(cardId);
+    state.shop.splice(shopIndex, 1);
+
+    sendCGState(room);
+  });
+
+  // ショップをスキップして相手のターンへ移行する処理
+  socket.on('cgSkipShop', () => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+
+    // 相手のターンを開始する
+    const nextPlayer = 1 - playerIndex;
+    state.activePlayer = nextPlayer;
+    state.phase = 'play';
+    state.shop = [];
+    cgStartTurn(state, nextPlayer);
+
+    sendCGState(room);
+  });
+
+  // カードゲームロビーへ戻る際にルームから退出させる
+  socket.on('cgLeaveRoom', () => {
+    leaveCGRoom(socket);
+  });
+
   // 切断時に部屋の状態を整理する
   socket.on("disconnect", () => {
     leaveCurrentRoom(socket);
     leaveBBRoom(socket);
     leaveTypingRoom(socket);
+    leaveCGRoom(socket);
   });
 });
 
