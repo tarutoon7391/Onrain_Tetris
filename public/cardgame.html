@@ -419,6 +419,81 @@
         flex-wrap: wrap;
       }
     }
+
+    /* ===== カード削除モーダル ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: linear-gradient(180deg, #1f2937, #111827);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      max-width: 640px;
+      width: 92%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 6px;
+    }
+
+    .modal-cost {
+      font-size: 0.95rem;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.84rem;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    .modal-section-title {
+      width: 100%;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 10px 0 4px;
+    }
+
+    .modal-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    #cancelTrashBtn {
+      background: linear-gradient(180deg, #6b7280, #4b5563);
+      border-color: #9ca3af;
+      font-size: 0.9rem;
+      padding: 8px 20px;
+    }
+
+    /* 削除オプションカード */
+    .card-trash {
+      background: linear-gradient(160deg, #1c1917, #7c2d12);
+      border-color: rgba(239,68,68,0.45);
+    }
   </style>
 </head>
 <body>
@@ -540,6 +615,17 @@
     <div class="card">
       <p id="resultText"></p>
       <button id="backToLobbyBtn" type="button">ロビーへ戻る</button>
+    </div>
+  </div>
+
+  <!-- カード削除モーダル -->
+  <div class="modal-overlay" id="trashModal">
+    <div class="modal-box">
+      <div class="modal-title">🗑️ カードを削除する</div>
+      <div class="modal-cost" id="trashCostInfo">削除コスト: 5 コイン</div>
+      <div class="modal-subtitle">削除するカードをクリックしてください（デッキ・手札・捨て札すべてから選択可能）</div>
+      <div class="modal-cards" id="trashCardList"></div>
+      <button id="cancelTrashBtn" type="button">キャンセル</button>
     </div>
   </div>
 
@@ -678,9 +764,11 @@
     }
 
     // ===== ショップを描画する関数 =====
-    function renderShop(shop, gold) {
+    function renderShop(shop, gold, trashCost, state) {
       const container = document.getElementById('shopCards');
       container.innerHTML = '';
+
+      // ランダム3枚のカードを描画する
       shop.forEach((cardId, shopIndex) => {
         const card = CARD_DEFS[cardId];
         if (!card) return;
@@ -695,6 +783,26 @@
 
         container.appendChild(cardEl);
       });
+
+      // 削除オプションを常に表示する
+      const canTrash = gold >= trashCost;
+      const trashEl = document.createElement('div');
+      trashEl.className = `card-item card-trash${canTrash ? '' : ' card-disabled'}`;
+      trashEl.innerHTML = `
+        <div class="card-emoji">🗑️</div>
+        <div class="card-name">カードを削除</div>
+        <div class="card-effect">デッキ・手札・捨て札<br>から1枚削除</div>
+        <div class="card-shop-cost">🪙 ${trashCost}</div>
+      `;
+
+      if (canTrash) {
+        // stateを引数で受け取ることでクリック時に最新の状態を参照する
+        trashEl.addEventListener('click', () => {
+          openTrashModal(state);
+        });
+      }
+
+      container.appendChild(trashEl);
     }
 
     // ===== HPバーを更新する関数 =====
@@ -760,7 +868,7 @@
       const shopPanel = document.getElementById('shopPanel');
       if (isMyTurn && currentPhase === 'shop') {
         shopPanel.style.display = 'block';
-        renderShop(state.shop, state.myGold);
+        renderShop(state.shop, state.myGold, state.myTrashCost, state);
         document.getElementById('msgBar').textContent = '🛒 カードを購入するかスキップしてください';
       } else {
         shopPanel.style.display = 'none';
@@ -771,6 +879,74 @@
         }
       }
     }
+
+    // ===== カード削除モーダル関連 =====
+
+    // モーダルを開き選択可能なカードを一覧表示する関数
+    function openTrashModal(state) {
+      document.getElementById('trashCostInfo').textContent = `削除コスト: ${state.myTrashCost} コイン`;
+
+      const list = document.getElementById('trashCardList');
+      list.innerHTML = '';
+
+      // 手札のカードを表示する
+      if (state.myHand && state.myHand.length > 0) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'modal-section-title';
+        titleEl.textContent = '手札';
+        list.appendChild(titleEl);
+        state.myHand.forEach((cardId, i) => {
+          const cardEl = createCardElement(cardId, {});
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgTrashCard', { source: 'hand', cardIndex: i });
+            closeTrashModal();
+          });
+          list.appendChild(cardEl);
+        });
+      }
+
+      // デッキのカードを表示する
+      if (state.myDeckCards && state.myDeckCards.length > 0) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'modal-section-title';
+        titleEl.textContent = 'デッキ';
+        list.appendChild(titleEl);
+        state.myDeckCards.forEach((cardId, i) => {
+          const cardEl = createCardElement(cardId, {});
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgTrashCard', { source: 'deck', cardIndex: i });
+            closeTrashModal();
+          });
+          list.appendChild(cardEl);
+        });
+      }
+
+      // 捨て札のカードを表示する
+      if (state.myDiscardCards && state.myDiscardCards.length > 0) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'modal-section-title';
+        titleEl.textContent = '捨て札';
+        list.appendChild(titleEl);
+        state.myDiscardCards.forEach((cardId, i) => {
+          const cardEl = createCardElement(cardId, {});
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgTrashCard', { source: 'discard', cardIndex: i });
+            closeTrashModal();
+          });
+          list.appendChild(cardEl);
+        });
+      }
+
+      document.getElementById('trashModal').classList.add('open');
+    }
+
+    // モーダルを閉じる関数
+    function closeTrashModal() {
+      document.getElementById('trashModal').classList.remove('open');
+    }
+
+    // キャンセルボタンでモーダルを閉じる
+    document.getElementById('cancelTrashBtn').addEventListener('click', closeTrashModal);
 
     // ===== Socket.ioイベントハンドラ =====
 

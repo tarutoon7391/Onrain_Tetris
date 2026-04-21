@@ -365,6 +365,10 @@ function initCGGameState() {
     activePlayer: 0,
     phase: 'play',
     shop: [],
+    // カード削除回数（プレイヤーごと）
+    trashCount: [0, 0],
+    // 現在の削除コスト（初回5コイン、削除するたびに5コイン増加）
+    trashCost: [5, 5],
   };
 }
 
@@ -426,6 +430,8 @@ function sendCGState(room) {
   const state = room.state;
   room.players.forEach((socketId, index) => {
     const opp = 1 - index;
+    // 自分のショップフェーズのときはデッキ・捨て札の中身もカード削除UIのために送る
+    const isMyShopTurn = state.phase === 'shop' && state.activePlayer === index;
     io.to(socketId).emit('cgStateUpdate', {
       myHp: state.hp[index],
       myBlock: state.block[index],
@@ -446,7 +452,14 @@ function sendCGState(room) {
       myPlayerNumber: index + 1,
       phase: state.phase,
       // ショップフェーズかつ自分のターンのときだけショップ情報を送る
-      shop: (state.phase === 'shop' && state.activePlayer === index) ? state.shop : [],
+      shop: isMyShopTurn ? state.shop : [],
+      // 現在の削除コスト
+      myTrashCost: state.trashCost[index],
+      // 累積削除回数
+      myTrashCount: state.trashCount[index],
+      // カード削除モーダル用にデッキ・捨て札の中身を送る（自分のショップフェーズのみ）
+      myDeckCards: isMyShopTurn ? [...state.deck[index]] : null,
+      myDiscardCards: isMyShopTurn ? [...state.discard[index]] : null,
     });
   });
 }
@@ -1152,6 +1165,54 @@ io.on("connection", (socket) => {
     state.gold[playerIndex] -= card.shopCost;
     state.deck[playerIndex].push(cardId);
     state.shop.splice(shopIndex, 1);
+
+    sendCGState(room);
+  });
+
+  // デッキ・手札・捨て札からカードを1枚削除する処理
+  socket.on('cgTrashCard', (payload) => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || !room.state || room.resultSent) return;
+
+    const state = room.state;
+    const playerIndex = meta.playerNumber - 1;
+
+    // ショップフェーズかつ自分のターンであることを確認する
+    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+
+    // 削除コストが足りているか確認する
+    const cost = state.trashCost[playerIndex];
+    if (state.gold[playerIndex] < cost) return;
+
+    const source = payload?.source;
+    const cardIndex = Number(payload?.cardIndex);
+    if (!Number.isInteger(cardIndex) || cardIndex < 0) return;
+
+    // 指定されたソースから対象カードを削除する
+    let removed = false;
+    if (source === 'hand') {
+      if (cardIndex >= state.hand[playerIndex].length) return;
+      state.hand[playerIndex].splice(cardIndex, 1);
+      removed = true;
+    } else if (source === 'deck') {
+      if (cardIndex >= state.deck[playerIndex].length) return;
+      state.deck[playerIndex].splice(cardIndex, 1);
+      removed = true;
+    } else if (source === 'discard') {
+      if (cardIndex >= state.discard[playerIndex].length) return;
+      state.discard[playerIndex].splice(cardIndex, 1);
+      removed = true;
+    }
+
+    if (!removed) return;
+
+    // ゴールドを消費し削除回数・削除コストを更新する
+    state.gold[playerIndex] -= cost;
+    state.trashCount[playerIndex] += 1;
+    state.trashCost[playerIndex] += 5;
 
     sendCGState(room);
   });
