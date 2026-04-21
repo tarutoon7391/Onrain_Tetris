@@ -455,6 +455,8 @@ function sendCGState(room) {
       shop: isMyShopTurn ? state.shop : [],
       // 現在の削除コスト
       myTrashCost: state.trashCost[index],
+      // 累積削除回数
+      myTrashCount: state.trashCount[index],
       // カード削除モーダル用にデッキ・捨て札の中身を送る（自分のショップフェーズのみ）
       myDeckCards: isMyShopTurn ? [...state.deck[index]] : null,
       myDiscardCards: isMyShopTurn ? [...state.discard[index]] : null,

@@ -764,7 +764,7 @@
     }
 
     // ===== ショップを描画する関数 =====
-    function renderShop(shop, gold, trashCost) {
+    function renderShop(shop, gold, trashCost, state) {
       const container = document.getElementById('shopCards');
       container.innerHTML = '';
 
@@ -796,8 +796,9 @@
       `;
 
       if (canTrash) {
+        // stateを引数で受け取ることでクリック時に最新の状態を参照する
         trashEl.addEventListener('click', () => {
-          openTrashModal(lastState);
+          openTrashModal(state);
         });
       }
 
@@ -867,7 +868,7 @@
       const shopPanel = document.getElementById('shopPanel');
       if (isMyTurn && currentPhase === 'shop') {
         shopPanel.style.display = 'block';
-        renderShop(state.shop, state.myGold, state.myTrashCost);
+        renderShop(state.shop, state.myGold, state.myTrashCost, state);
         document.getElementById('msgBar').textContent = '🛒 カードを購入するかスキップしてください';
       } else {
         shopPanel.style.display = 'none';
