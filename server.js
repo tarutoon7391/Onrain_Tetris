@@ -434,11 +434,10 @@ function cgDrawCards(state, playerIndex, count) {
 }
 
 // ターン開始処理（マナ補充・フィールドリセット・5枚ドロー）
-// ゴールドはターン内で使い切る設計のため毎ターン開始時に0へリセットする
+// ターン開始時の処理（マナをリセットし手札を補充する）
 function cgStartTurn(state, playerIndex) {
   state.maxMana[playerIndex] = Math.min(state.maxMana[playerIndex] + 1, 10);
   state.mana[playerIndex] = state.maxMana[playerIndex];
-  state.gold[playerIndex] = 0;
   state.field[playerIndex] = [];
 
   // 毒ダメージを処理する（毒カウンターが残っている場合はPOISON_DMG_PER_TURNダメージを与えて1減少）
@@ -1238,7 +1237,7 @@ io.on("connection", (socket) => {
     // HPが0になったら勝敗を通知する
     if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
       room.resultSent = true;
-      const p0win = state.hp[oppIndex] <= 0;
+      const p0win = state.hp[1] <= 0;
       io.to(room.players[0]).emit('cgResult', { win: p0win });
       io.to(room.players[1]).emit('cgResult', { win: !p0win });
       return;
