@@ -310,7 +310,7 @@ const CARD_DEFS = {
   attack2:  { id: 'attack2',  name: '強撃',     cost: 2, effect: 'damage', value: 7, shopCost: 6, emoji: '🗡️' },
   defense1: { id: 'defense1', name: '防御',     cost: 1, effect: 'block',  value: 5, shopCost: 4, emoji: '🛡️' },
   draw1:    { id: 'draw1',    name: 'ドロー',   cost: 1, effect: 'draw',   value: 2, shopCost: 4, emoji: '📚' },
-  gold:     { id: 'gold',     name: 'ゴールド', cost: 0, effect: 'gold',   value: 3, shopCost: 3, emoji: '🪙' },
+  gold:     { id: 'gold',     name: 'ゴールド', cost: 1, effect: 'gold',   value: 5, shopCost: 3, emoji: '🪙' },
 };
 
 // ショップに並ぶカードのプール
@@ -1148,9 +1148,9 @@ io.on("connection", (socket) => {
     // ゴールドが足りているか確認する
     if (state.gold[playerIndex] < card.shopCost) return;
 
-    // カードを購入し捨て札に加える
+    // カードを購入しデッキに直接追加する
     state.gold[playerIndex] -= card.shopCost;
-    state.discard[playerIndex].push(cardId);
+    state.deck[playerIndex].push(cardId);
     state.shop.splice(shopIndex, 1);
 
     sendCGState(room);
