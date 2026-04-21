@@ -528,6 +528,13 @@
       box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
     }
 
+    /* カードゲームボタン */
+    .btn-cardgame {
+      background: linear-gradient(135deg, #92400e, #f59e0b);
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
     /* マッチング状況テキスト */
     .arcade-matching-status {
       margin-top: 18px;
@@ -584,6 +591,11 @@
         <span class="btn-icon">⌨️</span>
         <span class="btn-label">タイピングバトル</span>
         <span class="btn-tag">TYPING</span>
+      </button>
+      <button id="matchCardBtn" type="button" class="game-btn btn-cardgame">
+        <span class="btn-icon">🃏</span>
+        <span class="btn-label">カードゲーム</span>
+        <span class="btn-tag">CARD GAME</span>
       </button>
       <p id="matchingStatus" class="arcade-matching-status"></p>
     </div>
@@ -1812,6 +1824,12 @@
     document.getElementById("matchTypingBtn").addEventListener("click", () => {
       localStorage.setItem("typingPlayerName", myPlayerName);
       window.location.href = "/typing.html";
+    });
+
+    // カードゲームボタン処理（cardgame.htmlへ遷移する）
+    document.getElementById("matchCardBtn").addEventListener("click", () => {
+      localStorage.setItem("cgPlayerName", myPlayerName);
+      window.location.href = "/cardgame.html";
     });
 
     // ロビーへ戻るボタン処理

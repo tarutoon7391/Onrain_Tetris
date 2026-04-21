@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>カードゲーム - オンラインゲームセンター</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --text: #e5e7eb;
+      --accent: #60a5fa;
+      --border: #374151;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --gold: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0%, #0b1020 65%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* ===== ロビー・待機・結果画面 ===== */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(31,41,55,0.98), rgba(17,24,39,0.98));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 40px 36px;
+      width: 100%;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 24px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    .card p {
+      margin-bottom: 20px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .matching-status {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: #fde68a;
+      min-height: 1.4em;
+    }
+
+    .result-win  { font-size: 2.4rem; font-weight: 900; color: var(--ok);     margin-bottom: 28px; }
+    .result-lose { font-size: 2.4rem; font-weight: 900; color: var(--danger); margin-bottom: 28px; }
+
+    button {
+      cursor: pointer;
+      border: 1px solid #3b82f6;
+      color: white;
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 10px 16px;
+    }
+
+    button:hover  { filter: brightness(1.1); }
+    button:active { transform: translateY(1px); }
+
+    /* ===== ゲーム画面レイアウト ===== */
+    #gameScreen {
+      display: none;
+      width: min(1100px, 100%);
+      gap: 12px;
+      flex-direction: column;
+    }
+
+    /* プレイヤー名バー */
+    #namesBar {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      background: rgba(31,41,55,0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    #myNameBadge  { color: var(--accent); }
+    #oppNameBadge { color: var(--warn); }
+
+    /* メイン2カラム */
+    .game-body {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 12px;
+    }
+
+    .main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* パネル共通 */
+    .panel {
+      background: linear-gradient(180deg, rgba(31,41,55,0.95), rgba(17,24,39,0.95));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .panel-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* ===== 相手エリア ===== */
+    #oppArea {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* HP バー */
+    .hp-section {
+      min-width: 160px;
+    }
+
+    .hp-label {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .hp-bar-wrap {
+      background: rgba(0,0,0,0.4);
+      border-radius: 999px;
+      height: 14px;
+      width: 180px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .hp-bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .hp-bar.my-bar  { background: linear-gradient(90deg, #16a34a, #22c55e); }
+    .hp-bar.opp-bar { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+
+    .hp-number {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .hp-number.low { color: var(--danger); }
+
+    /* ブロック表示 */
+    .block-badge {
+      font-size: 0.82rem;
+      background: rgba(96,165,250,0.15);
+      border: 1px solid rgba(96,165,250,0.4);
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: var(--accent);
+    }
+
+    /* 手札・デッキ枚数 */
+    .count-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .count-chip {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      background: rgba(55,65,81,0.7);
+      border-radius: 6px;
+      padding: 3px 10px;
+    }
+
+    /* ===== フィールド ===== */
+    .field-area {
+      min-height: 80px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .field-area.empty::after {
+      content: "（なし）";
+      color: #4b5563;
+      font-size: 0.85rem;
+    }
+
+    /* ===== カード ===== */
+    .card-item {
+      width: 88px;
+      min-height: 110px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 6px 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s, filter 0.12s, border-color 0.12s;
+      position: relative;
+      font-size: 0.78rem;
+    }
+
+    .card-item:hover:not(.card-disabled) {
+      transform: translateY(-6px);
+      filter: brightness(1.15);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .card-item.card-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* カード種別の色 */
+    .card-attack1  { background: linear-gradient(160deg, #7f1d1d, #dc2626); border-color: rgba(239,68,68,0.4); }
+    .card-attack2  { background: linear-gradient(160deg, #450a0a, #b91c1c); border-color: rgba(185,28,28,0.5); }
+    .card-defense1 { background: linear-gradient(160deg, #1e3a5f, #2563eb); border-color: rgba(37,99,235,0.4); }
+    .card-draw1    { background: linear-gradient(160deg, #312e81, #7c3aed); border-color: rgba(124,58,237,0.4); }
+    .card-gold     { background: linear-gradient(160deg, #78350f, #d97706); border-color: rgba(217,119,6,0.4); }
+
+    .card-emoji { font-size: 1.6rem; line-height: 1; }
+
+    .card-name {
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-align: center;
+      margin: 2px 0;
+    }
+
+    .card-effect {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .card-cost {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(0,0,0,0.45);
+      border-radius: 999px;
+      padding: 1px 5px;
+      color: #fde68a;
+    }
+
+    /* ショップカード: ゴールド購入コスト表示 */
+    .card-shop-cost {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fde68a;
+      margin-top: 2px;
+    }
+
+    /* ===== 自分エリア ===== */
+    #myArea {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* 手札 */
+    #handArea {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      min-height: 120px;
+    }
+
+    /* ===== 右サイドバー ===== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* マナ表示 */
+    .mana-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .mana-orb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid #60a5fa;
+    }
+
+    .mana-orb.full { background: #3b82f6; }
+    .mana-orb.empty { background: rgba(59,130,246,0.15); }
+
+    /* ゴールド */
+    .gold-display {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    /* ターン終了ボタン */
+    #endTurnBtn {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      background: linear-gradient(180deg, #16a34a, #15803d);
+      border-color: #22c55e;
+    }
+
+    #endTurnBtn:disabled {
+      background: linear-gradient(180deg, #374151, #1f2937);
+      border-color: #4b5563;
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ショップ */
+    #shopPanel { display: none; }
+
+    #shopPanel .panel-title { color: #fde68a; }
+
+    .shop-cards {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    #skipShopBtn {
+      width: 100%;
+      margin-top: 10px;
+      background: linear-gradient(180deg, #6b7280, #4b5563);
+      border-color: #9ca3af;
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+
+    /* ターン情報 */
+    .turn-info {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #cbd5e1;
+    }
+
+    .turn-info .active-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .turn-info .active-label.my-turn  { color: var(--ok); }
+    .turn-info .active-label.opp-turn { color: var(--warn); }
+
+    /* メッセージバー */
+    #msgBar {
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      min-height: 1.5em;
+      color: #fde68a;
+      padding: 4px;
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 700px) {
+      .game-body {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 待機画面 -->
+  <div id="waitingScreen" class="screen">
+    <div class="card">
+      <h1>🃏 カードゲーム</h1>
+      <p id="waitingName"></p>
+      <p class="matching-status">対戦相手を待っています...</p>
+      <button id="backFromWaitBtn" type="button" style="margin-top:16px;">ロビーへ戻る</button>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="gameScreen">
+    <!-- プレイヤー名バー -->
+    <div id="namesBar" class="panel">
+      <span id="myNameBadge"></span>　vs　<span id="oppNameBadge"></span>
+    </div>
+
+    <div class="game-body">
+      <!-- メインカラム -->
+      <div class="main-col">
+        <!-- 相手情報 -->
+        <div class="panel" id="oppInfoPanel">
+          <div class="panel-title">相手</div>
+          <div id="oppArea">
+            <div class="hp-section">
+              <div class="hp-label">HP</div>
+              <div class="hp-bar-wrap"><div class="hp-bar opp-bar" id="oppHpBar" style="width:100%"></div></div>
+              <div class="hp-number" id="oppHpNum">20</div>
+            </div>
+            <div>
+              <div class="block-badge" id="oppBlockBadge">🛡️ ブロック: 0</div>
+            </div>
+            <div class="count-row">
+              <div class="count-chip" id="oppHandCount">手札: 0</div>
+              <div class="count-chip" id="oppDeckCount">デッキ: 0</div>
+              <div class="count-chip" id="oppDiscardCount">捨て札: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 相手フィールド -->
+        <div class="panel">
+          <div class="panel-title">相手の場</div>
+          <div class="field-area empty" id="oppField"></div>
+        </div>
+
+        <!-- 自分フィールド -->
+        <div class="panel">
+          <div class="panel-title">自分の場</div>
+          <div class="field-area empty" id="myField"></div>
+        </div>
+
+        <!-- 自分情報 -->
+        <div class="panel" id="myInfoPanel">
+          <div class="panel-title">自分</div>
+          <div id="myArea">
+            <div class="hp-section">
+              <div class="hp-label">HP</div>
+              <div class="hp-bar-wrap"><div class="hp-bar my-bar" id="myHpBar" style="width:100%"></div></div>
+              <div class="hp-number" id="myHpNum">20</div>
+            </div>
+            <div>
+              <div class="block-badge" id="myBlockBadge">🛡️ ブロック: 0</div>
+            </div>
+            <div class="count-row">
+              <div class="count-chip" id="myDeckCount">デッキ: 0</div>
+              <div class="count-chip" id="myDiscardCount">捨て札: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 手札 -->
+        <div class="panel">
+          <div class="panel-title">手札</div>
+          <div id="handArea"></div>
+        </div>
+      </div>
+
+      <!-- 右サイドバー -->
+      <div class="sidebar">
+        <!-- ターン・マナ情報 -->
+        <div class="panel">
+          <div class="panel-title">ターン情報</div>
+          <div class="turn-info">
+            <div id="turnLabel" class="active-label"></div>
+            <div>マナ: <span id="manaNum">0</span> / <span id="maxManaNum">0</span></div>
+            <div class="mana-row" id="manaOrbs"></div>
+          </div>
+        </div>
+
+        <!-- ゴールド -->
+        <div class="panel">
+          <div class="panel-title">ゴールド</div>
+          <div class="gold-display" id="goldDisplay">🪙 0</div>
+        </div>
+
+        <!-- ターン終了ボタン -->
+        <button id="endTurnBtn" type="button" disabled>ターン終了</button>
+
+        <!-- ショップパネル -->
+        <div class="panel" id="shopPanel">
+          <div class="panel-title">🛒 ショップ</div>
+          <div class="shop-cards" id="shopCards"></div>
+          <button id="skipShopBtn" type="button">スキップ</button>
+        </div>
+
+        <!-- メッセージ -->
+        <div id="msgBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="resultScreen" class="screen" style="display:none">
+    <div class="card">
+      <p id="resultText"></p>
+      <button id="backToLobbyBtn" type="button">ロビーへ戻る</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ===== カード定義（サーバーと同じ内容） =====
+    const CARD_DEFS = {
+      attack1:  { id: 'attack1',  name: '攻撃',     cost: 1, effect: 'damage', value: 3, shopCost: 3, emoji: '⚔️' },
+      attack2:  { id: 'attack2',  name: '強撃',     cost: 2, effect: 'damage', value: 7, shopCost: 6, emoji: '🗡️' },
+      defense1: { id: 'defense1', name: '防御',     cost: 1, effect: 'block',  value: 5, shopCost: 4, emoji: '🛡️' },
+      draw1:    { id: 'draw1',    name: 'ドロー',   cost: 1, effect: 'draw',   value: 2, shopCost: 4, emoji: '📚' },
+      gold:     { id: 'gold',     name: 'ゴールド', cost: 0, effect: 'gold',   value: 3, shopCost: 3, emoji: '🪙' },
+    };
+
+    // カード効果の説明文を返す関数
+    function cardEffectText(card) {
+      if (card.effect === 'damage') return `${card.value} ダメージ`;
+      if (card.effect === 'block')  return `${card.value} ブロック`;
+      if (card.effect === 'draw')   return `${card.value} 枚ドロー`;
+      if (card.effect === 'gold')   return `+${card.value} ゴールド`;
+      return '';
+    }
+
+    // ===== ゲーム状態を保持する変数 =====
+    let myPlayerName = '';
+    let opponentName = '';
+    let myPlayerNumber = 0;
+    let lastState = null;
+    let isMyTurn = false;
+    let currentPhase = 'play';
+
+    // ===== Socket.io接続 =====
+    const socket = io();
+
+    // ローカルストレージからプレイヤー名を取得してマッチングを開始する
+    const storedName = localStorage.getItem('cgPlayerName') || 'ゲスト';
+    myPlayerName = storedName;
+    document.getElementById('waitingName').textContent = `プレイヤー名: ${storedName}`;
+
+    socket.emit('cgJoinMatch', { playerName: storedName });
+
+    // ===== 画面切り替え関数 =====
+    function showWaiting() {
+      document.getElementById('waitingScreen').style.display = 'flex';
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'none';
+    }
+
+    function showGame() {
+      document.getElementById('waitingScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'flex';
+      document.getElementById('resultScreen').style.display = 'none';
+    }
+
+    function showResult(win) {
+      document.getElementById('waitingScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'flex';
+      const el = document.getElementById('resultText');
+      if (win) {
+        el.className = 'result-win';
+        el.textContent = '🎉 勝利！';
+      } else {
+        el.className = 'result-lose';
+        el.textContent = '💀 敗北...';
+      }
+    }
+
+    // ===== カード要素を生成する関数 =====
+    function createCardElement(cardId, options = {}) {
+      const card = CARD_DEFS[cardId];
+      if (!card) return null;
+
+      const el = document.createElement('div');
+      el.className = `card-item card-${cardId}`;
+
+      // マナ不足またはターン外の場合は非活性にする
+      if (options.disabled) el.classList.add('card-disabled');
+
+      el.innerHTML = `
+        <div class="card-cost">${card.cost > 0 ? card.cost + '💧マナ' : '無料'}</div>
+        <div class="card-emoji">${card.emoji}</div>
+        <div class="card-name">${card.name}</div>
+        <div class="card-effect">${cardEffectText(card)}</div>
+        ${options.showShopCost ? `<div class="card-shop-cost">🪙 ${card.shopCost}</div>` : ''}
+      `;
+
+      return el;
+    }
+
+    // ===== マナオーブを描画する関数 =====
+    function renderManaOrbs(current, max) {
+      const container = document.getElementById('manaOrbs');
+      container.innerHTML = '';
+      for (let i = 0; i < max; i++) {
+        const orb = document.createElement('div');
+        orb.className = `mana-orb ${i < current ? 'full' : 'empty'}`;
+        container.appendChild(orb);
+      }
+    }
+
+    // ===== フィールドのカード一覧を描画する関数 =====
+    function renderField(containerId, cardIds) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      if (!cardIds || cardIds.length === 0) {
+        el.classList.add('empty');
+      } else {
+        el.classList.remove('empty');
+        cardIds.forEach((id) => {
+          const cardEl = createCardElement(id, { disabled: true });
+          if (cardEl) el.appendChild(cardEl);
+        });
+      }
+    }
+
+    // ===== 手札を描画する関数 =====
+    function renderHand(hand, mana) {
+      const container = document.getElementById('handArea');
+      container.innerHTML = '';
+      hand.forEach((cardId, index) => {
+        const card = CARD_DEFS[cardId];
+        if (!card) return;
+        // 自分のターンのプレイフェーズのみクリック可能にする
+        const canPlay = isMyTurn && currentPhase === 'play' && mana >= card.cost;
+        const cardEl = createCardElement(cardId, { disabled: !canPlay });
+
+        if (canPlay) {
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgPlayCard', { handIndex: index });
+          });
+        }
+
+        container.appendChild(cardEl);
+      });
+    }
+
+    // ===== ショップを描画する関数 =====
+    function renderShop(shop, gold) {
+      const container = document.getElementById('shopCards');
+      container.innerHTML = '';
+      shop.forEach((cardId, shopIndex) => {
+        const card = CARD_DEFS[cardId];
+        if (!card) return;
+        const canBuy = gold >= card.shopCost;
+        const cardEl = createCardElement(cardId, { disabled: !canBuy, showShopCost: true });
+
+        if (canBuy) {
+          cardEl.addEventListener('click', () => {
+            socket.emit('cgBuyCard', { shopIndex });
+          });
+        }
+
+        container.appendChild(cardEl);
+      });
+    }
+
+    // ===== HPバーを更新する関数 =====
+    function updateHpBar(barId, numId, hp) {
+      const pct = Math.max(0, Math.min(100, (hp / 20) * 100));
+      document.getElementById(barId).style.width = pct + '%';
+      const numEl = document.getElementById(numId);
+      numEl.textContent = hp;
+      numEl.className = 'hp-number' + (hp <= 5 ? ' low' : '');
+    }
+
+    // ===== ゲーム状態を画面に反映する関数 =====
+    function applyState(state) {
+      lastState = state;
+      isMyTurn = (state.activePlayer === state.myPlayerNumber);
+      currentPhase = state.phase;
+
+      // HP更新
+      updateHpBar('myHpBar', 'myHpNum', state.myHp);
+      updateHpBar('oppHpBar', 'oppHpNum', state.oppHp);
+
+      // ブロック表示
+      document.getElementById('myBlockBadge').textContent  = `🛡️ ブロック: ${state.myBlock}`;
+      document.getElementById('oppBlockBadge').textContent = `🛡️ ブロック: ${state.oppBlock}`;
+
+      // デッキ・手札枚数
+      document.getElementById('myDeckCount').textContent     = `デッキ: ${state.myDeckCount}`;
+      document.getElementById('myDiscardCount').textContent  = `捨て札: ${state.myDiscardCount}`;
+      document.getElementById('oppHandCount').textContent    = `手札: ${state.oppHandCount}`;
+      document.getElementById('oppDeckCount').textContent    = `デッキ: ${state.oppDeckCount}`;
+      document.getElementById('oppDiscardCount').textContent = `捨て札: ${state.oppDiscardCount}`;
+
+      // マナ
+      document.getElementById('manaNum').textContent    = state.myMana;
+      document.getElementById('maxManaNum').textContent = state.myMaxMana;
+      renderManaOrbs(state.myMana, state.myMaxMana);
+
+      // ゴールド
+      document.getElementById('goldDisplay').textContent = `🪙 ${state.myGold}`;
+
+      // フィールド
+      renderField('myField', state.myField);
+      renderField('oppField', state.oppField);
+
+      // 手札
+      renderHand(state.myHand, state.myMana);
+
+      // ターン情報
+      const turnLabel = document.getElementById('turnLabel');
+      if (isMyTurn) {
+        turnLabel.textContent = '▶ 自分のターン';
+        turnLabel.className = 'active-label my-turn';
+      } else {
+        turnLabel.textContent = '⏳ 相手のターン';
+        turnLabel.className = 'active-label opp-turn';
+      }
+
+      // ターン終了ボタン（自分のターンのプレイフェーズのみ有効）
+      const endBtn = document.getElementById('endTurnBtn');
+      endBtn.disabled = !(isMyTurn && currentPhase === 'play');
+
+      // ショップパネル
+      const shopPanel = document.getElementById('shopPanel');
+      if (isMyTurn && currentPhase === 'shop') {
+        shopPanel.style.display = 'block';
+        renderShop(state.shop, state.myGold);
+        document.getElementById('msgBar').textContent = '🛒 カードを購入するかスキップしてください';
+      } else {
+        shopPanel.style.display = 'none';
+        if (!isMyTurn) {
+          document.getElementById('msgBar').textContent = '相手のターンです...';
+        } else {
+          document.getElementById('msgBar').textContent = 'カードを使ってターン終了ボタンを押してください';
+        }
+      }
+    }
+
+    // ===== Socket.ioイベントハンドラ =====
+
+    // 待機通知
+    socket.on('cgWaiting', () => {
+      showWaiting();
+    });
+
+    // マッチ開始通知
+    socket.on('cgMatchStart', (payload) => {
+      myPlayerNumber = payload.playerNumber;
+      opponentName   = payload.opponentName;
+      document.getElementById('myNameBadge').textContent  = payload.myName;
+      document.getElementById('oppNameBadge').textContent = payload.opponentName;
+      showGame();
+    });
+
+    // ゲーム状態更新
+    socket.on('cgStateUpdate', (state) => {
+      applyState(state);
+    });
+
+    // 相手が切断した通知
+    socket.on('cgOpponentLeft', () => {
+      document.getElementById('msgBar').textContent = '相手が退出しました';
+      document.getElementById('endTurnBtn').disabled = true;
+      document.getElementById('shopPanel').style.display = 'none';
+    });
+
+    // 勝敗通知
+    socket.on('cgResult', (payload) => {
+      showResult(payload.win);
+    });
+
+    // ===== ボタンイベント =====
+
+    // ターン終了ボタン
+    document.getElementById('endTurnBtn').addEventListener('click', () => {
+      socket.emit('cgEndTurn');
+    });
+
+    // ショップスキップボタン
+    document.getElementById('skipShopBtn').addEventListener('click', () => {
+      socket.emit('cgSkipShop');
+    });
+
+    // 待機画面からロビーへ戻るボタン
+    document.getElementById('backFromWaitBtn').addEventListener('click', () => {
+      socket.emit('cgLeaveRoom');
+      window.location.href = '/';
+    });
+
+    // 結果画面からロビーへ戻るボタン
+    document.getElementById('backToLobbyBtn').addEventListener('click', () => {
+      socket.emit('cgLeaveRoom');
+      window.location.href = '/';
+    });
+
+    // 最初は待機画面を表示する
+    showWaiting();
+  </script>
+</body>
+</html>
