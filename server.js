@@ -1405,7 +1405,7 @@ io.on("connection", (socket) => {
     }
 
     // コピーフラグが有効な場合は効果を2回適用する（scryとその他インタラクティブ系は例外で1回のみ）
-    const noRepeatEffects = ['scry', 'copy', 'timewarp', 'm_drain', 'warcry', 'shadowclone', 'm_recover', 'm_timewarp'];
+    const noRepeatEffects = ['scry', 'copy', 'timewarp', 'm_drain', 'warcry', 'shadowclone', 'm_recover'];
     const repeatCount = state.copyNext[playerIndex] && !noRepeatEffects.includes(card.effect) ? 2 : 1;
     if (card.effect !== 'copy') {
       state.copyNext[playerIndex] = false;

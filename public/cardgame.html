@@ -1084,8 +1084,8 @@
         const card = CARD_DEFS[cardId];
         if (!card) return;
         const isSealed = sealedCardId === cardId;
-        // 隠密バフ有効時は最初の1枚のコストを0とみなす
-        const effectiveCost = (stealth && index === 0) ? 0 : card.cost;
+        // 隠密バフが有効な場合はカードのコストを0とみなしてプレイ可否を判定する
+        const effectiveCost = stealth ? 0 : card.cost;
         // 自分のターンのプレイフェーズのみクリック可能にする（封印カードは不可）
         const canPlay = isMyTurn && currentPhase === 'play' && mana >= effectiveCost && !isSealed;
         const cardEl = createCardElement(cardId, { disabled: !canPlay });
