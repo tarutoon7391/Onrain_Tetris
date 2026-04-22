@@ -336,6 +336,101 @@ const CARD_DEFS = {
   // ===== ゴールドカード =====
   gold2:     { id: 'gold2',     name: '金塊',     cost: 2,  effect: 'gold',    value: 8,  shopCost: 4,  emoji: '💰' },
   invest:    { id: 'invest',    name: '投資',     cost: 3,  effect: 'invest',  value: 15, shopCost: 6,  emoji: '📈' },
+
+  // ===== ⚔️ ウォリアー固有カード =====
+  w_slash:     { id: 'w_slash',     name: '斬撃',       cost: 1,  effect: 'damage',    value: 4,  shopCost: 3,  emoji: '⚔️', job: 'warrior' },
+  w_wall:      { id: 'w_wall',      name: '防壁',       cost: 1,  effect: 'block',     value: 5,  shopCost: 3,  emoji: '🧱', job: 'warrior' },
+  w_smash:     { id: 'w_smash',     name: '強打',       cost: 2,  effect: 'damage',    value: 8,  shopCost: 6,  emoji: '🔨', job: 'warrior' },
+  w_shieldbash:{ id: 'w_shieldbash',name: '盾撃',       cost: 2,  effect: 'shieldbash',value: 4,  blockValue: 4,  shopCost: 6,  emoji: '🛡️', job: 'warrior' },
+  w_fortress:  { id: 'w_fortress',  name: '堅陣',       cost: 2,  effect: 'block',     value: 8,  shopCost: 6,  emoji: '🏰', job: 'warrior' },
+  w_weaponup:  { id: 'w_weaponup',  name: '武器強化',   cost: 3,  effect: 'weaponup',  value: 8,  shopCost: 9,  emoji: '⬆️', job: 'warrior' },
+  w_charge:    { id: 'w_charge',    name: '突進',       cost: 3,  effect: 'shieldbash',value: 10, blockValue: 3,  shopCost: 9,  emoji: '🐂', job: 'warrior' },
+  w_dualwield: { id: 'w_dualwield', name: '二刀流',     cost: 3,  effect: 'combo',     value: 5,  shopCost: 9,  emoji: '⚔️', job: 'warrior' },
+  w_counter:   { id: 'w_counter',   name: '反撃',       cost: 4,  effect: 'counter',   value: 8,  shopCost: 12, emoji: '🔄', job: 'warrior' },
+  w_warfiend:  { id: 'w_warfiend',  name: '戦鬼',       cost: 4,  effect: 'warfiend',  value: 5,  blockValue: 3,  shopCost: 12, emoji: '👹', job: 'warrior' },
+  w_earthcrush:{ id: 'w_earthcrush',name: '大地砕き',   cost: 5,  effect: 'damage',    value: 18, shopCost: 15, emoji: '💥', job: 'warrior' },
+  w_rage:      { id: 'w_rage',      name: '激怒',       cost: 5,  effect: 'rage',      value: 2,  shopCost: 15, emoji: '😤', job: 'warrior' },
+  w_warcry:    { id: 'w_warcry',    name: '覇気',       cost: 6,  effect: 'warcry',    value: 0,  shopCost: 18, emoji: '📯', job: 'warrior' },
+  w_undying:   { id: 'w_undying',   name: '不屈',       cost: 6,  effect: 'undying',   value: 10, blockValue: 12, shopCost: 18, emoji: '💪', job: 'warrior' },
+  w_ironwall:  { id: 'w_ironwall',  name: '鉄壁構え',   cost: 7,  effect: 'ironwall',  value: 20, shopCost: 21, emoji: '🗿', job: 'warrior' },
+  w_allout:    { id: 'w_allout',    name: '渾身の一撃', cost: 8,  effect: 'damage',    value: 30, shopCost: 24, emoji: '💢', job: 'warrior' },
+  w_godofwar:  { id: 'w_godofwar',  name: '【必殺】武神降臨', cost: 10, effect: 'godofwar', value: 10, blockValue: 20, shopCost: 30, emoji: '⚡', job: 'warrior' },
+
+  // ===== 🔥 メイジ固有カード =====
+  m_magicarrow:{ id: 'm_magicarrow',name: '魔法矢',     cost: 1,  effect: 'damage',    value: 4,  shopCost: 3,  emoji: '🏹', job: 'mage' },
+  m_manafill:  { id: 'm_manafill',  name: '魔力充填',   cost: 1,  effect: 'manafill',  value: 3,  shopCost: 3,  emoji: '🔵', job: 'mage' },
+  m_magicwall: { id: 'm_magicwall', name: '魔法障壁',   cost: 2,  effect: 'block',     value: 8,  shopCost: 6,  emoji: '🌀', job: 'mage' },
+  m_amplify:   { id: 'm_amplify',   name: '魔力増幅',   cost: 2,  effect: 'amplify',   value: 0,  shopCost: 6,  emoji: '✨', job: 'mage' },
+  m_chain:     { id: 'm_chain',     name: '連鎖魔法',   cost: 2,  effect: 'chain',     value: 3,  shopCost: 6,  emoji: '🔗', job: 'mage' },
+  m_freeze:    { id: 'm_freeze',    name: '氷結',       cost: 3,  effect: 'freeze',    value: 5,  shopCost: 9,  emoji: '❄️', job: 'mage' },
+  m_thunder:   { id: 'm_thunder',   name: '雷撃',       cost: 3,  effect: 'thunder',   value: 8,  drawValue: 2, shopCost: 9,  emoji: '⚡', job: 'mage' },
+  m_fireball:  { id: 'm_fireball',  name: 'ファイアボール', cost: 4, effect: 'damage', value: 14, shopCost: 12, emoji: '🔥', job: 'mage' },
+  m_recover:   { id: 'm_recover',   name: '魔力回収',   cost: 4,  effect: 'm_recover', value: 2,  shopCost: 12, emoji: '♻️', job: 'mage' },
+  m_seal:      { id: 'm_seal',      name: '封印',       cost: 4,  effect: 'm_seal',    value: 0,  shopCost: 12, emoji: '🔒', job: 'mage' },
+  m_copy:      { id: 'm_copy',      name: '魔法複製',   cost: 5,  effect: 'm_copy',    value: 0,  shopCost: 15, emoji: '📋', job: 'mage' },
+  m_timewarp:  { id: 'm_timewarp',  name: '時空歪曲',   cost: 5,  effect: 'timewarp',  value: 2,  shopCost: 15, emoji: '⏳', job: 'mage' },
+  m_explosion: { id: 'm_explosion', name: '魔力爆発',   cost: 6,  effect: 'explosion', value: 5,  shopCost: 18, emoji: '💣', job: 'mage' },
+  m_drain:     { id: 'm_drain',     name: '吸魔',       cost: 7,  effect: 'm_drain',   value: 0,  shopCost: 21, emoji: '🌑', job: 'mage' },
+  m_meteor:    { id: 'm_meteor',    name: '隕石',       cost: 8,  effect: 'damage',    value: 30, shopCost: 24, emoji: '☄️', job: 'mage' },
+  m_bigmagic:  { id: 'm_bigmagic',  name: '大魔法',     cost: 8,  effect: 'bigmagic',  value: 6,  shopCost: 24, emoji: '🌟', job: 'mage' },
+  m_collapse:  { id: 'm_collapse',  name: '【必殺】魔導崩壊', cost: 10, effect: 'collapse', value: 0.6, drawValue: 5, shopCost: 30, emoji: '🌌', job: 'mage' },
+
+  // ===== ✨ プリースト固有カード =====
+  p_heal:      { id: 'p_heal',      name: '癒し',       cost: 1,  effect: 'heal',      value: 5,  shopCost: 3,  emoji: '💚', job: 'priest' },
+  p_holylight: { id: 'p_holylight', name: '聖光',       cost: 1,  effect: 'block',     value: 4,  shopCost: 3,  emoji: '☀️', job: 'priest' },
+  p_prayer:    { id: 'p_prayer',    name: '祈り',       cost: 2,  effect: 'prayer',    value: 3,  turns: 3,     shopCost: 6,  emoji: '🙏', job: 'priest' },
+  p_purify:    { id: 'p_purify',    name: '浄化',       cost: 2,  effect: 'purify',    value: 3,  shopCost: 6,  emoji: '🌸', job: 'priest' },
+  p_devotion:  { id: 'p_devotion',  name: '献身',       cost: 2,  effect: 'devotion',  value: 6,  drawValue: 2, shopCost: 6,  emoji: '❤️', job: 'priest' },
+  p_holyfire:  { id: 'p_holyfire',  name: '聖なる炎',   cost: 3,  effect: 'holyfire',  value: 8,  healValue: 4, shopCost: 9,  emoji: '🕯️', job: 'priest' },
+  p_holyshield:{ id: 'p_holyshield',name: '聖盾',       cost: 3,  effect: 'holyshield',value: 10, healValue: 5, shopCost: 9,  emoji: '🛡️', job: 'priest' },
+  p_confess:   { id: 'p_confess',   name: '懺悔',       cost: 3,  effect: 'confess',   value: 4,  shopCost: 9,  emoji: '📖', job: 'priest' },
+  p_bless:     { id: 'p_bless',     name: '祝福',       cost: 4,  effect: 'bless',     value: 0,  shopCost: 12, emoji: '⭐', job: 'priest' },
+  p_divineye:  { id: 'p_divineye',  name: '神の目',     cost: 4,  effect: 'divineye',  value: 2,  shopCost: 12, emoji: '👁️', job: 'priest' },
+  p_holybeam:  { id: 'p_holybeam',  name: '聖なる光',   cost: 5,  effect: 'holybeam',  value: 8,  healValue: 15, shopCost: 15, emoji: '💫', job: 'priest' },
+  p_judgment:  { id: 'p_judgment',  name: '天罰',       cost: 5,  effect: 'judgment',  value: 0,  shopCost: 15, emoji: '⚖️', job: 'priest' },
+  p_sanctuary: { id: 'p_sanctuary', name: '聖域',       cost: 6,  effect: 'sanctuary', value: 8,  turns: 3,     shopCost: 18, emoji: '🏛️', job: 'priest' },
+  p_protection:{ id: 'p_protection',name: '加護',       cost: 6,  effect: 'protection',value: 2,  shopCost: 18, emoji: '🔰', job: 'priest' },
+  p_divine:    { id: 'p_divine',    name: '裁き',       cost: 7,  effect: 'divine',    value: 0.3, shopCost: 21, emoji: '✝️', job: 'priest' },
+  p_resurrect: { id: 'p_resurrect', name: '復活',       cost: 8,  effect: 'heal',      value: 30, shopCost: 24, emoji: '🌅', job: 'priest' },
+  p_holyjudge: { id: 'p_holyjudge', name: '【必殺】聖なる審判', cost: 10, effect: 'holyjudge', value: 20, shopCost: 30, emoji: '👼', job: 'priest' },
+
+  // ===== 🗡️ ローグ固有カード =====
+  r_dagger:    { id: 'r_dagger',    name: '短刀',       cost: 1,  effect: 'damage',    value: 4,  shopCost: 3,  emoji: '🗡️', job: 'rogue' },
+  r_smoke:     { id: 'r_smoke',     name: '煙幕',       cost: 1,  effect: 'block',     value: 5,  shopCost: 3,  emoji: '💨', job: 'rogue' },
+  r_shadowrun: { id: 'r_shadowrun', name: '影走り',     cost: 2,  effect: 'shadowrun', value: 2,  drawValue: 3, shopCost: 6,  emoji: '👤', job: 'rogue' },
+  r_stealth:   { id: 'r_stealth',   name: '隠密',       cost: 2,  effect: 'stealth',   value: 0,  shopCost: 6,  emoji: '🌙', job: 'rogue' },
+  r_poisonstar:{ id: 'r_poisonstar',name: '毒手裏剣',   cost: 2,  effect: 'poisonstar',value: 3,  poisonDmg: 2, poisonTurns: 2, shopCost: 6,  emoji: '🌟', job: 'rogue' },
+  r_steal:     { id: 'r_steal',     name: 'スリ',       cost: 3,  effect: 'steal',     value: 5,  shopCost: 9,  emoji: '💸', job: 'rogue' },
+  r_stab:      { id: 'r_stab',      name: '連刺し',     cost: 3,  effect: 'stab',      value: 2,  shopCost: 9,  emoji: '🔪', job: 'rogue' },
+  r_distract:  { id: 'r_distract',  name: '陽動',       cost: 3,  effect: 'distract',  value: 1,  shopCost: 9,  emoji: '🎭', job: 'rogue' },
+  r_mirage:    { id: 'r_mirage',    name: '残像',       cost: 4,  effect: 'mirage',    value: 4,  shopCost: 12, emoji: '🌫️', job: 'rogue' },
+  r_illusion:  { id: 'r_illusion',  name: '幻影',       cost: 4,  effect: 'illusion',  value: 0,  shopCost: 12, emoji: '🪄', job: 'rogue' },
+  r_backstab:  { id: 'r_backstab',  name: '背後奇襲',   cost: 5,  effect: 'backstab',  value: 15, bonusValue: 8, shopCost: 15, emoji: '🥷', job: 'rogue' },
+  r_toxicsmoke:{ id: 'r_toxicsmoke',name: '毒煙幕',     cost: 5,  effect: 'toxicsmoke',value: 6,  poisonDmg: 3, poisonTurns: 3, shopCost: 15, emoji: '☁️', job: 'rogue' },
+  r_doublesteal:{ id: 'r_doublesteal', name: '二重スリ',cost: 6,  effect: 'doublesteal',value: 8, drawValue: 3, shopCost: 18, emoji: '💰', job: 'rogue' },
+  r_chaos:     { id: 'r_chaos',     name: '撹乱',       cost: 6,  effect: 'distract',  value: 2,  shopCost: 18, emoji: '🌪️', job: 'rogue' },
+  r_shadowstrike:{ id: 'r_shadowstrike', name: '闇討ち',cost: 7,  effect: 'damage',    value: 25, shopCost: 21, emoji: '🌑', job: 'rogue' },
+  r_vital:     { id: 'r_vital',     name: '急所突き',   cost: 8,  effect: 'vital',     value: 20, discardCount: 2, shopCost: 24, emoji: '💔', job: 'rogue' },
+  r_dance:     { id: 'r_dance',     name: '【必殺】千影乱舞', cost: 10, effect: 'dance', value: 3, shopCost: 30, emoji: '💃', job: 'rogue' },
+
+  // ===== 🔪 アサシン固有カード =====
+  a_needle:    { id: 'a_needle',    name: '毒針',       cost: 1,  effect: 'poisoncard', value: 2,  poisonDmg: 1, poisonTurns: 3, shopCost: 3,  emoji: '🪡', job: 'assassin' },
+  a_hide:      { id: 'a_hide',      name: '影隠れ',     cost: 1,  effect: 'block',     value: 5,  shopCost: 3,  emoji: '🌑', job: 'assassin' },
+  a_corrosion: { id: 'a_corrosion', name: '腐食毒',     cost: 2,  effect: 'corrosion', poisonDmg: 2, poisonTurns: 2, shopCost: 6,  emoji: '🧪', job: 'assassin' },
+  a_miasma:    { id: 'a_miasma',    name: '毒霧',       cost: 2,  effect: 'poisoncard', value: 0,  poisonDmg: 2, poisonTurns: 5, shopCost: 6,  emoji: '💀', job: 'assassin' },
+  a_shadowbind:{ id: 'a_shadowbind',name: '影縫い',     cost: 2,  effect: 'shadowbind',value: 3,  shopCost: 6,  emoji: '🕸️', job: 'assassin' },
+  a_venom:     { id: 'a_venom',     name: '猛毒',       cost: 3,  effect: 'poisoncard', value: 0,  poisonDmg: 4, poisonTurns: 4, shopCost: 9,  emoji: '☠️', job: 'assassin' },
+  a_poisonblade:{ id: 'a_poisonblade', name: '毒刃',    cost: 3,  effect: 'poisoncard', value: 6,  poisonDmg: 3, poisonTurns: 3, shopCost: 9,  emoji: '🗡️', job: 'assassin' },
+  a_darkpact:  { id: 'a_darkpact',  name: '闇の契約',   cost: 3,  effect: 'darkpact',  value: 8,  drawValue: 6, shopCost: 9,  emoji: '📜', job: 'assassin' },
+  a_trap:      { id: 'a_trap',      name: '罠',         cost: 4,  effect: 'trap',      value: 3,  trapCount: 4, shopCost: 12, emoji: '⚙️', job: 'assassin' },
+  a_powerup:   { id: 'a_powerup',   name: '毒強化',     cost: 4,  effect: 'powerup',   value: 0,  shopCost: 12, emoji: '⬆️', job: 'assassin' },
+  a_poisonbomb:{ id: 'a_poisonbomb',name: '毒爆弾',     cost: 5,  effect: 'poisoncard', value: 0,  poisonDmg: 4, poisonTurns: 4, shopCost: 15, emoji: '💣', job: 'assassin' },
+  a_shadowclone:{ id: 'a_shadowclone', name: '影分身',  cost: 5,  effect: 'shadowclone', value: 0, shopCost: 15, emoji: '👥', job: 'assassin' },
+  a_swamp:     { id: 'a_swamp',     name: '毒沼',       cost: 6,  effect: 'poisoncard', value: 0,  poisonDmg: 6, poisonTurns: 5, shopCost: 18, emoji: '🌿', job: 'assassin' },
+  a_assassinate:{ id: 'a_assassinate', name: '暗殺',    cost: 7,  effect: 'assassinate', value: 30, shopCost: 21, emoji: '🥷', job: 'assassin' },
+  a_deadlyvenom:{ id: 'a_deadlyvenom', name: '絶命毒',  cost: 8,  effect: 'poisoncard', value: 0,  poisonDmg: 10, poisonTurns: 4, shopCost: 24, emoji: '💀', job: 'assassin' },
+  a_ritual:    { id: 'a_ritual',    name: '暗黒の儀式', cost: 8,  effect: 'ritual',    value: 35, selfDmg: 15,  shopCost: 24, emoji: '🕯️', job: 'assassin' },
+  a_spiral:    { id: 'a_spiral',    name: '【必殺】死の螺旋', cost: 10, effect: 'spiral', value: 0, poisonDmg: 15, poisonTurns: 5, shopCost: 30, emoji: '🌀', job: 'assassin' },
 };
 
 // 毒の1ターンあたりダメージ量
@@ -345,13 +440,62 @@ const SCRY_CARD_COUNT = 3;
 // プレイヤーの最大HP
 const CG_MAX_HP = 20;
 
-// ショップに並ぶカードのプール（初期カードの attack1・gold は含めない）
+// ショップに並ぶカードの共通プール（初期カードの attack1・gold は含めない）
 const CG_SHOP_POOL = [
   'attack2', 'strike2', 'combo', 'poison', 'greatsword', 'storm', 'finisher', 'phoenix',
   'defense1', 'block1', 'fortify', 'reflect', 'heal',
   'draw1', 'library', 'copy', 'scry',
   'gold2', 'invest',
 ];
+
+// ⚔️ ウォリアー固有カードのショッププール
+const WARRIOR_POOL = [
+  'w_slash', 'w_wall', 'w_smash', 'w_shieldbash', 'w_fortress',
+  'w_weaponup', 'w_charge', 'w_dualwield', 'w_counter', 'w_warfiend',
+  'w_earthcrush', 'w_rage', 'w_warcry', 'w_undying', 'w_ironwall',
+  'w_allout', 'w_godofwar',
+];
+
+// 🔥 メイジ固有カードのショッププール
+const MAGE_POOL = [
+  'm_magicarrow', 'm_manafill', 'm_magicwall', 'm_amplify', 'm_chain',
+  'm_freeze', 'm_thunder', 'm_fireball', 'm_recover', 'm_seal',
+  'm_copy', 'm_timewarp', 'm_explosion', 'm_drain', 'm_meteor',
+  'm_bigmagic', 'm_collapse',
+];
+
+// ✨ プリースト固有カードのショッププール
+const PRIEST_POOL = [
+  'p_heal', 'p_holylight', 'p_prayer', 'p_purify', 'p_devotion',
+  'p_holyfire', 'p_holyshield', 'p_confess', 'p_bless', 'p_divineye',
+  'p_holybeam', 'p_judgment', 'p_sanctuary', 'p_protection', 'p_divine',
+  'p_resurrect', 'p_holyjudge',
+];
+
+// 🗡️ ローグ固有カードのショッププール
+const ROGUE_POOL = [
+  'r_dagger', 'r_smoke', 'r_shadowrun', 'r_stealth', 'r_poisonstar',
+  'r_steal', 'r_stab', 'r_distract', 'r_mirage', 'r_illusion',
+  'r_backstab', 'r_toxicsmoke', 'r_doublesteal', 'r_chaos', 'r_shadowstrike',
+  'r_vital', 'r_dance',
+];
+
+// 🔪 アサシン固有カードのショッププール
+const ASSASSIN_POOL = [
+  'a_needle', 'a_hide', 'a_corrosion', 'a_miasma', 'a_shadowbind',
+  'a_venom', 'a_poisonblade', 'a_darkpact', 'a_trap', 'a_powerup',
+  'a_poisonbomb', 'a_shadowclone', 'a_swamp', 'a_assassinate', 'a_deadlyvenom',
+  'a_ritual', 'a_spiral',
+];
+
+// 職業名からプールを返すマップ
+const JOB_POOLS = {
+  warrior: WARRIOR_POOL,
+  mage:    MAGE_POOL,
+  priest:  PRIEST_POOL,
+  rogue:   ROGUE_POOL,
+  assassin: ASSASSIN_POOL,
+};
 
 // 初期デッキ構成（攻撃×4・ゴールド×6）
 const CG_INITIAL_DECK = [
@@ -380,9 +524,13 @@ function cgShuffle(arr) {
   return a;
 }
 
-// ショップに並べる3枚のカードをランダムに生成する関数
-function generateCGShop() {
-  return cgShuffle([...CG_SHOP_POOL]).slice(0, 3);
+// ショップに並べる3枚のカードをランダムに生成する関数（職業プール優先）
+function generateCGShop(job) {
+  // 職業固有プール(2枚) + 共通プール(1枚) を混ぜて提示する
+  const jobPool = JOB_POOLS[job] || [];
+  const jobCards = jobPool.length > 0 ? cgShuffle([...jobPool]).slice(0, 2) : [];
+  const commonCards = cgShuffle([...CG_SHOP_POOL]).slice(0, 3 - jobCards.length);
+  return cgShuffle([...jobCards, ...commonCards]);
 }
 
 // ゲーム初期状態を生成する関数
@@ -406,8 +554,10 @@ function initCGGameState() {
     trashCount: [0, 0],
     // 現在の削除コスト（初回5コイン、削除するたびに5コイン増加）
     trashCost: [5, 5],
-    // 毒カウンター（毎ターン開始時にダメージを与え1減少する）
-    poison: [0, 0],
+    // 毒スタック（各スタックは {dmg, turns} - 毎ターン開始時にダメージを与えターンを減らす）
+    poisonStacks: [[], []],
+    // ターン開始時回復スタック（prayer/sanctuaryなど - 各スタックは {amount, turns}）
+    healPerTurn: [[], []],
     // 次ターン開始時に加算されるゴールド（invest の効果）
     pendingGold: [0, 0],
     // 反射フラグ（受けたダメージの半分を返す）
@@ -416,6 +566,30 @@ function initCGGameState() {
     copyNext: [false, false],
     // 予知（scry）選択待ちカードリスト
     scryCards: [null, null],
+    // 職業情報
+    jobs: ['', ''],
+    // ウォリアー武器強化バフ（次の攻撃カードに追加ダメージ）
+    weaponUp: [0, 0],
+    // メイジ魔力増幅バフ（次のカードのダメージを2倍にする）
+    amplify: [false, false],
+    // プリースト祝福バフ（次のカードの効果を2倍にする）
+    bless: [false, false],
+    // ローグ隠密バフ（次のカードのコストを0にする）
+    stealth: [false, false],
+    // 次のターン追加で得るマナ量（正でマナ増加・負でマナ減少）
+    manaBonusNextTurn: [0, 0],
+    // プリースト加護（次にN回受けるダメージを無効化）
+    protection: [0, 0],
+    // アサシン罠（相手がカードを使うたびにダメージ - 残りトリガー数）
+    trapTriggers: [0, 0],
+    // ウォリアー鉄壁構え（次のターンも継続するブロック値）
+    persistBlock: [0, 0],
+    // メイジ封印（封印されたカードID - 相手の手札で1枚使用不能）
+    sealedCardId: [null, null],
+    // このターンに使用した毒カードのリスト（アサシン影分身用）
+    poisonCardsThisTurn: [[], []],
+    // 累計受けたダメージ（ウォリアー激怒用）
+    totalDamageTaken: [0, 0],
   };
 }
 
@@ -439,21 +613,57 @@ function cgStartTurn(state, playerIndex) {
   state.maxMana[playerIndex] = Math.min(state.maxMana[playerIndex] + 1, 10);
   state.mana[playerIndex] = state.maxMana[playerIndex];
   state.field[playerIndex] = [];
+  // このターンの毒カード使用履歴をリセットする
+  state.poisonCardsThisTurn[playerIndex] = [];
 
-  // 毒ダメージを処理する（毒カウンターが残っている場合はPOISON_DMG_PER_TURNダメージを与えて1減少）
-  if (state.poison[playerIndex] > 0) {
-    const poisonDmg = POISON_DMG_PER_TURN;
-    const absorbed = Math.min(state.block[playerIndex], poisonDmg);
-    state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbed);
-    state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - (poisonDmg - absorbed));
-    state.poison[playerIndex] -= 1;
+  // 鉄壁構えの持続ブロックを付与する
+  if (state.persistBlock[playerIndex] > 0) {
+    state.block[playerIndex] += state.persistBlock[playerIndex];
+    state.persistBlock[playerIndex] = 0;
   }
+
+  // 毒スタックのダメージを処理する（各スタックのdmgを与え、ターンを1減らす）
+  const activeStacks = [];
+  let totalPoisonDmg = 0;
+  for (const stack of state.poisonStacks[playerIndex]) {
+    totalPoisonDmg += stack.dmg;
+    if (stack.turns > 1) {
+      activeStacks.push({ dmg: stack.dmg, turns: stack.turns - 1 });
+    }
+  }
+  state.poisonStacks[playerIndex] = activeStacks;
+  if (totalPoisonDmg > 0) {
+    const absorbed = Math.min(state.block[playerIndex], totalPoisonDmg);
+    state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbed);
+    const actualPoisonDmg = totalPoisonDmg - absorbed;
+    state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - actualPoisonDmg);
+    state.totalDamageTaken[playerIndex] += actualPoisonDmg;
+  }
+
+  // ターン開始時の回復スタックを処理する（prayer/sanctuaryなど）
+  const activeHeals = [];
+  for (const stack of state.healPerTurn[playerIndex]) {
+    state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + stack.amount);
+    if (stack.turns > 1) {
+      activeHeals.push({ amount: stack.amount, turns: stack.turns - 1 });
+    }
+  }
+  state.healPerTurn[playerIndex] = activeHeals;
 
   // 前ターンに invest で積み立てたゴールドを加算する
   if (state.pendingGold[playerIndex] > 0) {
     state.gold[playerIndex] += state.pendingGold[playerIndex];
     state.pendingGold[playerIndex] = 0;
   }
+
+  // 追加マナボーナスを処理する（マナ充填や影縫いなど）
+  if (state.manaBonusNextTurn[playerIndex] !== 0) {
+    state.mana[playerIndex] = Math.max(0, state.mana[playerIndex] + state.manaBonusNextTurn[playerIndex]);
+    state.manaBonusNextTurn[playerIndex] = 0;
+  }
+
+  // 封印は1ターンのみ有効なのでリセットする
+  state.sealedCardId[playerIndex] = null;
 
   cgDrawCards(state, playerIndex, 5);
 }
@@ -494,6 +704,9 @@ function sendCGState(room) {
     const opp = 1 - index;
     // 自分のショップフェーズのときはデッキ・捨て札の中身もカード削除UIのために送る
     const isMyShopTurn = state.phase === 'shop' && state.activePlayer === index;
+    // 毒の合計ダメージ/ターンを計算して送る
+    const myPoisonDmgPerTurn = state.poisonStacks[index].reduce((s, st) => s + st.dmg, 0);
+    const oppPoisonDmgPerTurn = state.poisonStacks[opp].reduce((s, st) => s + st.dmg, 0);
     io.to(socketId).emit('cgStateUpdate', {
       myHp: state.hp[index],
       myBlock: state.block[index],
@@ -522,15 +735,33 @@ function sendCGState(room) {
       // カード削除モーダル用にデッキ・捨て札の中身を送る（自分のショップフェーズのみ）
       myDeckCards: isMyShopTurn ? [...state.deck[index]] : null,
       myDiscardCards: isMyShopTurn ? [...state.discard[index]] : null,
+      // 職業情報
+      myJob: state.jobs[index],
+      oppJob: state.jobs[opp],
+      // 毒ダメージ/ターン
+      myPoisonDmgPerTurn,
+      oppPoisonDmgPerTurn,
+      // バフ状態
+      myWeaponUp: state.weaponUp[index],
+      myAmplify: state.amplify[index],
+      myBless: state.bless[index],
+      myStealth: state.stealth[index],
+      myProtection: state.protection[index],
+      myTrapTriggers: state.trapTriggers[index],
+      // 封印されているカードID（相手から封印されている場合）
+      mySealedCardId: state.sealedCardId[index],
     });
   });
 }
 
 // カードゲームルームへプレイヤーを参加させる関数
-function joinCGRoom(socket, playerName) {
+function joinCGRoom(socket, playerName, job) {
   const room = getJoinableCGRoom();
   room.players.push(socket.id);
   room.playerNames[socket.id] = playerName;
+  // 職業情報をルームに保存する
+  if (!room.playerJobs) room.playerJobs = {};
+  room.playerJobs[socket.id] = job || '';
   socket.join(room.id);
 
   const playerNumber = room.players.length;
@@ -540,8 +771,10 @@ function joinCGRoom(socket, playerName) {
     room.started = true;
     cgWaitingRoomId = null;
 
-    // ゲーム初期状態を生成し先攻のターンを開始する
+    // ゲーム初期状態を生成し職業を設定して先攻のターンを開始する
     room.state = initCGGameState();
+    room.state.jobs[0] = room.playerJobs[room.players[0]] || '';
+    room.state.jobs[1] = room.playerJobs[room.players[1]] || '';
     cgStartTurn(room.state, 0);
 
     room.players.forEach((socketId, index) => {
@@ -553,6 +786,8 @@ function joinCGRoom(socket, playerName) {
         playerNumber: index + 1,
         myName,
         opponentName,
+        myJob: room.state.jobs[index],
+        opponentJob: room.state.jobs[1 - index],
       });
     });
 
@@ -1116,7 +1351,9 @@ io.on("connection", (socket) => {
   socket.on('cgJoinMatch', (payload) => {
     const raw = typeof payload?.playerName === 'string' ? payload.playerName : '';
     const playerName = raw.trim().slice(0, 20) || 'ゲスト';
-    joinCGRoom(socket, playerName);
+    const validJobs = ['warrior', 'mage', 'priest', 'rogue', 'assassin'];
+    const job = validJobs.includes(payload?.job) ? payload.job : '';
+    joinCGRoom(socket, playerName, job);
   });
 
   // カードを使用する処理（手札からフィールドへ移動し効果を適用する）
@@ -1140,24 +1377,58 @@ io.on("connection", (socket) => {
     const card = CARD_DEFS[cardId];
     if (!card) return;
 
-    // マナが足りているか確認する
-    if (state.mana[playerIndex] < card.cost) return;
+    // 封印されたカードは使用不能
+    if (state.sealedCardId[playerIndex] === cardId) return;
+
+    // 隠密バフが有効なら実効コストを0にする
+    const effectiveCost = state.stealth[playerIndex] ? 0 : card.cost;
+    if (state.mana[playerIndex] < effectiveCost) return;
+    if (state.stealth[playerIndex]) {
+      state.stealth[playerIndex] = false;
+    }
 
     // カードを手札から取り出しフィールドへ移動する
     state.hand[playerIndex].splice(handIndex, 1);
-    state.mana[playerIndex] -= card.cost;
+    state.mana[playerIndex] -= effectiveCost;
     state.field[playerIndex].push(cardId);
 
     const oppIndex = 1 - playerIndex;
 
-    // コピーフラグが有効な場合は効果を2回適用する（scryは例外で1回のみ）
-    const repeatCount = state.copyNext[playerIndex] && card.effect !== 'scry' ? 2 : 1;
+    // 罠が有効な場合はカードを使用するたびに3ダメージを受ける
+    if (state.trapTriggers[playerIndex] > 0) {
+      const trapDmg = 3;
+      const trapAbs = Math.min(state.block[playerIndex], trapDmg);
+      state.block[playerIndex] = Math.max(0, state.block[playerIndex] - trapAbs);
+      state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - (trapDmg - trapAbs));
+      state.totalDamageTaken[playerIndex] += (trapDmg - trapAbs);
+      state.trapTriggers[playerIndex] -= 1;
+    }
+
+    // コピーフラグが有効な場合は効果を2回適用する（scryとその他インタラクティブ系は例外で1回のみ）
+    const noRepeatEffects = ['scry', 'copy', 'timewarp', 'm_drain', 'warcry', 'shadowclone', 'm_recover'];
+    const repeatCount = state.copyNext[playerIndex] && !noRepeatEffects.includes(card.effect) ? 2 : 1;
     if (card.effect !== 'copy') {
       state.copyNext[playerIndex] = false;
     }
 
-    // ダメージを相手に与えるヘルパー関数（ブロック・反射を考慮する）
+    // amplify（魔力増幅）・bless（祝福）の倍率を計算する
+    const ampMult = state.amplify[playerIndex] ? 2 : 1;
+    const blsMult = state.bless[playerIndex] ? 2 : 1;
+    const effMult = ampMult * blsMult;
+    if (state.amplify[playerIndex]) state.amplify[playerIndex] = false;
+    if (state.bless[playerIndex]) state.bless[playerIndex] = false;
+
+    // 武器強化ボーナス（攻撃カードに追加ダメージ）を取得する
+    const weaponBonus = (state.weaponUp[playerIndex] > 0 && (card.effect === 'damage' || card.effect === 'shieldbash' || card.effect === 'combo')) ? state.weaponUp[playerIndex] : 0;
+    if (weaponBonus > 0) state.weaponUp[playerIndex] = 0;
+
+    // ダメージを相手に与えるヘルパー関数（加護・ブロック・反射を考慮する）
     function applyDamageToOpp(dmg) {
+      // 相手の加護が有効な場合はダメージを無効化する
+      if (state.protection[oppIndex] > 0) {
+        state.protection[oppIndex] -= 1;
+        return;
+      }
       const absorbed = Math.min(state.block[oppIndex], dmg);
       state.block[oppIndex] = Math.max(0, state.block[oppIndex] - absorbed);
       const actualDmg = dmg - absorbed;
@@ -1168,45 +1439,67 @@ io.on("connection", (socket) => {
         if (reflectDmg > 0) {
           const absorbedSelf = Math.min(state.block[playerIndex], reflectDmg);
           state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbedSelf);
-          state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - (reflectDmg - absorbedSelf));
+          const selfDmg = reflectDmg - absorbedSelf;
+          state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - selfDmg);
+          state.totalDamageTaken[playerIndex] += selfDmg;
         }
         state.reflect[oppIndex] = false;
       }
     }
 
+    // 自分自身にダメージを与えるヘルパー関数
+    function applySelfDamage(dmg) {
+      const absorbed = Math.min(state.block[playerIndex], dmg);
+      state.block[playerIndex] = Math.max(0, state.block[playerIndex] - absorbed);
+      const actual = dmg - absorbed;
+      state.hp[playerIndex] = Math.max(0, state.hp[playerIndex] - actual);
+      state.totalDamageTaken[playerIndex] += actual;
+    }
+
+    // 毒スタックを相手に追加するヘルパー関数
+    function applyPoisonToOpp(dmg, turns) {
+      if (dmg > 0 && turns > 0) {
+        state.poisonStacks[oppIndex].push({ dmg, turns });
+      }
+    }
+
+    // 毒カード使用履歴に記録する（影分身用）
+    const isPoisonCard = card.effect === 'poisoncard' || card.effect === 'poison' || card.effect === 'toxicsmoke' || card.effect === 'poisonstar' || card.effect === 'corrosion';
+    if (isPoisonCard) {
+      state.poisonCardsThisTurn[playerIndex].push(cardId);
+    }
+
     // カードの効果をrepeatCount回適用する
     for (let r = 0; r < repeatCount; r++) {
+      const dmgMult = effMult;
+
       if (card.effect === 'damage') {
-        // ブロックでダメージを軽減し残りをHPへ適用する
-        applyDamageToOpp(card.value);
+        applyDamageToOpp((card.value + weaponBonus) * dmgMult);
       } else if (card.effect === 'combo') {
         // card.value のダメージを2回与える（各ヒットでブロックを消費する）
-        applyDamageToOpp(card.value);
-        applyDamageToOpp(card.value);
+        const comboDmg = (card.value + Math.floor(weaponBonus / 2)) * dmgMult;
+        applyDamageToOpp(comboDmg);
+        applyDamageToOpp(comboDmg);
       } else if (card.effect === 'poison') {
-        // 4ダメージ＋毒カウンターに2を加算する（毎ターン2ダメージ×3ターン）
-        applyDamageToOpp(4);
-        state.poison[oppIndex] += 2;
+        // 4ダメージ＋毒スタックに追加する（毎ターン2ダメージ×3ターン）
+        applyDamageToOpp(4 * dmgMult);
+        applyPoisonToOpp(2, 3);
       } else if (card.effect === 'storm') {
-        // 手札枚数×3ダメージ（使用後の手札枚数で計算する）
-        const stormDmg = state.hand[playerIndex].length * card.value;
+        // 手札枚数×card.valueのダメージ
+        const stormDmg = state.hand[playerIndex].length * card.value * dmgMult;
         applyDamageToOpp(stormDmg);
       } else if (card.effect === 'phoenix') {
-        // card.value のダメージ＋card.healValue 分のHP回復
-        applyDamageToOpp(card.value);
-        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue);
+        applyDamageToOpp(card.value * dmgMult);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
       } else if (card.effect === 'block') {
-        state.block[playerIndex] += card.value;
+        state.block[playerIndex] += card.value * blsMult;
       } else if (card.effect === 'reflect') {
-        // 次に受けるダメージの半分を返す反射フラグを立てる
         state.reflect[playerIndex] = true;
       } else if (card.effect === 'heal') {
-        // HPを card.value 分回復する（最大CG_MAX_HPまで）
-        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value * blsMult);
       } else if (card.effect === 'draw') {
-        cgDrawCards(state, playerIndex, card.value);
+        cgDrawCards(state, playerIndex, card.value * blsMult);
       } else if (card.effect === 'copy') {
-        // 次に使用するカードを2回発動するフラグを立てる
         state.copyNext[playerIndex] = true;
       } else if (card.effect === 'scry') {
         // デッキトップから最大SCRY_CARD_COUNT枚を取り出しクライアントへ送り選択を待つ
@@ -1222,15 +1515,380 @@ io.on("connection", (socket) => {
           }
         }
         state.scryCards[playerIndex] = scryCards;
-        // クライアントに選択肢を送る
         io.to(socket.id).emit('cgScryChoice', { cards: scryCards });
         sendCGState(room);
-        return; // cgScryPickイベントを待つ
+        return;
       } else if (card.effect === 'gold') {
         state.gold[playerIndex] += card.value;
       } else if (card.effect === 'invest') {
-        // 次ターン開始時に加算されるゴールドを積み立てる
         state.pendingGold[playerIndex] += card.value;
+
+      // ===== ウォリアー固有効果 =====
+      } else if (card.effect === 'shieldbash') {
+        // ダメージ＋ブロックを同時に得る
+        applyDamageToOpp((card.value + weaponBonus) * dmgMult);
+        state.block[playerIndex] += card.blockValue * blsMult;
+      } else if (card.effect === 'weaponup') {
+        // 次の攻撃カードのダメージに追加ボーナスを与える
+        state.weaponUp[playerIndex] += card.value;
+      } else if (card.effect === 'counter') {
+        // ブロック＋反射フラグ
+        state.block[playerIndex] += card.value * blsMult;
+        state.reflect[playerIndex] = true;
+      } else if (card.effect === 'warfiend') {
+        // ダメージ＋ブロックを3回繰り返す
+        for (let i = 0; i < 3; i++) {
+          applyDamageToOpp(card.value * dmgMult);
+          state.block[playerIndex] += card.blockValue * blsMult;
+        }
+      } else if (card.effect === 'rage') {
+        // これまで受けた累計ダメージ × card.value のダメージ
+        const rageDmg = state.totalDamageTaken[playerIndex] * card.value * dmgMult;
+        applyDamageToOpp(rageDmg);
+      } else if (card.effect === 'warcry') {
+        // 手札の全攻撃カード（effect:damage/combo/shieldbash）を即座に発動する
+        const attackEffects = ['damage', 'combo', 'shieldbash'];
+        const attackIndices = [];
+        state.hand[playerIndex].forEach((cid, i) => {
+          const c = CARD_DEFS[cid];
+          if (c && attackEffects.includes(c.effect)) attackIndices.push(i);
+        });
+        // 後ろから削除して索引ずれを防ぐ
+        attackIndices.reverse().forEach(i => {
+          const cid = state.hand[playerIndex][i];
+          const c = CARD_DEFS[cid];
+          state.hand[playerIndex].splice(i, 1);
+          state.field[playerIndex].push(cid);
+          if (c.effect === 'damage') {
+            applyDamageToOpp(c.value);
+          } else if (c.effect === 'combo') {
+            applyDamageToOpp(c.value);
+            applyDamageToOpp(c.value);
+          } else if (c.effect === 'shieldbash') {
+            applyDamageToOpp(c.value);
+            state.block[playerIndex] += c.blockValue;
+          }
+        });
+      } else if (card.effect === 'undying') {
+        // HP回復＋ブロック
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value * blsMult);
+        state.block[playerIndex] += card.blockValue * blsMult;
+      } else if (card.effect === 'ironwall') {
+        // 今のターン大きなブロック＋次のターンも継続
+        state.block[playerIndex] += card.value * blsMult;
+        state.persistBlock[playerIndex] += card.value * blsMult;
+      } else if (card.effect === 'godofwar') {
+        // card.valueのダメージを5回＋card.blockValueのブロック
+        for (let i = 0; i < 5; i++) {
+          applyDamageToOpp(card.value * dmgMult);
+        }
+        state.block[playerIndex] += card.blockValue * blsMult;
+
+      // ===== メイジ固有効果 =====
+      } else if (card.effect === 'manafill') {
+        // 次のターン追加マナ
+        state.manaBonusNextTurn[playerIndex] += card.value;
+      } else if (card.effect === 'amplify') {
+        // 次のカードのダメージを2倍にするフラグを立てる
+        state.amplify[playerIndex] = true;
+      } else if (card.effect === 'chain') {
+        // 手札枚数 × card.value のダメージ
+        const chainDmg = state.hand[playerIndex].length * card.value * dmgMult;
+        applyDamageToOpp(chainDmg);
+      } else if (card.effect === 'freeze') {
+        // ダメージ＋相手の次のターンのマナを3減らす
+        applyDamageToOpp(card.value * dmgMult);
+        state.manaBonusNextTurn[oppIndex] -= 3;
+      } else if (card.effect === 'thunder') {
+        // ダメージ＋カードを引く
+        applyDamageToOpp(card.value * dmgMult);
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+      } else if (card.effect === 'm_recover') {
+        // 捨て札から最大card.value枚を手札に戻す
+        const recoverCount = Math.min(card.value, state.discard[playerIndex].length);
+        for (let i = 0; i < recoverCount; i++) {
+          const cid = state.discard[playerIndex].pop();
+          state.hand[playerIndex].push(cid);
+        }
+      } else if (card.effect === 'm_seal') {
+        // 相手の手札をランダムに1枚封印する（次のターンまで使用不能）
+        if (state.hand[oppIndex].length > 0) {
+          const sealIdx = Math.floor(Math.random() * state.hand[oppIndex].length);
+          state.sealedCardId[oppIndex] = state.hand[oppIndex][sealIdx];
+        }
+      } else if (card.effect === 'm_copy') {
+        // 手札の一番左のカードをコピーして効果を発動する（そのカードは消費しない）
+        if (state.hand[playerIndex].length > 0) {
+          const copyCid = state.hand[playerIndex][0];
+          const copyCard = CARD_DEFS[copyCid];
+          if (copyCard && copyCard.effect === 'damage') {
+            applyDamageToOpp(copyCard.value * dmgMult);
+          } else if (copyCard && copyCard.effect === 'block') {
+            state.block[playerIndex] += copyCard.value * blsMult;
+          } else if (copyCard && copyCard.effect === 'heal') {
+            state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + copyCard.value * blsMult);
+          } else if (copyCard && copyCard.effect === 'draw') {
+            cgDrawCards(state, playerIndex, copyCard.value * blsMult);
+          } else if (copyCard && copyCard.effect === 'gold') {
+            state.gold[playerIndex] += copyCard.value;
+          }
+        }
+      } else if (card.effect === 'timewarp') {
+        // 手札を全て捨てて同枚数+card.value枚引く
+        const drawCount = state.hand[playerIndex].length + card.value;
+        state.discard[playerIndex].push(...state.hand[playerIndex]);
+        state.hand[playerIndex] = [];
+        cgDrawCards(state, playerIndex, drawCount);
+      } else if (card.effect === 'explosion') {
+        // 使用済みカード枚数（フィールド枚数）× card.value のダメージ
+        const explDmg = state.field[playerIndex].length * card.value * dmgMult;
+        applyDamageToOpp(explDmg);
+      } else if (card.effect === 'm_drain') {
+        // 相手の手札からコスト最大のカードを奪う
+        if (state.hand[oppIndex].length > 0) {
+          let maxCost = -1;
+          let maxIdx = 0;
+          state.hand[oppIndex].forEach((cid, i) => {
+            const c = CARD_DEFS[cid];
+            if (c && c.cost > maxCost) { maxCost = c.cost; maxIdx = i; }
+          });
+          const drainedCard = state.hand[oppIndex].splice(maxIdx, 1)[0];
+          state.hand[playerIndex].push(drainedCard);
+        }
+      } else if (card.effect === 'bigmagic') {
+        // 手札枚数 × card.value のダメージ
+        const bigDmg = state.hand[playerIndex].length * card.value * dmgMult;
+        applyDamageToOpp(bigDmg);
+      } else if (card.effect === 'collapse') {
+        // 相手のHP残量の60%ダメージ＋card.drawValue枚ドロー
+        const collapseDmg = Math.floor(state.hp[oppIndex] * card.value * dmgMult);
+        applyDamageToOpp(collapseDmg);
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+
+      // ===== プリースト固有効果 =====
+      } else if (card.effect === 'prayer') {
+        // 毎ターン開始時card.value回復（card.turnsターン）
+        state.healPerTurn[playerIndex].push({ amount: card.value * blsMult, turns: card.turns });
+      } else if (card.effect === 'purify') {
+        // 自分の毒スタックをクリア＋HP回復
+        state.poisonStacks[playerIndex] = [];
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value * blsMult);
+      } else if (card.effect === 'devotion') {
+        // HP回復＋カードを引く
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value * blsMult);
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+      } else if (card.effect === 'holyfire') {
+        // ダメージ＋自分HP回復
+        applyDamageToOpp(card.value * dmgMult);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'holyshield') {
+        // ブロック＋HP回復
+        state.block[playerIndex] += card.value * blsMult;
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'confess') {
+        // 手札の最後のカードを捨てて card.value 枚ドロー
+        if (state.hand[playerIndex].length > 0) {
+          const discarded = state.hand[playerIndex].pop();
+          state.discard[playerIndex].push(discarded);
+        }
+        cgDrawCards(state, playerIndex, card.value * blsMult);
+      } else if (card.effect === 'bless') {
+        // 次のカードの効果を2倍にするフラグを立てる
+        state.bless[playerIndex] = true;
+      } else if (card.effect === 'divineye') {
+        // デッキトップ5枚を見てコストが高い順にcard.value枚を手札に加える
+        const DIVINEYE_VIEW = 5;
+        const viewedCards = [];
+        for (let i = 0; i < DIVINEYE_VIEW; i++) {
+          if (state.deck[playerIndex].length === 0) {
+            if (state.discard[playerIndex].length === 0) break;
+            state.deck[playerIndex] = cgShuffle(state.discard[playerIndex]);
+            state.discard[playerIndex] = [];
+          }
+          if (state.deck[playerIndex].length > 0) {
+            viewedCards.push(state.deck[playerIndex].pop());
+          }
+        }
+        // コストが高い順にcard.value枚を手札へ、残りは捨て札へ
+        viewedCards.sort((a, b) => (CARD_DEFS[b]?.cost || 0) - (CARD_DEFS[a]?.cost || 0));
+        const keepCount = Math.min(card.value * blsMult, viewedCards.length);
+        viewedCards.forEach((cid, i) => {
+          if (i < keepCount) {
+            state.hand[playerIndex].push(cid);
+          } else {
+            state.discard[playerIndex].push(cid);
+          }
+        });
+      } else if (card.effect === 'holybeam') {
+        // HP回復＋ブロック
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+        state.block[playerIndex] += card.value * blsMult;
+      } else if (card.effect === 'judgment') {
+        // 相手HP残量 − 自分HP残量 のダメージ（0以上）
+        const jDmg = Math.max(0, Math.floor((state.hp[oppIndex] - state.hp[playerIndex]) * dmgMult));
+        applyDamageToOpp(jDmg);
+      } else if (card.effect === 'sanctuary') {
+        // 毎ターン開始時card.value回復（card.turnsターン）
+        state.healPerTurn[playerIndex].push({ amount: card.value * blsMult, turns: card.turns });
+      } else if (card.effect === 'protection') {
+        // 次にcard.value回受けるダメージを無効化する
+        state.protection[playerIndex] += card.value;
+      } else if (card.effect === 'divine') {
+        // 相手HPの30%ダメージ
+        const divineDmg = Math.floor(state.hp[oppIndex] * card.value * dmgMult);
+        applyDamageToOpp(divineDmg);
+      } else if (card.effect === 'holyjudge') {
+        // 20ダメージ＋自分HP全回復＋全状態異常解除
+        applyDamageToOpp(card.value * dmgMult);
+        state.hp[playerIndex] = CG_MAX_HP;
+        state.poisonStacks[playerIndex] = [];
+        state.trapTriggers[playerIndex] = 0;
+        state.sealedCardId[playerIndex] = null;
+
+      // ===== ローグ固有効果 =====
+      } else if (card.effect === 'shadowrun') {
+        // card.drawValue枚ドロー＋card.valueダメージ
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'stealth') {
+        // 次のカードのコストを0にするフラグを立てる
+        state.stealth[playerIndex] = true;
+      } else if (card.effect === 'poisonstar') {
+        // ダメージ＋毒スタック追加
+        applyDamageToOpp(card.value * dmgMult);
+        applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
+      } else if (card.effect === 'steal') {
+        // 相手からcard.value分のゴールドを奪う
+        const stolen = Math.min(card.value, state.gold[oppIndex]);
+        state.gold[oppIndex] -= stolen;
+        state.gold[playerIndex] += stolen;
+      } else if (card.effect === 'stab') {
+        // card.valueダメージを5回与える
+        for (let i = 0; i < 5; i++) {
+          applyDamageToOpp(Math.floor(card.value * dmgMult));
+        }
+      } else if (card.effect === 'distract') {
+        // 相手の手札からcard.value枚をランダムに捨てさせる
+        for (let i = 0; i < card.value; i++) {
+          if (state.hand[oppIndex].length > 0) {
+            const idx = Math.floor(Math.random() * state.hand[oppIndex].length);
+            const discardedCard = state.hand[oppIndex].splice(idx, 1)[0];
+            state.discard[oppIndex].push(discardedCard);
+          }
+        }
+      } else if (card.effect === 'mirage') {
+        // このターン使ったカード枚数 × card.value のダメージ
+        const mirageDmg = state.field[playerIndex].length * card.value * dmgMult;
+        applyDamageToOpp(mirageDmg);
+      } else if (card.effect === 'illusion') {
+        // 手札の一番安いカードをコピーして2回発動する
+        if (state.hand[playerIndex].length > 0) {
+          let minCost = Infinity;
+          let minIdx = 0;
+          state.hand[playerIndex].forEach((cid, i) => {
+            const c = CARD_DEFS[cid];
+            if (c && c.cost < minCost) { minCost = c.cost; minIdx = i; }
+          });
+          const illusionCard = CARD_DEFS[state.hand[playerIndex][minIdx]];
+          if (illusionCard) {
+            for (let i = 0; i < 2; i++) {
+              if (illusionCard.effect === 'damage') applyDamageToOpp(illusionCard.value * dmgMult);
+              else if (illusionCard.effect === 'block') state.block[playerIndex] += illusionCard.value;
+              else if (illusionCard.effect === 'heal') state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + illusionCard.value);
+              else if (illusionCard.effect === 'draw') cgDrawCards(state, playerIndex, illusionCard.value);
+              else if (illusionCard.effect === 'gold') state.gold[playerIndex] += illusionCard.value;
+            }
+          }
+        }
+      } else if (card.effect === 'backstab') {
+        // 手札が4枚以上あればボーナスダメージを追加する
+        const bsDmg = (card.value + (state.hand[playerIndex].length >= 4 ? card.bonusValue : 0)) * dmgMult;
+        applyDamageToOpp(bsDmg);
+      } else if (card.effect === 'toxicsmoke') {
+        // ブロック＋毒スタック追加
+        state.block[playerIndex] += card.value * blsMult;
+        applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
+      } else if (card.effect === 'doublesteal') {
+        // ゴールドを奪う＋カードを引く
+        const dStolen = Math.min(card.value, state.gold[oppIndex]);
+        state.gold[oppIndex] -= dStolen;
+        state.gold[playerIndex] += dStolen;
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+      } else if (card.effect === 'vital') {
+        // ダメージ＋相手の手札をcard.discardCount枚捨てさせる
+        applyDamageToOpp(card.value * dmgMult);
+        for (let i = 0; i < card.discardCount; i++) {
+          if (state.hand[oppIndex].length > 0) {
+            const idx = Math.floor(Math.random() * state.hand[oppIndex].length);
+            state.discard[oppIndex].push(state.hand[oppIndex].splice(idx, 1)[0]);
+          }
+        }
+      } else if (card.effect === 'dance') {
+        // card.valueダメージ×10回＋相手の手札を全て捨てさせる
+        for (let i = 0; i < 10; i++) {
+          applyDamageToOpp(card.value * dmgMult);
+        }
+        state.discard[oppIndex].push(...state.hand[oppIndex]);
+        state.hand[oppIndex] = [];
+
+      // ===== アサシン固有効果 =====
+      } else if (card.effect === 'poisoncard') {
+        // 即時ダメージ（あれば）＋毒スタック追加
+        if (card.value > 0) applyDamageToOpp(card.value * dmgMult);
+        applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
+      } else if (card.effect === 'corrosion') {
+        // 相手のブロックを半減＋毒スタック追加
+        state.block[oppIndex] = Math.floor(state.block[oppIndex] / 2);
+        applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
+      } else if (card.effect === 'shadowbind') {
+        // 相手の次のターンのマナをcard.value減らす
+        state.manaBonusNextTurn[oppIndex] -= card.value;
+      } else if (card.effect === 'darkpact') {
+        // 自分HPをcard.value失う代わりにcard.drawValue枚ドロー
+        applySelfDamage(card.value);
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+      } else if (card.effect === 'trap') {
+        // 相手がカードを使うたびにcard.value×card.trapCountの罠を仕掛ける
+        state.trapTriggers[oppIndex] += card.trapCount;
+      } else if (card.effect === 'powerup') {
+        // 相手の現在の毒スタック全てのダメージを2倍にする
+        state.poisonStacks[oppIndex] = state.poisonStacks[oppIndex].map(s => ({ dmg: s.dmg * 2, turns: s.turns }));
+      } else if (card.effect === 'shadowclone') {
+        // このターン使った毒カードを全て再発動する
+        const poisonCardsPlayed = [...state.poisonCardsThisTurn[playerIndex]];
+        poisonCardsPlayed.forEach(cid => {
+          const c = CARD_DEFS[cid];
+          if (!c) return;
+          if (c.effect === 'poisoncard' || c.effect === 'poison') {
+            if (c.value > 0) applyDamageToOpp(c.value);
+            applyPoisonToOpp(c.poisonDmg, c.poisonTurns);
+          } else if (c.effect === 'corrosion') {
+            state.block[oppIndex] = Math.floor(state.block[oppIndex] / 2);
+            applyPoisonToOpp(c.poisonDmg, c.poisonTurns);
+          } else if (c.effect === 'toxicsmoke') {
+            state.block[playerIndex] += c.value;
+            applyPoisonToOpp(c.poisonDmg, c.poisonTurns);
+          } else if (c.effect === 'poisonstar') {
+            applyDamageToOpp(c.value);
+            applyPoisonToOpp(c.poisonDmg, c.poisonTurns);
+          }
+        });
+      } else if (card.effect === 'assassinate') {
+        // 相手が毒状態なら大ダメージを与える
+        if (state.poisonStacks[oppIndex].length > 0) {
+          applyDamageToOpp(card.value * dmgMult);
+        } else {
+          // 毒がない場合は半分のダメージ
+          applyDamageToOpp(Math.floor(card.value / 2) * dmgMult);
+        }
+      } else if (card.effect === 'ritual') {
+        // 自分HPをcard.selfDmg失う代わりに相手に大ダメージ
+        applySelfDamage(card.selfDmg);
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'spiral') {
+        // 毒スタック追加＋相手の全毒スタックを2倍にする
+        applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
+        state.poisonStacks[oppIndex] = state.poisonStacks[oppIndex].map(s => ({ dmg: s.dmg * 2, turns: s.turns }));
       }
     }
 
@@ -1266,7 +1924,7 @@ io.on("connection", (socket) => {
 
     // ショップフェーズへ移行する
     state.phase = 'shop';
-    state.shop = generateCGShop();
+    state.shop = generateCGShop(state.jobs[playerIndex]);
 
     sendCGState(room);
   });

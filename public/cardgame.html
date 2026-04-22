@@ -64,6 +64,91 @@
       font-size: 1rem;
     }
 
+    /* ===== 職業選択画面 ===== */
+    #jobScreen {
+      width: 100%;
+      max-width: 780px;
+    }
+
+    .job-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .job-subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .job-cards {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .job-card {
+      width: 130px;
+      min-height: 180px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: linear-gradient(160deg, rgba(31,41,55,0.98), rgba(17,24,39,0.98));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 10px 14px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      text-align: center;
+      user-select: none;
+    }
+
+    .job-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(96,165,250,0.25);
+    }
+
+    .job-card.selected {
+      border-color: var(--ok);
+      box-shadow: 0 0 16px rgba(34,197,94,0.4);
+      transform: translateY(-4px);
+    }
+
+    .job-card-emoji { font-size: 2.4rem; line-height: 1; margin-bottom: 8px; }
+    .job-card-name  { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .job-card-desc  { font-size: 0.72rem; color: #94a3b8; line-height: 1.5; }
+
+    .job-warrior  { border-color: rgba(239,68,68,0.4);  }
+    .job-mage     { border-color: rgba(167,139,250,0.4); }
+    .job-priest   { border-color: rgba(251,191,36,0.4);  }
+    .job-rogue    { border-color: rgba(52,211,153,0.4);  }
+    .job-assassin { border-color: rgba(100,116,139,0.4); }
+
+    .job-warrior:hover, .job-warrior.selected  { border-color: #ef4444; box-shadow: 0 8px 24px rgba(239,68,68,0.3); }
+    .job-mage:hover,    .job-mage.selected     { border-color: #a78bfa; box-shadow: 0 8px 24px rgba(167,139,250,0.3); }
+    .job-priest:hover,  .job-priest.selected   { border-color: #fbbf24; box-shadow: 0 8px 24px rgba(251,191,36,0.3); }
+    .job-rogue:hover,   .job-rogue.selected    { border-color: #34d399; box-shadow: 0 8px 24px rgba(52,211,153,0.3); }
+    .job-assassin:hover,.job-assassin.selected { border-color: #94a3b8; box-shadow: 0 8px 24px rgba(100,116,139,0.3); }
+
+    /* 職業バッジ（ゲーム画面） */
+    .job-badge {
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(96,165,250,0.15);
+      border: 1px solid rgba(96,165,250,0.3);
+      color: var(--accent);
+      margin-left: 4px;
+    }
+
     .matching-status {
       margin-top: 14px;
       font-size: 0.9rem;
@@ -498,8 +583,45 @@
 </head>
 <body>
 
+  <!-- 職業選択画面 -->
+  <div id="jobScreen" class="screen" style="max-width:780px;">
+    <div style="width:100%;background:linear-gradient(180deg,rgba(31,41,55,0.98),rgba(17,24,39,0.98));border:1px solid var(--border);border-radius:14px;padding:36px 28px;box-shadow:0 12px 28px rgba(0,0,0,0.45);">
+      <div class="job-title">🃏 カードゲーム</div>
+      <p id="jobScreenName" style="text-align:center;color:#94a3b8;margin-bottom:6px;font-size:0.95rem;"></p>
+      <p class="job-subtitle">職業を選んでバトルに挑もう！</p>
+      <div class="job-cards">
+        <div class="job-card job-warrior" data-job="warrior">
+          <div class="job-card-emoji">⚔️</div>
+          <div class="job-card-name">ウォリアー</div>
+          <div class="job-card-desc">物理攻撃・ブロック特化<br>屈強な戦士</div>
+        </div>
+        <div class="job-card job-mage" data-job="mage">
+          <div class="job-card-emoji">🔥</div>
+          <div class="job-card-name">メイジ</div>
+          <div class="job-card-desc">魔法・連鎖特化<br>強力な魔力を操る</div>
+        </div>
+        <div class="job-card job-priest" data-job="priest">
+          <div class="job-card-emoji">✨</div>
+          <div class="job-card-name">プリースト</div>
+          <div class="job-card-desc">回復・バフ特化<br>聖なる力で戦う</div>
+        </div>
+        <div class="job-card job-rogue" data-job="rogue">
+          <div class="job-card-emoji">🗡️</div>
+          <div class="job-card-name">ローグ</div>
+          <div class="job-card-desc">コンボ・ドロー特化<br>素早い手捌き</div>
+        </div>
+        <div class="job-card job-assassin" data-job="assassin">
+          <div class="job-card-emoji">🔪</div>
+          <div class="job-card-name">アサシン</div>
+          <div class="job-card-desc">毒・状態異常特化<br>影から刺す</div>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:20px;font-size:0.8rem;color:#4b5563;">カードをクリックして職業を選択してください</p>
+    </div>
+  </div>
+
   <!-- 待機画面 -->
-  <div id="waitingScreen" class="screen">
+  <div id="waitingScreen" class="screen" style="display:none;">
     <div class="card">
       <h1>🃏 カードゲーム</h1>
       <p id="waitingName"></p>
@@ -529,7 +651,7 @@
             </div>
             <div>
               <div class="block-badge" id="oppBlockBadge">🛡️ ブロック: 0</div>
-            </div>
+              <div class="block-badge" id="oppPoisonBadge" style="display:none;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86efac;margin-top:4px;">☠️ 毒: 0/T</div>
             <div class="count-row">
               <div class="count-chip" id="oppHandCount">手札: 0</div>
               <div class="count-chip" id="oppDeckCount">デッキ: 0</div>
@@ -561,7 +683,7 @@
             </div>
             <div>
               <div class="block-badge" id="myBlockBadge">🛡️ ブロック: 0</div>
-            </div>
+              <div class="block-badge" id="myPoisonBadge" style="display:none;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86efac;margin-top:4px;">☠️ 毒: 0/T</div>
             <div class="count-row">
               <div class="count-chip" id="myDeckCount">デッキ: 0</div>
               <div class="count-chip" id="myDiscardCount">捨て札: 0</div>
@@ -672,23 +794,182 @@
       // ===== ゴールドカード =====
       gold2:      { id: 'gold2',      name: '金塊',     cost: 2,  effect: 'gold',    value: 8,  shopCost: 4,  emoji: '💰' },
       invest:     { id: 'invest',     name: '投資',     cost: 3,  effect: 'invest',  value: 15, shopCost: 6,  emoji: '📈' },
+
+      // ===== ⚔️ ウォリアー固有カード =====
+      w_slash:      { id: 'w_slash',      name: '斬撃',       cost: 1, effect: 'damage',    value: 4,  shopCost: 3,  emoji: '⚔️' },
+      w_wall:       { id: 'w_wall',       name: '防壁',       cost: 1, effect: 'block',     value: 5,  shopCost: 3,  emoji: '🧱' },
+      w_smash:      { id: 'w_smash',      name: '強打',       cost: 2, effect: 'damage',    value: 8,  shopCost: 6,  emoji: '🔨' },
+      w_shieldbash: { id: 'w_shieldbash', name: '盾撃',       cost: 2, effect: 'shieldbash',value: 4,  blockValue: 4,  shopCost: 6,  emoji: '🛡️' },
+      w_fortress:   { id: 'w_fortress',   name: '堅陣',       cost: 2, effect: 'block',     value: 8,  shopCost: 6,  emoji: '🏰' },
+      w_weaponup:   { id: 'w_weaponup',   name: '武器強化',   cost: 3, effect: 'weaponup',  value: 8,  shopCost: 9,  emoji: '⬆️' },
+      w_charge:     { id: 'w_charge',     name: '突進',       cost: 3, effect: 'shieldbash',value: 10, blockValue: 3,  shopCost: 9,  emoji: '🐂' },
+      w_dualwield:  { id: 'w_dualwield',  name: '二刀流',     cost: 3, effect: 'combo',     value: 5,  shopCost: 9,  emoji: '⚔️' },
+      w_counter:    { id: 'w_counter',    name: '反撃',       cost: 4, effect: 'counter',   value: 8,  shopCost: 12, emoji: '🔄' },
+      w_warfiend:   { id: 'w_warfiend',   name: '戦鬼',       cost: 4, effect: 'warfiend',  value: 5,  blockValue: 3,  shopCost: 12, emoji: '👹' },
+      w_earthcrush: { id: 'w_earthcrush', name: '大地砕き',   cost: 5, effect: 'damage',    value: 18, shopCost: 15, emoji: '💥' },
+      w_rage:       { id: 'w_rage',       name: '激怒',       cost: 5, effect: 'rage',      value: 2,  shopCost: 15, emoji: '😤' },
+      w_warcry:     { id: 'w_warcry',     name: '覇気',       cost: 6, effect: 'warcry',    value: 0,  shopCost: 18, emoji: '📯' },
+      w_undying:    { id: 'w_undying',    name: '不屈',       cost: 6, effect: 'undying',   value: 10, blockValue: 12, shopCost: 18, emoji: '💪' },
+      w_ironwall:   { id: 'w_ironwall',   name: '鉄壁構え',   cost: 7, effect: 'ironwall',  value: 20, shopCost: 21, emoji: '🗿' },
+      w_allout:     { id: 'w_allout',     name: '渾身の一撃', cost: 8, effect: 'damage',    value: 30, shopCost: 24, emoji: '💢' },
+      w_godofwar:   { id: 'w_godofwar',   name: '【必殺】武神降臨', cost: 10, effect: 'godofwar', value: 10, blockValue: 20, shopCost: 30, emoji: '⚡' },
+
+      // ===== 🔥 メイジ固有カード =====
+      m_magicarrow: { id: 'm_magicarrow', name: '魔法矢',     cost: 1, effect: 'damage',    value: 4,  shopCost: 3,  emoji: '🏹' },
+      m_manafill:   { id: 'm_manafill',   name: '魔力充填',   cost: 1, effect: 'manafill',  value: 3,  shopCost: 3,  emoji: '🔵' },
+      m_magicwall:  { id: 'm_magicwall',  name: '魔法障壁',   cost: 2, effect: 'block',     value: 8,  shopCost: 6,  emoji: '🌀' },
+      m_amplify:    { id: 'm_amplify',    name: '魔力増幅',   cost: 2, effect: 'amplify',   value: 0,  shopCost: 6,  emoji: '✨' },
+      m_chain:      { id: 'm_chain',      name: '連鎖魔法',   cost: 2, effect: 'chain',     value: 3,  shopCost: 6,  emoji: '🔗' },
+      m_freeze:     { id: 'm_freeze',     name: '氷結',       cost: 3, effect: 'freeze',    value: 5,  shopCost: 9,  emoji: '❄️' },
+      m_thunder:    { id: 'm_thunder',    name: '雷撃',       cost: 3, effect: 'thunder',   value: 8,  drawValue: 2, shopCost: 9,  emoji: '⚡' },
+      m_fireball:   { id: 'm_fireball',   name: 'ファイアボール', cost: 4, effect: 'damage', value: 14, shopCost: 12, emoji: '🔥' },
+      m_recover:    { id: 'm_recover',    name: '魔力回収',   cost: 4, effect: 'm_recover', value: 2,  shopCost: 12, emoji: '♻️' },
+      m_seal:       { id: 'm_seal',       name: '封印',       cost: 4, effect: 'm_seal',    value: 0,  shopCost: 12, emoji: '🔒' },
+      m_copy:       { id: 'm_copy',       name: '魔法複製',   cost: 5, effect: 'm_copy',    value: 0,  shopCost: 15, emoji: '📋' },
+      m_timewarp:   { id: 'm_timewarp',   name: '時空歪曲',   cost: 5, effect: 'timewarp',  value: 2,  shopCost: 15, emoji: '⏳' },
+      m_explosion:  { id: 'm_explosion',  name: '魔力爆発',   cost: 6, effect: 'explosion', value: 5,  shopCost: 18, emoji: '💣' },
+      m_drain:      { id: 'm_drain',      name: '吸魔',       cost: 7, effect: 'm_drain',   value: 0,  shopCost: 21, emoji: '🌑' },
+      m_meteor:     { id: 'm_meteor',     name: '隕石',       cost: 8, effect: 'damage',    value: 30, shopCost: 24, emoji: '☄️' },
+      m_bigmagic:   { id: 'm_bigmagic',   name: '大魔法',     cost: 8, effect: 'bigmagic',  value: 6,  shopCost: 24, emoji: '🌟' },
+      m_collapse:   { id: 'm_collapse',   name: '【必殺】魔導崩壊', cost: 10, effect: 'collapse', value: 0.6, drawValue: 5, shopCost: 30, emoji: '🌌' },
+
+      // ===== ✨ プリースト固有カード =====
+      p_heal:       { id: 'p_heal',       name: '癒し',       cost: 1, effect: 'heal',      value: 5,  shopCost: 3,  emoji: '💚' },
+      p_holylight:  { id: 'p_holylight',  name: '聖光',       cost: 1, effect: 'block',     value: 4,  shopCost: 3,  emoji: '☀️' },
+      p_prayer:     { id: 'p_prayer',     name: '祈り',       cost: 2, effect: 'prayer',    value: 3,  turns: 3,     shopCost: 6,  emoji: '🙏' },
+      p_purify:     { id: 'p_purify',     name: '浄化',       cost: 2, effect: 'purify',    value: 3,  shopCost: 6,  emoji: '🌸' },
+      p_devotion:   { id: 'p_devotion',   name: '献身',       cost: 2, effect: 'devotion',  value: 6,  drawValue: 2, shopCost: 6,  emoji: '❤️' },
+      p_holyfire:   { id: 'p_holyfire',   name: '聖なる炎',   cost: 3, effect: 'holyfire',  value: 8,  healValue: 4, shopCost: 9,  emoji: '🕯️' },
+      p_holyshield: { id: 'p_holyshield', name: '聖盾',       cost: 3, effect: 'holyshield',value: 10, healValue: 5, shopCost: 9,  emoji: '🛡️' },
+      p_confess:    { id: 'p_confess',    name: '懺悔',       cost: 3, effect: 'confess',   value: 4,  shopCost: 9,  emoji: '📖' },
+      p_bless:      { id: 'p_bless',      name: '祝福',       cost: 4, effect: 'bless',     value: 0,  shopCost: 12, emoji: '⭐' },
+      p_divineye:   { id: 'p_divineye',   name: '神の目',     cost: 4, effect: 'divineye',  value: 2,  shopCost: 12, emoji: '👁️' },
+      p_holybeam:   { id: 'p_holybeam',   name: '聖なる光',   cost: 5, effect: 'holybeam',  value: 8,  healValue: 15, shopCost: 15, emoji: '💫' },
+      p_judgment:   { id: 'p_judgment',   name: '天罰',       cost: 5, effect: 'judgment',  value: 0,  shopCost: 15, emoji: '⚖️' },
+      p_sanctuary:  { id: 'p_sanctuary',  name: '聖域',       cost: 6, effect: 'sanctuary', value: 8,  turns: 3,     shopCost: 18, emoji: '🏛️' },
+      p_protection: { id: 'p_protection', name: '加護',       cost: 6, effect: 'protection',value: 2,  shopCost: 18, emoji: '🔰' },
+      p_divine:     { id: 'p_divine',     name: '裁き',       cost: 7, effect: 'divine',    value: 0.3, shopCost: 21, emoji: '✝️' },
+      p_resurrect:  { id: 'p_resurrect',  name: '復活',       cost: 8, effect: 'heal',      value: 30, shopCost: 24, emoji: '🌅' },
+      p_holyjudge:  { id: 'p_holyjudge',  name: '【必殺】聖なる審判', cost: 10, effect: 'holyjudge', value: 20, shopCost: 30, emoji: '👼' },
+
+      // ===== 🗡️ ローグ固有カード =====
+      r_dagger:     { id: 'r_dagger',     name: '短刀',       cost: 1, effect: 'damage',    value: 4,  shopCost: 3,  emoji: '🗡️' },
+      r_smoke:      { id: 'r_smoke',      name: '煙幕',       cost: 1, effect: 'block',     value: 5,  shopCost: 3,  emoji: '💨' },
+      r_shadowrun:  { id: 'r_shadowrun',  name: '影走り',     cost: 2, effect: 'shadowrun', value: 2,  drawValue: 3, shopCost: 6,  emoji: '👤' },
+      r_stealth:    { id: 'r_stealth',    name: '隠密',       cost: 2, effect: 'stealth',   value: 0,  shopCost: 6,  emoji: '🌙' },
+      r_poisonstar: { id: 'r_poisonstar', name: '毒手裏剣',   cost: 2, effect: 'poisonstar',value: 3,  poisonDmg: 2, poisonTurns: 2, shopCost: 6, emoji: '🌟' },
+      r_steal:      { id: 'r_steal',      name: 'スリ',       cost: 3, effect: 'steal',     value: 5,  shopCost: 9,  emoji: '💸' },
+      r_stab:       { id: 'r_stab',       name: '連刺し',     cost: 3, effect: 'stab',      value: 2,  shopCost: 9,  emoji: '🔪' },
+      r_distract:   { id: 'r_distract',   name: '陽動',       cost: 3, effect: 'distract',  value: 1,  shopCost: 9,  emoji: '🎭' },
+      r_mirage:     { id: 'r_mirage',     name: '残像',       cost: 4, effect: 'mirage',    value: 4,  shopCost: 12, emoji: '🌫️' },
+      r_illusion:   { id: 'r_illusion',   name: '幻影',       cost: 4, effect: 'illusion',  value: 0,  shopCost: 12, emoji: '🪄' },
+      r_backstab:   { id: 'r_backstab',   name: '背後奇襲',   cost: 5, effect: 'backstab',  value: 15, bonusValue: 8, shopCost: 15, emoji: '🥷' },
+      r_toxicsmoke: { id: 'r_toxicsmoke', name: '毒煙幕',     cost: 5, effect: 'toxicsmoke',value: 6,  poisonDmg: 3, poisonTurns: 3, shopCost: 15, emoji: '☁️' },
+      r_doublesteal:{ id: 'r_doublesteal',name: '二重スリ',   cost: 6, effect: 'doublesteal',value: 8, drawValue: 3, shopCost: 18, emoji: '💰' },
+      r_chaos:      { id: 'r_chaos',      name: '撹乱',       cost: 6, effect: 'distract',  value: 2,  shopCost: 18, emoji: '🌪️' },
+      r_shadowstrike:{ id: 'r_shadowstrike', name: '闇討ち',  cost: 7, effect: 'damage',    value: 25, shopCost: 21, emoji: '🌑' },
+      r_vital:      { id: 'r_vital',      name: '急所突き',   cost: 8, effect: 'vital',     value: 20, discardCount: 2, shopCost: 24, emoji: '💔' },
+      r_dance:      { id: 'r_dance',      name: '【必殺】千影乱舞', cost: 10, effect: 'dance', value: 3, shopCost: 30, emoji: '💃' },
+
+      // ===== 🔪 アサシン固有カード =====
+      a_needle:     { id: 'a_needle',     name: '毒針',       cost: 1, effect: 'poisoncard',value: 2,  poisonDmg: 1, poisonTurns: 3, shopCost: 3,  emoji: '🪡' },
+      a_hide:       { id: 'a_hide',       name: '影隠れ',     cost: 1, effect: 'block',     value: 5,  shopCost: 3,  emoji: '🌑' },
+      a_corrosion:  { id: 'a_corrosion',  name: '腐食毒',     cost: 2, effect: 'corrosion', poisonDmg: 2, poisonTurns: 2, shopCost: 6, emoji: '🧪' },
+      a_miasma:     { id: 'a_miasma',     name: '毒霧',       cost: 2, effect: 'poisoncard',value: 0,  poisonDmg: 2, poisonTurns: 5, shopCost: 6,  emoji: '💀' },
+      a_shadowbind: { id: 'a_shadowbind', name: '影縫い',     cost: 2, effect: 'shadowbind',value: 3,  shopCost: 6,  emoji: '🕸️' },
+      a_venom:      { id: 'a_venom',      name: '猛毒',       cost: 3, effect: 'poisoncard',value: 0,  poisonDmg: 4, poisonTurns: 4, shopCost: 9,  emoji: '☠️' },
+      a_poisonblade:{ id: 'a_poisonblade',name: '毒刃',       cost: 3, effect: 'poisoncard',value: 6,  poisonDmg: 3, poisonTurns: 3, shopCost: 9,  emoji: '🗡️' },
+      a_darkpact:   { id: 'a_darkpact',   name: '闇の契約',   cost: 3, effect: 'darkpact',  value: 8,  drawValue: 6, shopCost: 9,  emoji: '📜' },
+      a_trap:       { id: 'a_trap',       name: '罠',         cost: 4, effect: 'trap',      value: 3,  trapCount: 4, shopCost: 12, emoji: '⚙️' },
+      a_powerup:    { id: 'a_powerup',    name: '毒強化',     cost: 4, effect: 'powerup',   value: 0,  shopCost: 12, emoji: '⬆️' },
+      a_poisonbomb: { id: 'a_poisonbomb', name: '毒爆弾',     cost: 5, effect: 'poisoncard',value: 0,  poisonDmg: 4, poisonTurns: 4, shopCost: 15, emoji: '💣' },
+      a_shadowclone:{ id: 'a_shadowclone',name: '影分身',     cost: 5, effect: 'shadowclone',value: 0, shopCost: 15, emoji: '👥' },
+      a_swamp:      { id: 'a_swamp',      name: '毒沼',       cost: 6, effect: 'poisoncard',value: 0,  poisonDmg: 6, poisonTurns: 5, shopCost: 18, emoji: '🌿' },
+      a_assassinate:{ id: 'a_assassinate',name: '暗殺',       cost: 7, effect: 'assassinate',value: 30, shopCost: 21, emoji: '🥷' },
+      a_deadlyvenom:{ id: 'a_deadlyvenom',name: '絶命毒',     cost: 8, effect: 'poisoncard',value: 0,  poisonDmg: 10, poisonTurns: 4, shopCost: 24, emoji: '💀' },
+      a_ritual:     { id: 'a_ritual',     name: '暗黒の儀式', cost: 8, effect: 'ritual',    value: 35, selfDmg: 15,  shopCost: 24, emoji: '🕯️' },
+      a_spiral:     { id: 'a_spiral',     name: '【必殺】死の螺旋', cost: 10, effect: 'spiral', value: 0, poisonDmg: 15, poisonTurns: 5, shopCost: 30, emoji: '🌀' },
     };
 
     // カード効果の説明文を返す関数
     function cardEffectText(card) {
-      if (card.effect === 'damage')  return `${card.value} ダメージ`;
-      if (card.effect === 'block')   return `${card.value} ブロック`;
-      if (card.effect === 'draw')    return `${card.value} 枚ドロー`;
-      if (card.effect === 'gold')    return `+${card.value} ゴールド`;
-      if (card.effect === 'combo')   return `${card.value} ダメージ × 2回`;
-      if (card.effect === 'poison')  return `${card.value} ダメージ＋毒（2×3ターン）`;
-      if (card.effect === 'storm')   return `手札枚数 × ${card.value} ダメージ`;
-      if (card.effect === 'phoenix') return `${card.value} ダメージ＋HP${card.healValue}回復`;
-      if (card.effect === 'reflect') return `次に受けたダメージの半分を返す`;
-      if (card.effect === 'heal')    return `HP${card.value}回復`;
-      if (card.effect === 'copy')    return `次のカードを2回発動`;
-      if (card.effect === 'scry')    return `デッキトップ3枚から1枚を手札に`;
-      if (card.effect === 'invest')  return `次ターン開始時+${card.value}ゴールド`;
+      if (card.effect === 'damage')      return `${card.value} ダメージ`;
+      if (card.effect === 'block')       return `${card.value} ブロック`;
+      if (card.effect === 'draw')        return `${card.value} 枚ドロー`;
+      if (card.effect === 'gold')        return `+${card.value} ゴールド`;
+      if (card.effect === 'combo')       return `${card.value} ダメージ × 2回`;
+      if (card.effect === 'poison')      return `4 ダメージ＋毒（2/ターン×3）`;
+      if (card.effect === 'storm')       return `手札枚数 × ${card.value} ダメージ`;
+      if (card.effect === 'phoenix')     return `${card.value} ダメージ＋HP${card.healValue}回復`;
+      if (card.effect === 'reflect')     return `次に受けたダメージの半分を返す`;
+      if (card.effect === 'heal')        return `HP${card.value}回復`;
+      if (card.effect === 'copy')        return `次のカードを2回発動`;
+      if (card.effect === 'scry')        return `デッキトップ3枚から1枚を手札に`;
+      if (card.effect === 'invest')      return `次ターン開始時+${card.value}ゴールド`;
+      // ウォリアー
+      if (card.effect === 'shieldbash')  return `${card.value} ダメージ＋${card.blockValue} ブロック`;
+      if (card.effect === 'weaponup')    return `次の攻撃カードに+${card.value}ダメージ`;
+      if (card.effect === 'counter')     return `${card.value} ブロック＋反射`;
+      if (card.effect === 'warfiend')    return `(${card.value}ダメ＋${card.blockValue}ブロ)×3`;
+      if (card.effect === 'rage')        return `受けたダメージ累計×${card.value}ダメージ`;
+      if (card.effect === 'warcry')      return `手札の全攻撃カードを即発動`;
+      if (card.effect === 'undying')     return `HP${card.value}回復＋${card.blockValue}ブロック`;
+      if (card.effect === 'ironwall')    return `${card.value}ブロック＋次のターンも継続`;
+      if (card.effect === 'godofwar')    return `${card.value}ダメ×5回＋${card.blockValue}ブロック`;
+      // メイジ
+      if (card.effect === 'manafill')    return `次のターン追加で+${card.value}マナ`;
+      if (card.effect === 'amplify')     return `次のカードのダメージ2倍`;
+      if (card.effect === 'chain')       return `手札枚数×${card.value}ダメージ`;
+      if (card.effect === 'freeze')      return `${card.value}ダメ＋相手次ターンマナ-3`;
+      if (card.effect === 'thunder')     return `${card.value}ダメ＋${card.drawValue}枚ドロー`;
+      if (card.effect === 'm_recover')   return `捨て札から${card.value}枚を手札に戻す`;
+      if (card.effect === 'm_seal')      return `相手の手札1枚を封印`;
+      if (card.effect === 'm_copy')      return `手札左端のカードの効果をコピー`;
+      if (card.effect === 'timewarp')    return `手札を全て捨て同枚数+${card.value}ドロー`;
+      if (card.effect === 'explosion')   return `使用済みカード枚数×${card.value}ダメージ`;
+      if (card.effect === 'm_drain')     return `相手手札のコスト最大カードを奪う`;
+      if (card.effect === 'bigmagic')    return `手札枚数×${card.value}ダメージ`;
+      if (card.effect === 'collapse')    return `相手HP×60%ダメ＋${card.drawValue}枚ドロー`;
+      // プリースト
+      if (card.effect === 'prayer')      return `毎ターン+${card.value}HP回復（${card.turns}T）`;
+      if (card.effect === 'purify')      return `毒解除＋HP${card.value}回復`;
+      if (card.effect === 'devotion')    return `HP${card.value}回復＋${card.drawValue}枚ドロー`;
+      if (card.effect === 'holyfire')    return `${card.value}ダメ＋HP${card.healValue}回復`;
+      if (card.effect === 'holyshield')  return `${card.value}ブロ＋HP${card.healValue}回復`;
+      if (card.effect === 'confess')     return `手札1枚捨て+${card.value}枚ドロー`;
+      if (card.effect === 'bless')       return `次のカードの効果を2倍`;
+      if (card.effect === 'divineye')    return `デッキトップ5枚から${card.value}枚を手札に`;
+      if (card.effect === 'holybeam')    return `HP${card.healValue}回復＋${card.value}ブロック`;
+      if (card.effect === 'judgment')    return `相手HP - 自分HP 分ダメージ`;
+      if (card.effect === 'sanctuary')   return `毎ターン+${card.value}HP回復（${card.turns}T）`;
+      if (card.effect === 'protection')  return `次に受けるダメージを${card.value}回無効化`;
+      if (card.effect === 'divine')      return `相手HPの30%ダメージ`;
+      if (card.effect === 'holyjudge')   return `${card.value}ダメ＋HP全回復＋状態異常解除`;
+      // ローグ
+      if (card.effect === 'shadowrun')   return `${card.drawValue}枚ドロー＋${card.value}ダメージ`;
+      if (card.effect === 'stealth')     return `次のカードのコストを0にする`;
+      if (card.effect === 'poisonstar')  return `${card.value}ダメ＋毒(${card.poisonDmg}/T×${card.poisonTurns})`;
+      if (card.effect === 'steal')       return `相手から${card.value}ゴールド奪う`;
+      if (card.effect === 'stab')        return `${card.value}ダメージ×5回`;
+      if (card.effect === 'distract')    return `相手手札を${card.value}枚捨てさせる`;
+      if (card.effect === 'mirage')      return `使用済みカード枚数×${card.value}ダメージ`;
+      if (card.effect === 'illusion')    return `手札最安カードの効果を2回コピー`;
+      if (card.effect === 'backstab')    return `${card.value}ダメ（手札4枚以上で+${card.bonusValue}）`;
+      if (card.effect === 'toxicsmoke')  return `${card.value}ブロ＋毒(${card.poisonDmg}/T×${card.poisonTurns})`;
+      if (card.effect === 'doublesteal') return `${card.value}ゴールド奪う＋${card.drawValue}枚ドロー`;
+      if (card.effect === 'vital')       return `${card.value}ダメ＋相手手札${card.discardCount}枚捨て`;
+      if (card.effect === 'dance')       return `${card.value}ダメ×10回＋相手手札全捨て`;
+      // アサシン
+      if (card.effect === 'poisoncard')  return (card.value > 0 ? `${card.value}ダメ＋` : '') + `毒(${card.poisonDmg}/T×${card.poisonTurns})`;
+      if (card.effect === 'corrosion')   return `相手ブロ半減＋毒(${card.poisonDmg}/T×${card.poisonTurns})`;
+      if (card.effect === 'shadowbind')  return `相手の次のターンマナ-${card.value}`;
+      if (card.effect === 'darkpact')    return `HP${card.value}失う代わり${card.drawValue}枚ドロー`;
+      if (card.effect === 'trap')        return `相手がカードを使うたび3ダメ（${card.trapCount}回）`;
+      if (card.effect === 'powerup')     return `相手の毒ダメージを2倍にする`;
+      if (card.effect === 'shadowclone') return `このターンの毒カードを全て再発動`;
+      if (card.effect === 'assassinate') return `毒状態の相手に${card.value}ダメージ`;
+      if (card.effect === 'ritual')      return `HP${card.selfDmg}失う代わり${card.value}ダメージ`;
+      if (card.effect === 'spiral')      return `毒(${card.poisonDmg}/T×${card.poisonTurns})＋相手毒2倍`;
       return '';
     }
 
@@ -699,31 +980,41 @@
     let lastState = null;
     let isMyTurn = false;
     let currentPhase = 'play';
+    let selectedJob = ''; // 選択した職業
 
     // ===== Socket.io接続 =====
     const socket = io();
 
-    // ローカルストレージからプレイヤー名を取得してマッチングを開始する
+    // ローカルストレージからプレイヤー名を取得して職業選択画面を表示する
     const storedName = localStorage.getItem('cgPlayerName') || 'ゲスト';
     myPlayerName = storedName;
     document.getElementById('waitingName').textContent = `プレイヤー名: ${storedName}`;
-
-    socket.emit('cgJoinMatch', { playerName: storedName });
+    document.getElementById('jobScreenName').textContent = `プレイヤー名: ${storedName}`;
 
     // ===== 画面切り替え関数 =====
+    function showJobScreen() {
+      document.getElementById('jobScreen').style.display = 'flex';
+      document.getElementById('waitingScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'none';
+    }
+
     function showWaiting() {
+      document.getElementById('jobScreen').style.display = 'none';
       document.getElementById('waitingScreen').style.display = 'flex';
       document.getElementById('gameScreen').style.display = 'none';
       document.getElementById('resultScreen').style.display = 'none';
     }
 
     function showGame() {
+      document.getElementById('jobScreen').style.display = 'none';
       document.getElementById('waitingScreen').style.display = 'none';
       document.getElementById('gameScreen').style.display = 'flex';
       document.getElementById('resultScreen').style.display = 'none';
     }
 
     function showResult(win) {
+      document.getElementById('jobScreen').style.display = 'none';
       document.getElementById('waitingScreen').style.display = 'none';
       document.getElementById('gameScreen').style.display = 'none';
       document.getElementById('resultScreen').style.display = 'flex';
@@ -786,15 +1077,24 @@
     }
 
     // ===== 手札を描画する関数 =====
-    function renderHand(hand, mana) {
+    function renderHand(hand, mana, sealedCardId, stealth) {
       const container = document.getElementById('handArea');
       container.innerHTML = '';
       hand.forEach((cardId, index) => {
         const card = CARD_DEFS[cardId];
         if (!card) return;
-        // 自分のターンのプレイフェーズのみクリック可能にする
-        const canPlay = isMyTurn && currentPhase === 'play' && mana >= card.cost;
+        const isSealed = sealedCardId === cardId;
+        // 隠密バフが有効な場合はカードのコストを0とみなしてプレイ可否を判定する
+        const effectiveCost = stealth ? 0 : card.cost;
+        // 自分のターンのプレイフェーズのみクリック可能にする（封印カードは不可）
+        const canPlay = isMyTurn && currentPhase === 'play' && mana >= effectiveCost && !isSealed;
         const cardEl = createCardElement(cardId, { disabled: !canPlay });
+
+        // 封印中は表示を変える
+        if (isSealed) {
+          cardEl.style.outline = '2px solid #6b7280';
+          cardEl.title = '封印中：このターン使用不可';
+        }
 
         if (canPlay) {
           cardEl.addEventListener('click', () => {
@@ -878,6 +1178,18 @@
       document.getElementById('oppDeckCount').textContent    = `デッキ: ${state.oppDeckCount}`;
       document.getElementById('oppDiscardCount').textContent = `捨て札: ${state.oppDiscardCount}`;
 
+      // 毒ダメージ表示を更新する（毒がある場合のみ表示）
+      const myPoisonEl = document.getElementById('myPoisonBadge');
+      const oppPoisonEl = document.getElementById('oppPoisonBadge');
+      if (myPoisonEl) {
+        myPoisonEl.style.display = state.myPoisonDmgPerTurn > 0 ? '' : 'none';
+        myPoisonEl.textContent = `☠️ 毒: ${state.myPoisonDmgPerTurn}/T`;
+      }
+      if (oppPoisonEl) {
+        oppPoisonEl.style.display = state.oppPoisonDmgPerTurn > 0 ? '' : 'none';
+        oppPoisonEl.textContent = `☠️ 毒: ${state.oppPoisonDmgPerTurn}/T`;
+      }
+
       // マナ
       document.getElementById('manaNum').textContent    = state.myMana;
       document.getElementById('maxManaNum').textContent = state.myMaxMana;
@@ -890,8 +1202,8 @@
       renderField('myField', state.myField);
       renderField('oppField', state.oppField);
 
-      // 手札
-      renderHand(state.myHand, state.myMana);
+      // 手札（封印・隠密バフを渡す）
+      renderHand(state.myHand, state.myMana, state.mySealedCardId, state.myStealth);
 
       // ターン情報
       const turnLabel = document.getElementById('turnLabel');
@@ -1077,8 +1389,21 @@
       window.location.href = '/';
     });
 
-    // 最初は待機画面を表示する
-    showWaiting();
+    // ===== 職業選択ボタンのイベント =====
+    document.querySelectorAll('.job-card').forEach(el => {
+      el.addEventListener('click', () => {
+        selectedJob = el.dataset.job;
+        // 選択状態を視覚的に更新する
+        document.querySelectorAll('.job-card').forEach(j => j.classList.remove('selected'));
+        el.classList.add('selected');
+        // マッチング待機画面へ遷移してサーバーに参加要求を送る
+        showWaiting();
+        socket.emit('cgJoinMatch', { playerName: storedName, job: selectedJob });
+      });
+    });
+
+    // 最初は職業選択画面を表示する
+    showJobScreen();
   </script>
 </body>
 </html>
