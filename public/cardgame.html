@@ -1249,6 +1249,7 @@
     let isMyTurn = false;
     let currentPhase = 'play';
     let selectedJob = ''; // 選択した職業
+    let cgGameOverSent = false; // 自分のHP0検知時にcgGameOverを多重送信しないためのフラグ
 
     // ===== Socket.io接続 =====
     const socket = io();
@@ -1643,6 +1644,13 @@
       opponentName   = payload.opponentName;
       document.getElementById('myNameBadge').textContent  = payload.myName;
       document.getElementById('oppNameBadge').textContent = payload.opponentName;
+      // ゲーム開始直後に勝敗通知リスナーを登録する（テトリスと同じ方式）
+      socket.off('cgResult');
+      socket.on('cgResult', (payload) => {
+        showResult(payload.win);
+      });
+      // 自分がHP0を検知した際の多重送信を防ぐためのフラグをリセットする
+      cgGameOverSent = false;
       showGame();
     });
 
@@ -1650,6 +1658,11 @@
     socket.off('cgStateUpdate');
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
+      // 自分のHPが0以下になったらゲームオーバーをサーバーへ通知する（テトリスと同じ方式）
+      if (state.myHp <= 0 && !cgGameOverSent) {
+        cgGameOverSent = true;
+        socket.emit('cgGameOver');
+      }
     });
 
     // 相手が切断した通知
@@ -1657,12 +1670,6 @@
     socket.on('cgOpponentLeft', () => {
       // 相手切断時は勝利扱いとして結果画面へ遷移する
       showResult(true);
-    });
-
-    // 勝敗通知
-    socket.off('cgResult');
-    socket.on('cgResult', (payload) => {
-      showResult(payload.win);
     });
 
     // 予知（scry）選択肢通知

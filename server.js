@@ -2745,16 +2745,26 @@ io.on("connection", (socket) => {
       }
     }
 
-    // HPが0になったら勝敗を通知する
-    if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
-      room.resultSent = true;
-      const p0win = state.hp[1] <= 0;
-      io.to(room.players[0]).emit('cgResult', { win: p0win });
-      io.to(room.players[1]).emit('cgResult', { win: !p0win });
-      return;
-    }
-
+    // HP0を含む最新状態をクライアントへ送信するだけにする（勝敗の確定はクライアントからのcgGameOver通知で行う）
     sendCGState(room);
+  });
+
+  // カードゲームのゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する（テトリスのgameOverと同じ方式）
+  socket.on('cgGameOver', () => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || room.players.length < 2 || room.resultSent) return;
+
+    // 最初にHP0を検知して通知してきたプレイヤーが負け
+    room.resultSent = true;
+    io.to(socket.id).emit('cgResult', { win: false });
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit('cgResult', { win: true });
+      }
+    });
   });
 
   // ターン終了処理（手札・フィールドを捨て札へ移動しショップフェーズへ移行する）
