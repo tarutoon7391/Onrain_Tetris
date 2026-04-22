@@ -438,7 +438,7 @@ const POISON_DMG_PER_TURN = 2;
 // 予知（scry）で提示するカード枚数
 const SCRY_CARD_COUNT = 3;
 // プレイヤーの最大HP
-const CG_MAX_HP = 20;
+const CG_MAX_HP = 40;
 
 // ショップに並ぶカードの共通プール（初期カードの attack1・gold は含めない）
 const CG_SHOP_POOL = [
@@ -538,7 +538,7 @@ function initCGGameState() {
   const deck0 = cgShuffle([...CG_INITIAL_DECK]);
   const deck1 = cgShuffle([...CG_INITIAL_DECK]);
   return {
-    hp: [20, 20],
+    hp: [CG_MAX_HP, CG_MAX_HP],
     block: [0, 0],
     mana: [0, 0],
     maxMana: [0, 0],
@@ -2027,6 +2027,14 @@ io.on("connection", (socket) => {
     state.phase = 'play';
     state.shop = [];
     cgStartTurn(state, nextPlayer);
+
+    if (state.hp[nextPlayer] <= 0 || state.hp[1 - nextPlayer] <= 0) {
+      room.resultSent = true;
+      const p0win = state.hp[1] <= 0;
+      io.to(room.players[0]).emit('cgResult', { win: p0win });
+      io.to(room.players[1]).emit('cgResult', { win: !p0win });
+      return;
+    }
 
     sendCGState(room);
   });
