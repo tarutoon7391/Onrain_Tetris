@@ -1515,6 +1515,14 @@ io.on("connection", (socket) => {
           }
         }
         state.scryCards[playerIndex] = scryCards;
+        // 罠ダメージ等でカード使用前に誰かのHPが0になっていた場合は勝敗を確定させる
+        if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
+          room.resultSent = true;
+          const p0win = state.hp[1] <= 0;
+          io.to(room.players[0]).emit('cgResult', { win: p0win });
+          io.to(room.players[1]).emit('cgResult', { win: !p0win });
+          return;
+        }
         io.to(socket.id).emit('cgScryChoice', { cards: scryCards });
         sendCGState(room);
         return;
