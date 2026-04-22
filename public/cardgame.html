@@ -615,6 +615,41 @@
           <div class="job-card-name">アサシン</div>
           <div class="job-card-desc">毒・状態異常特化<br>影から刺す</div>
         </div>
+        <div class="job-card" data-job="knight" style="border-color:rgba(148,163,184,0.4);background:rgba(148,163,184,0.07);">
+          <div class="job-card-emoji">🛡️</div>
+          <div class="job-card-name">ナイト</div>
+          <div class="job-card-desc">ブロック消費攻撃特化<br>守りながら戦う</div>
+        </div>
+        <div class="job-card" data-job="gambler" style="border-color:rgba(234,179,8,0.4);background:rgba(234,179,8,0.07);">
+          <div class="job-card-emoji">🎲</div>
+          <div class="job-card-name">ギャンブラー</div>
+          <div class="job-card-desc">成功・失敗の賭け<br>運命に身を委ねる</div>
+        </div>
+        <div class="job-card" data-job="alchemist" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.07);">
+          <div class="job-card-emoji">🧪</div>
+          <div class="job-card-name">アルケミスト</div>
+          <div class="job-card-desc">コイン消費攻撃特化<br>金を力に変える</div>
+        </div>
+        <div class="job-card" data-job="necromancer" style="border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.07);">
+          <div class="job-card-emoji">👻</div>
+          <div class="job-card-name">ネクロマンサー</div>
+          <div class="job-card-desc">墓地利用特化<br>死者を従える</div>
+        </div>
+        <div class="job-card" data-job="monk" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.07);">
+          <div class="job-card-emoji">⚡</div>
+          <div class="job-card-name">モンク</div>
+          <div class="job-card-desc">気力ゲージ特化<br>内なる力を解放</div>
+        </div>
+        <div class="job-card" data-job="curse" style="border-color:rgba(239,68,68,0.5);background:rgba(239,68,68,0.07);">
+          <div class="job-card-emoji">🌑</div>
+          <div class="job-card-name">カース</div>
+          <div class="job-card-desc">自傷・HP低下で強化<br>呪いと共に生きる</div>
+        </div>
+        <div class="job-card" data-job="summoner" style="border-color:rgba(34,211,238,0.4);background:rgba(34,211,238,0.07);">
+          <div class="job-card-emoji">🤝</div>
+          <div class="job-card-name">サモナー</div>
+          <div class="job-card-desc">トークン召喚特化<br>仲間と共に戦う</div>
+        </div>
       </div>
       <p style="text-align:center;margin-top:20px;font-size:0.8rem;color:#4b5563;">カードをクリックして職業を選択してください</p>
     </div>
@@ -684,6 +719,8 @@
             <div>
               <div class="block-badge" id="myBlockBadge">🛡️ ブロック: 0</div>
               <div class="block-badge" id="myPoisonBadge" style="display:none;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86efac;margin-top:4px;">☠️ 毒: 0/T</div>
+              <div class="block-badge" id="myKiBadge" style="display:none;background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.3);color:#fde68a;margin-top:4px;">⚡ 気力: 0</div>
+              <div class="block-badge" id="myGraveBadge" style="display:none;background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);color:#c4b5fd;margin-top:4px;">💀 墓地: 0</div>
             <div class="count-row">
               <div class="count-chip" id="myDeckCount">デッキ: 0</div>
               <div class="count-chip" id="myDiscardCount">捨て札: 0</div>
@@ -889,6 +926,152 @@
       a_deadlyvenom:{ id: 'a_deadlyvenom',name: '絶命毒',     cost: 8, effect: 'poisoncard',value: 0,  poisonDmg: 10, poisonTurns: 4, shopCost: 24, emoji: '💀' },
       a_ritual:     { id: 'a_ritual',     name: '暗黒の儀式', cost: 8, effect: 'ritual',    value: 35, selfDmg: 15,  shopCost: 24, emoji: '🕯️' },
       a_spiral:     { id: 'a_spiral',     name: '【必殺】死の螺旋', cost: 10, effect: 'spiral', value: 0, poisonDmg: 15, poisonTurns: 5, shopCost: 30, emoji: '🌀' },
+
+      // ===== 🛡️ ナイト固有カード =====
+      kn_shieldblow: { id: 'kn_shieldblow', name: '盾の一撃',     cost: 1,  effect: 'kn_shieldblow', bonus: 0,   shopCost: 3,  emoji: '🛡️' },
+      kn_guard:      { id: 'kn_guard',      name: '守護',         cost: 1,  effect: 'block',          value: 3,   shopCost: 3,  emoji: '🧱' },
+      kn_holyblow:   { id: 'kn_holyblow',   name: '聖盾突き',     cost: 2,  effect: 'kn_shieldblow',  bonus: 4,   shopCost: 6,  emoji: '✨' },
+      kn_ironwall:   { id: 'kn_ironwall',   name: '鉄壁',         cost: 2,  effect: 'block',          value: 7,   shopCost: 6,  emoji: '🏰' },
+      kn_shieldup:   { id: 'kn_shieldup',   name: '盾強化',       cost: 2,  effect: 'kn_shieldup',    mult: 1.5,  shopCost: 6,  emoji: '⬆️' },
+      kn_shieldheal: { id: 'kn_shieldheal', name: '盾回復',       cost: 3,  effect: 'holyshield',     value: 6,   healValue: 4, shopCost: 9,  emoji: '💚' },
+      kn_fortress:   { id: 'kn_fortress',   name: '要塞化',       cost: 3,  effect: 'block',          value: 10,  shopCost: 9,  emoji: '🏯' },
+      kn_holystrike: { id: 'kn_holystrike', name: '聖なる盾撃',   cost: 3,  effect: 'kn_shieldblow',  bonus: 8,   shopCost: 9,  emoji: '⚡' },
+      kn_ironcharge: { id: 'kn_ironcharge', name: '鉄壁突進',     cost: 4,  effect: 'kn_ironcharge',  shopCost: 12, emoji: '🐂' },
+      kn_immovable:  { id: 'kn_immovable',  name: '不動',         cost: 4,  effect: 'ironwall',       value: 14,  shopCost: 12, emoji: '🗿' },
+      kn_shieldstorm:{ id: 'kn_shieldstorm',name: '盾の嵐',       cost: 5,  effect: 'kn_shieldstorm', shopCost: 15, emoji: '🌪️' },
+      kn_holyup:     { id: 'kn_holyup',     name: '聖盾強化',     cost: 5,  effect: 'kn_shieldup',    mult: 2.0,  shopCost: 15, emoji: '🌟' },
+      kn_castle:     { id: 'kn_castle',     name: '城壁',         cost: 6,  effect: 'block',          value: 20,  shopCost: 18, emoji: '🏰' },
+      kn_shieldcrush:{ id: 'kn_shieldcrush',name: '盾砕き返し',   cost: 6,  effect: 'kn_shieldcrush', shopCost: 18, emoji: '💥' },
+      kn_perfectguard:{id:'kn_perfectguard',name: '完全防御',      cost: 7,  effect: 'kn_perfectguard',shopCost: 21, emoji: '🔰' },
+      kn_holyshield: { id: 'kn_holyshield', name: '聖域の盾',     cost: 8,  effect: 'kn_holyshield',  value: 25,  blockPerTurn: 4, blockTurns: 3, shopCost: 24, emoji: '✝️' },
+      kn_godshield:  { id: 'kn_godshield',  name: '【必殺】神盾爆砕', cost: 10, effect: 'kn_godshield', bonus: 30, shopCost: 30, emoji: '☀️' },
+
+      // ===== 🎲 ギャンブラー固有カード =====
+      gb_cointoss:   { id: 'gb_cointoss',   name: 'コイントス',    cost: 1, effect: 'gb_cointoss',   shopCost: 3,  emoji: '🪙' },
+      gb_luckydraw:  { id: 'gb_luckydraw',  name: 'ラッキードロー', cost: 1, effect: 'gb_luckydraw',  shopCost: 3,  emoji: '🎴' },
+      gb_bet:        { id: 'gb_bet',        name: '賭け',          cost: 2, effect: 'gb_bet',        shopCost: 6,  emoji: '🎰' },
+      gb_tripleup:   { id: 'gb_tripleup',   name: 'トリプルアップ', cost: 2, effect: 'gb_tripleup',   shopCost: 6,  emoji: '🃏' },
+      gb_roulette:   { id: 'gb_roulette',   name: 'ルーレット',    cost: 2, effect: 'gb_roulette',   shopCost: 6,  emoji: '🎡' },
+      gb_highroller: { id: 'gb_highroller', name: 'ハイローラー',  cost: 3, effect: 'gb_highroller', shopCost: 9,  emoji: '🎲' },
+      gb_goddess:    { id: 'gb_goddess',    name: '幸運の女神',    cost: 3, effect: 'gb_goddess',    shopCost: 9,  emoji: '🌈' },
+      gb_longshot:   { id: 'gb_longshot',   name: '大穴狙い',      cost: 3, effect: 'gb_longshot',   shopCost: 9,  emoji: '🏹' },
+      gb_casino:     { id: 'gb_casino',     name: 'カジノ',        cost: 4, effect: 'gb_casino',     shopCost: 12, emoji: '🎰' },
+      gb_slot:       { id: 'gb_slot',       name: 'スロット',      cost: 4, effect: 'gb_slot',       shopCost: 12, emoji: '🎰' },
+      gb_instinct:   { id: 'gb_instinct',   name: '博打師の直感',  cost: 5, effect: 'gb_instinct',   shopCost: 15, emoji: '💡' },
+      gb_fate:       { id: 'gb_fate',       name: '運命の一手',    cost: 5, effect: 'gb_fate',       shopCost: 15, emoji: '🌠' },
+      gb_jackpot:    { id: 'gb_jackpot',    name: 'ジャックポット', cost: 6, effect: 'gb_jackpot',    shopCost: 18, emoji: '💎' },
+      gb_combo:      { id: 'gb_combo',      name: '連続賭け',      cost: 6, effect: 'gb_combo',      shopCost: 18, emoji: '🔗' },
+      gb_mastery:    { id: 'gb_mastery',    name: '賭博師の奥義',  cost: 7, effect: 'gb_mastery',    shopCost: 21, emoji: '👁️' },
+      gb_allin:      { id: 'gb_allin',      name: '全賭け',        cost: 8, effect: 'gb_allin',      shopCost: 24, emoji: '💸' },
+      gb_ultimate:   { id: 'gb_ultimate',   name: '【必殺】究極の賭け', cost: 10, effect: 'gb_ultimate', shopCost: 30, emoji: '⭐' },
+
+      // ===== 🧪 アルケミスト固有カード =====
+      al_alchemy:    { id: 'al_alchemy',    name: '錬金術',       cost: 1,  effect: 'gold',          value: 10,  shopCost: 3,  emoji: '🧪' },
+      al_distill:    { id: 'al_distill',    name: '蒸留',         cost: 3,  effect: 'gold',          value: 30,  shopCost: 9,  emoji: '⚗️' },
+      al_sagestone:  { id: 'al_sagestone',  name: '賢者の錬金',   cost: 6,  effect: 'gold',          value: 60,  shopCost: 18, emoji: '💎' },
+      al_convert:    { id: 'al_convert',    name: '変換',         cost: 1,  effect: 'al_damage',     coinCost: 5,  value: 3,   shopCost: 3,  emoji: '🔄' },
+      al_refine:     { id: 'al_refine',     name: '精製爆発',     cost: 2,  effect: 'al_damage',     coinCost: 10, value: 8,   shopCost: 6,  emoji: '💣' },
+      al_catalyst:   { id: 'al_catalyst',   name: '触媒',         cost: 2,  effect: 'al_catalyst',   coinCost: 5,  shopCost: 6,  emoji: '✨' },
+      al_bomb:       { id: 'al_bomb',       name: '爆発薬',       cost: 3,  effect: 'al_damage',     coinCost: 15, value: 15,  shopCost: 9,  emoji: '💥' },
+      al_potion:     { id: 'al_potion',     name: '回復薬',       cost: 3,  effect: 'al_heal',       coinCost: 10, value: 10,  shopCost: 9,  emoji: '💊' },
+      al_armor:      { id: 'al_armor',      name: '強化薬',       cost: 3,  effect: 'al_block',      coinCost: 10, value: 15,  shopCost: 9,  emoji: '🛡️' },
+      al_synthesis:  { id: 'al_synthesis',  name: '大錬成',       cost: 4,  effect: 'al_damage',     coinCost: 20, value: 25,  shopCost: 12, emoji: '⚡' },
+      al_philstone:  { id: 'al_philstone',  name: '賢者の石',     cost: 4,  effect: 'al_combo',      coinCost: 15, value: 15,  blockValue: 10, shopCost: 12, emoji: '🌟' },
+      al_elixir:     { id: 'al_elixir',     name: '万能薬',       cost: 5,  effect: 'al_elixir',     coinCost: 20, value: 15,  blockValue: 10, healValue: 10, shopCost: 15, emoji: '🍶' },
+      al_transmute:  { id: 'al_transmute',  name: '変成',         cost: 5,  effect: 'al_damage',     coinCost: 25, value: 35,  shopCost: 15, emoji: '🔮' },
+      al_elemental:  { id: 'al_elemental',  name: '元素爆発',     cost: 6,  effect: 'al_damage',     coinCost: 30, value: 50,  shopCost: 18, emoji: '🌋' },
+      al_immortal:   { id: 'al_immortal',   name: '不死薬',       cost: 6,  effect: 'al_immortal',   coinCost: 20, healValue: 15, shopCost: 18, emoji: '🌿' },
+      al_magicraft:  { id: 'al_magicraft',  name: '魔導錬成',     cost: 7,  effect: 'al_magicraft',  coinCost: 35, shopCost: 21, emoji: '🔯' },
+      al_ultimate:   { id: 'al_ultimate',   name: '【必殺】哲学者の石', cost: 10, effect: 'al_ultimate', healValue: 20, shopCost: 30, emoji: '☄️' },
+
+      // ===== 👻 ネクロマンサー固有カード =====
+      nc_skeleton:   { id: 'nc_skeleton',   name: '骸骨召喚',     cost: 1,  effect: 'nc_revive',     value: 1,   shopCost: 3,  emoji: '💀' },
+      nc_claw:       { id: 'nc_claw',       name: '死霊の爪',     cost: 1,  effect: 'nc_claw',       value: 4,   bonus: 4,   threshold: 5, shopCost: 3,  emoji: '🦴' },
+      nc_graverobbery:{id:'nc_graverobbery',name: '墓荒らし',      cost: 2,  effect: 'nc_revive',     value: 2,   shopCost: 6,  emoji: '⛏️' },
+      nc_decay:      { id: 'nc_decay',      name: '腐敗',         cost: 2,  effect: 'nc_gravedmg',   mult: 1,    shopCost: 6,  emoji: '☠️' },
+      nc_lament:     { id: 'nc_lament',     name: '死者の嘆き',   cost: 2,  effect: 'nc_lament',     shopCost: 6,  emoji: '😢' },
+      nc_specterbuff:{ id: 'nc_specterbuff',name: '死霊強化',     cost: 3,  effect: 'nc_specterbuff',shopCost: 9,  emoji: '👻' },
+      nc_revive:     { id: 'nc_revive',     name: '蘇生',         cost: 3,  effect: 'nc_revive',     value: 3,   shopCost: 9,  emoji: '🌅' },
+      nc_chain:      { id: 'nc_chain',      name: '呪いの連鎖',   cost: 3,  effect: 'nc_gravedmg',   mult: 2,    shopCost: 9,  emoji: '⛓️' },
+      nc_army:       { id: 'nc_army',       name: '死者の軍勢',   cost: 4,  effect: 'nc_army',       shopCost: 12, emoji: '💪' },
+      nc_souleater:  { id: 'nc_souleater',  name: '魂喰い',       cost: 4,  effect: 'nc_souleater',  value: 20,  graveCost: 5, shopCost: 12, emoji: '🍖' },
+      nc_oath:       { id: 'nc_oath',       name: '不死の誓い',   cost: 5,  effect: 'nc_oath',       mult: 3,    healValue: 5, shopCost: 15, emoji: '📜' },
+      nc_explosion:  { id: 'nc_explosion',  name: '死霊爆発',     cost: 5,  effect: 'nc_explosion',  mult: 6,    shopCost: 15, emoji: '💣' },
+      nc_reincarnation:{id:'nc_reincarnation',name:'永遠の輪廻',   cost: 6,  effect: 'nc_reincarnation', shopCost: 18, emoji: '🔄' },
+      nc_king:       { id: 'nc_king',       name: '死者の王',     cost: 6,  effect: 'nc_king',       mult: 3,    shopCost: 18, emoji: '👑' },
+      nc_storm:      { id: 'nc_storm',      name: '魂の嵐',       cost: 7,  effect: 'nc_explosion',  mult: 8,    shopCost: 21, emoji: '🌩️' },
+      nc_release:    { id: 'nc_release',    name: '死霊解放',     cost: 8,  effect: 'nc_release',    blockMult: 3, shopCost: 24, emoji: '💫' },
+      nc_awakening:  { id: 'nc_awakening',  name: '【必殺】死者の覚醒', cost: 10, effect: 'nc_awakening', dmgMult: 15, blockMult: 5, shopCost: 30, emoji: '⚡' },
+
+      // ===== ⚡ モンク固有カード =====
+      mk_qigong:     { id: 'mk_qigong',     name: '気功',         cost: 0,  effect: 'mk_ki',         kiGain: 3,  shopCost: 3,  emoji: '🌀' },
+      mk_strike:     { id: 'mk_strike',     name: '連打',         cost: 0,  effect: 'mk_kidmg',      kiCost: 3,  value: 4,   shopCost: 3,  emoji: '👊' },
+      mk_meditate:   { id: 'mk_meditate',   name: '瞑想',         cost: 1,  effect: 'mk_meditate',   kiGain: 8,  drawValue: 2, shopCost: 3,  emoji: '🧘' },
+      mk_ironpunch:  { id: 'mk_ironpunch',  name: '鉄拳',         cost: 1,  effect: 'mk_kidmg',      kiCost: 5,  value: 8,   shopCost: 3,  emoji: '🥊' },
+      mk_airflow:    { id: 'mk_airflow',    name: '気流',         cost: 2,  effect: 'mk_ki',         kiGain: 12, shopCost: 6,  emoji: '🌬️' },
+      mk_palm:       { id: 'mk_palm',       name: '剛掌打',       cost: 2,  effect: 'mk_kidmg',      kiCost: 8,  value: 14,  shopCost: 6,  emoji: '🖐️' },
+      mk_shield:     { id: 'mk_shield',     name: '気盾',         cost: 2,  effect: 'mk_kiblock',    kiCost: 5,  value: 10,  shopCost: 6,  emoji: '🛡️' },
+      mk_burst:      { id: 'mk_burst',      name: '気功爆発',     cost: 3,  effect: 'mk_kidmg',      kiCost: 10, value: 20,  shopCost: 9,  emoji: '💥' },
+      mk_inner:      { id: 'mk_inner',      name: '内功',         cost: 3,  effect: 'mk_inner',      kiGain: 20, healValue: 5, shopCost: 9,  emoji: '💚' },
+      mk_storm:      { id: 'mk_storm',      name: '嵐の拳',       cost: 3,  effect: 'mk_storm',      kiCostPerHit: 3, value: 3, maxHits: 10, shopCost: 9,  emoji: '🌊' },
+      mk_release:    { id: 'mk_release',    name: '気力解放',     cost: 4,  effect: 'mk_release',    shopCost: 12, emoji: '⚡' },
+      mk_godspeed:   { id: 'mk_godspeed',   name: '神速',         cost: 4,  effect: 'mk_godspeed',   kiCost: 15, manaGain: 2, shopCost: 12, emoji: '🏃' },
+      mk_cannon:     { id: 'mk_cannon',     name: '気功砲',       cost: 5,  effect: 'mk_kidmg',      kiCost: 20, value: 35,  shopCost: 15, emoji: '💣' },
+      mk_mushin:     { id: 'mk_mushin',     name: '無我の境地',   cost: 5,  effect: 'mk_mushin',     kiGain: 30, shopCost: 15, emoji: '🌟' },
+      mk_dragon:     { id: 'mk_dragon',     name: '龍の拳',       cost: 6,  effect: 'mk_kidmg',      kiCost: 25, value: 50,  shopCost: 18, emoji: '🐉' },
+      mk_heaven:     { id: 'mk_heaven',     name: '天地気功',     cost: 8,  effect: 'mk_heaven',     shopCost: 24, emoji: '☀️' },
+      mk_mukyoku:    { id: 'mk_mukyoku',    name: '【必殺】無極', cost: 10, effect: 'mk_mukyoku',    shopCost: 30, emoji: '🌌' },
+
+      // ===== 🌑 カース固有カード =====
+      cu_bloodcost:  { id: 'cu_bloodcost',  name: '血の代償',     cost: 1,  effect: 'cu_bloodcost',  selfDmg: 3,  value: 8,   shopCost: 3,  emoji: '🩸' },
+      cu_pain:       { id: 'cu_pain',       name: '苦痛',         cost: 1,  effect: 'cu_pain',       value: 6,   lowValue: 2, shopCost: 3,  emoji: '😖' },
+      cu_woundpower: { id: 'cu_woundpower', name: '傷の力',       cost: 2,  effect: 'cu_woundpower', mult: 0.5,  shopCost: 6,  emoji: '⚔️' },
+      cu_dyingrage:  { id: 'cu_dyingrage',  name: '瀕死の怒り',   cost: 2,  effect: 'cu_dyingrage',  value: 15,  lowValue: 4, shopCost: 6,  emoji: '😡' },
+      cu_selfbuff:   { id: 'cu_selfbuff',   name: '自傷強化',     cost: 2,  effect: 'cu_selfbuff',   selfDmg: 5, shopCost: 6,  emoji: '🔥' },
+      cu_bloodpact:  { id: 'cu_bloodpact',  name: '血の契約',     cost: 3,  effect: 'cu_bloodcost',  selfDmg: 10, value: 25, shopCost: 9,  emoji: '📜' },
+      cu_cursearmor: { id: 'cu_cursearmor', name: '呪いの鎧',     cost: 3,  effect: 'cu_cursearmor', selfDmg: 5,  blockValue: 20, shopCost: 9,  emoji: '🛡️' },
+      cu_abyss:      { id: 'cu_abyss',      name: '死の淵',       cost: 3,  effect: 'cu_abyss',      value: 30,  lowValue: 5, shopCost: 9,  emoji: '🕳️' },
+      cu_bind:       { id: 'cu_bind',       name: '呪縛',         cost: 4,  effect: 'cu_bloodcost',  selfDmg: 15, value: 40, shopCost: 12, emoji: '⛓️' },
+      cu_woundex:    { id: 'cu_woundex',    name: '傷の爆発',     cost: 4,  effect: 'cu_woundpower', mult: 1.0,  shopCost: 12, emoji: '💣' },
+      cu_undying:    { id: 'cu_undying',    name: '不死の呪い',   cost: 5,  effect: 'cu_undying',    shopCost: 15, emoji: '💜' },
+      cu_bloodstorm: { id: 'cu_bloodstorm', name: '血の嵐',       cost: 5,  effect: 'cu_bloodstorm', selfDmg: 20, value: 5, hits: 6, shopCost: 15, emoji: '🌊' },
+      cu_curserelease:{id:'cu_curserelease',name: '呪いの解放',   cost: 6,  effect: 'cu_curserelease',mult: 1.5, healValue: 10, shopCost: 18, emoji: '✨' },
+      cu_deathscythe:{ id: 'cu_deathscythe',name: '死神の鎌',     cost: 7,  effect: 'cu_deathscythe',value: 10,  shopCost: 21, emoji: '⚰️' },
+      cu_cursepeak:  { id: 'cu_cursepeak',  name: '呪いの極致',   cost: 7,  effect: 'cu_bloodcost',  selfDmg: 30, value: 60, shopCost: 21, emoji: '👁️' },
+      cu_ruination:  { id: 'cu_ruination',  name: '滅びの呪い',   cost: 8,  effect: 'cu_ruination',  mult: 3,    shopCost: 24, emoji: '💀' },
+      cu_demonking:  { id: 'cu_demonking',  name: '【必殺】魔王降臨', cost: 10, effect: 'cu_demonking', value: 100, shopCost: 30, emoji: '😈' },
+
+      // ===== 🤝 サモナー固有カード =====
+      sm_goblin:     { id: 'sm_goblin',     name: '小鬼召喚',     cost: 1,  effect: 'sm_summon',     tokenId: 'sm_tok_atk3',  tokenCount: 1, shopCost: 3,  emoji: '👺' },
+      sm_spiritshield:{ id:'sm_spiritshield',name:'盾の精霊',      cost: 1,  effect: 'sm_summon',     tokenId: 'sm_tok_blk5',  tokenCount: 1, shopCost: 3,  emoji: '🛡️' },
+      sm_summonup:   { id: 'sm_summonup',   name: '召喚強化',     cost: 2,  effect: 'sm_summonup',   turns: 3,   shopCost: 6,  emoji: '⬆️' },
+      sm_goblinlegion:{id:'sm_goblinlegion',name: 'ゴブリン軍団',  cost: 2,  effect: 'sm_summon',     tokenId: 'sm_tok_atk3',  tokenCount: 3, shopCost: 6,  emoji: '👺' },
+      sm_healspirit: { id: 'sm_healspirit', name: '癒しの精霊',   cost: 2,  effect: 'sm_summon',     tokenId: 'sm_tok_heal5', tokenCount: 2, shopCost: 6,  emoji: '💚' },
+      sm_ogre:       { id: 'sm_ogre',       name: 'オーガ召喚',   cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_atk10', tokenCount: 1, shopCost: 9,  emoji: '👹' },
+      sm_spiritguard:{ id: 'sm_spiritguard',name: '精霊の加護',   cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_blk12', tokenCount: 1, shopCost: 9,  emoji: '✨' },
+      sm_masssummon: { id: 'sm_masssummon', name: '大量召喚',     cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_atk3',  tokenCount: 5, shopCost: 9,  emoji: '💪' },
+      sm_dragon:     { id: 'sm_dragon',     name: 'ドラゴン召喚', cost: 4,  effect: 'sm_summon',     tokenId: 'sm_tok_atk20', tokenCount: 1, shopCost: 12, emoji: '🐉' },
+      sm_sumstorm:   { id: 'sm_sumstorm',   name: '召喚の嵐',     cost: 4,  effect: 'sm_summon_now', tokenId: 'sm_tok_atk2',  tokenCount: 5, shopCost: 12, emoji: '🌪️' },
+      sm_spiritking: { id: 'sm_spiritking', name: '精霊王',       cost: 5,  effect: 'sm_summon',     tokenId: 'sm_tok_combo15', tokenCount: 1, shopCost: 15, emoji: '👑' },
+      sm_infinsum:   { id: 'sm_infinsum',   name: '無限召喚',     cost: 5,  effect: 'sm_infinsum',   tokenId: 'sm_tok_atk3',  tokenCount: 2, turns: 3, shopCost: 15, emoji: '♾️' },
+      sm_archdemon:  { id: 'sm_archdemon',  name: '魔神召喚',     cost: 6,  effect: 'sm_summon',     tokenId: 'sm_tok_atk30', tokenCount: 1, shopCost: 18, emoji: '👿' },
+      sm_sumexplosion:{id:'sm_sumexplosion',name: '召喚爆発',      cost: 6,  effect: 'sm_sumexplosion',value: 5,  shopCost: 18, emoji: '💥' },
+      sm_legionrelease:{id:'sm_legionrelease',name:'軍勢解放',     cost: 7,  effect: 'sm_legionrelease', shopCost: 21, emoji: '⚔️' },
+      sm_godcall:    { id: 'sm_godcall',    name: '召喚神降臨',   cost: 8,  effect: 'sm_summon',     tokenId: 'sm_tok_atk50', tokenCount: 1, shopCost: 24, emoji: '🌟' },
+      sm_ultimate:   { id: 'sm_ultimate',   name: '【必殺】万軍召喚', cost: 10, effect: 'sm_ultimate', tokenId: 'sm_tok_atk10_0', tokenCount: 10, shopCost: 30, emoji: '💢' },
+
+      // ===== サモナー用トークンカード（使い捨て）=====
+      sm_tok_atk3:   { id: 'sm_tok_atk3',   name: '召喚獣(弱)',   cost: 1,  effect: 'damage',  value: 3,  shopCost: 0, emoji: '👊', isToken: true },
+      sm_tok_blk5:   { id: 'sm_tok_blk5',   name: '盾精霊',       cost: 1,  effect: 'block',   value: 5,  shopCost: 0, emoji: '🛡️', isToken: true },
+      sm_tok_heal5:  { id: 'sm_tok_heal5',  name: '癒し精霊',     cost: 1,  effect: 'heal',    value: 5,  shopCost: 0, emoji: '💚', isToken: true },
+      sm_tok_atk10:  { id: 'sm_tok_atk10',  name: '召喚獣(中)',   cost: 2,  effect: 'damage',  value: 10, shopCost: 0, emoji: '⚔️', isToken: true },
+      sm_tok_blk12:  { id: 'sm_tok_blk12',  name: '護衛精霊',     cost: 2,  effect: 'block',   value: 12, shopCost: 0, emoji: '🛡️', isToken: true },
+      sm_tok_atk20:  { id: 'sm_tok_atk20',  name: 'ドラゴン',     cost: 3,  effect: 'damage',  value: 20, shopCost: 0, emoji: '🐉', isToken: true },
+      sm_tok_atk2:   { id: 'sm_tok_atk2',   name: '小精霊',       cost: 0,  effect: 'damage',  value: 2,  shopCost: 0, emoji: '✨', isToken: true },
+      sm_tok_combo15:{ id: 'sm_tok_combo15',name: '精霊王',        cost: 3,  effect: 'shieldbash', value: 15, blockValue: 15, shopCost: 0, emoji: '⭐', isToken: true },
+      sm_tok_atk30:  { id: 'sm_tok_atk30',  name: '魔神',         cost: 4,  effect: 'damage',  value: 30, shopCost: 0, emoji: '👿', isToken: true },
+      sm_tok_atk50:  { id: 'sm_tok_atk50',  name: '召喚神',       cost: 5,  effect: 'damage',  value: 50, shopCost: 0, emoji: '🌟', isToken: true },
+      sm_tok_atk10_0:{ id: 'sm_tok_atk10_0',name: '万軍兵士',     cost: 0,  effect: 'damage',  value: 10, shopCost: 0, emoji: '⚔️', isToken: true },
     };
 
     // カード効果の説明文を返す関数
@@ -970,6 +1153,91 @@
       if (card.effect === 'assassinate') return `毒状態の相手に${card.value}ダメージ`;
       if (card.effect === 'ritual')      return `HP${card.selfDmg}失う代わり${card.value}ダメージ`;
       if (card.effect === 'spiral')      return `毒(${card.poisonDmg}/T×${card.poisonTurns})＋相手毒2倍`;
+      // ナイト
+      if (card.effect === 'kn_shieldblow') return `ブロック2/3消費して消費量${card.bonus ? '+' + card.bonus : ''}ダメージ`;
+      if (card.effect === 'kn_shieldup')  return `現在のブロックを${card.mult}倍にする`;
+      if (card.effect === 'kn_ironcharge')return `ブロック2/3消費して消費量×1.5ダメージ`;
+      if (card.effect === 'kn_shieldstorm')return `ブロック2/3消費して消費量÷3×4回ダメージ`;
+      if (card.effect === 'kn_shieldcrush')return `ブロック2/3消費して消費量×2ダメージ`;
+      if (card.effect === 'kn_perfectguard')return `次に受けるダメージをすべてブロックに変換`;
+      if (card.effect === 'kn_holyshield')return `${card.value}ブロ＋毎ターン${card.blockPerTurn}ブロ（${card.blockTurns}T）`;
+      if (card.effect === 'kn_godshield') return `ブロック2/3消費して消費量×4ダメ＋${card.bonus}ブロック`;
+      // ギャンブラー
+      if (card.effect === 'gb_cointoss')  return `50%:15ダメ／50%:自分8ダメ`;
+      if (card.effect === 'gb_luckydraw') return `50%:5枚ドロー／50%:手札全捨て`;
+      if (card.effect === 'gb_bet')       return `50%:20ダメ／50%:自分10ダメ+手札1捨て`;
+      if (card.effect === 'gb_tripleup')  return `50%:次カード3倍／50%:次カード不発`;
+      if (card.effect === 'gb_roulette')  return `50%:ランダム大効果／50%:自分15ダメ`;
+      if (card.effect === 'gb_highroller')return `50%:35ダメ／50%:自分20ダメ+手札2捨て`;
+      if (card.effect === 'gb_goddess')   return `50%:全職業ランダムカード入手／50%:コイン全消失`;
+      if (card.effect === 'gb_longshot')  return `20%:50ダメ／80%:自分15ダメ`;
+      if (card.effect === 'gb_casino')    return `50%:30コイン獲得／50%:コイン全消失`;
+      if (card.effect === 'gb_slot')      return `50%:大効果3つ／50%:大デメリット3つ`;
+      if (card.effect === 'gb_instinct')  return `50%:使用枚数×10ダメ／50%:枚数×5自傷`;
+      if (card.effect === 'gb_fate')      return `50%:HP50%回復+20ブロ／50%:HP半分失う`;
+      if (card.effect === 'gb_jackpot')   return `10%:相手HP1／90%:自分HP1`;
+      if (card.effect === 'gb_combo')     return `50%:ランダム大効果×3回／50%:大デメリット×3回`;
+      if (card.effect === 'gb_mastery')   return `次のギャンブルカード必ず成功＋次ターンスキップ`;
+      if (card.effect === 'gb_allin')     return `50%:コイン×4ダメ／50%:コイン×2自傷+コイン全消失`;
+      if (card.effect === 'gb_ultimate')  return `50%:相手HP1+50ブロ／50%:自分HP1+手札全捨て`;
+      // アルケミスト
+      if (card.effect === 'al_damage')    return `コイン${card.coinCost}消費して${card.value}ダメージ`;
+      if (card.effect === 'al_heal')      return `コイン${card.coinCost}消費してHP${card.value}回復`;
+      if (card.effect === 'al_block')     return `コイン${card.coinCost}消費して${card.value}ブロック`;
+      if (card.effect === 'al_catalyst')  return `コイン${card.coinCost}消費して次のカード2倍`;
+      if (card.effect === 'al_combo')     return `コイン${card.coinCost}消費して${card.value}ダメ＋${card.blockValue}ブロ`;
+      if (card.effect === 'al_elixir')    return `コイン${card.coinCost}消費して${card.value}ダメ＋${card.blockValue}ブロ＋HP${card.healValue}回復`;
+      if (card.effect === 'al_immortal')  return `コイン${card.coinCost}消費して次ダメ無効＋HP${card.healValue}回復`;
+      if (card.effect === 'al_magicraft') return `コイン${card.coinCost}消費して残りコイン×2ダメ`;
+      if (card.effect === 'al_ultimate')  return `コイン全消費して消費量×3ダメ＋HP${card.healValue}回復`;
+      // ネクロマンサー
+      if (card.effect === 'nc_revive')    return `墓地から${card.value}枚手札に戻す`;
+      if (card.effect === 'nc_claw')      return `${card.value}ダメ（墓地${card.threshold}枚以上で+${card.bonus}）`;
+      if (card.effect === 'nc_gravedmg')  return `墓地枚数×${card.mult}ダメージ`;
+      if (card.effect === 'nc_lament')    return `墓地からコスト最大のカードを手札に`;
+      if (card.effect === 'nc_specterbuff')return `次に使うカードを墓地枚数×0.3倍に強化`;
+      if (card.effect === 'nc_army')      return `墓地を全て手札に戻す`;
+      if (card.effect === 'nc_souleater') return `墓地${card.graveCost}枚消費して${card.value}ダメージ`;
+      if (card.effect === 'nc_oath')      return `墓地枚数×${card.mult}ダメ＋HP${card.healValue}回復`;
+      if (card.effect === 'nc_explosion') return `墓地全消費して消費枚数×${card.mult}ダメージ`;
+      if (card.effect === 'nc_reincarnation')return `このターン使ったカードを手札に戻す＋コスト合計マナ獲得`;
+      if (card.effect === 'nc_king')      return `墓地枚数×${card.mult}ダメ＋同枚数ブロック`;
+      if (card.effect === 'nc_release')   return `墓地全て手札に戻す＋戻し枚数×${card.blockMult}ブロ`;
+      if (card.effect === 'nc_awakening') return `墓地全手札に戻して枚数×${card.dmgMult}ダメ＋枚数×${card.blockMult}ブロ`;
+      // モンク
+      if (card.effect === 'mk_ki')        return `気力+${card.kiGain}`;
+      if (card.effect === 'mk_meditate')  return `気力+${card.kiGain}＋${card.drawValue}枚ドロー`;
+      if (card.effect === 'mk_kidmg')     return `気力${card.kiCost}消費して${card.value}ダメージ`;
+      if (card.effect === 'mk_kiblock')   return `気力${card.kiCost}消費して${card.value}ブロック`;
+      if (card.effect === 'mk_inner')     return `気力+${card.kiGain}＋HP${card.healValue}回復`;
+      if (card.effect === 'mk_storm')     return `気力${card.kiCostPerHit}消費×${card.value}ダメ（最大${card.maxHits}回）`;
+      if (card.effect === 'mk_release')   return `気力÷5ダメージ＋気力を0にする`;
+      if (card.effect === 'mk_godspeed')  return `気力${card.kiCost}消費してマナ+${card.manaGain}`;
+      if (card.effect === 'mk_mushin')    return `気力+${card.kiGain}＋次のカードコスト0`;
+      if (card.effect === 'mk_heaven')    return `気力全消費して消費量÷2×3回ダメ（最大100）`;
+      if (card.effect === 'mk_mukyoku')   return `気力全消費して消費量×3ダメ（上限150）＋消費量÷2ブロ`;
+      // カース
+      if (card.effect === 'cu_bloodcost') return `HP${card.selfDmg}失う＋${card.value}ダメージ`;
+      if (card.effect === 'cu_pain')      return `HP半分以下なら${card.value}ダメ、それ以外は${card.lowValue}ダメ`;
+      if (card.effect === 'cu_woundpower')return `失ったHP×${card.mult}ダメージ`;
+      if (card.effect === 'cu_dyingrage') return `HP30%以下なら${card.value}ダメ、それ以外は${card.lowValue}ダメ`;
+      if (card.effect === 'cu_selfbuff')  return `HP${card.selfDmg}失う＋次のカードの効果3倍`;
+      if (card.effect === 'cu_cursearmor')return `HP${card.selfDmg}失う＋${card.blockValue}ブロック`;
+      if (card.effect === 'cu_abyss')     return `HP20%以下なら${card.value}ダメ、それ以外は${card.lowValue}ダメ`;
+      if (card.effect === 'cu_undying')   return `このターン致死ダメをHP1で耐える`;
+      if (card.effect === 'cu_bloodstorm')return `HP${card.selfDmg}失う＋${card.value}ダメ×${card.hits}回`;
+      if (card.effect === 'cu_curserelease')return `失ったHP×${card.mult}ダメ＋HP${card.healValue}回復`;
+      if (card.effect === 'cu_deathscythe')return `相手HP10%以下なら相手HP1+ブロ消去、それ以外は${card.value}ダメ`;
+      if (card.effect === 'cu_ruination') return `HP+ブロの半分失って失計×${card.mult}ダメ`;
+      if (card.effect === 'cu_demonking') return `自分HP1になる代わりに${card.value}ダメージ`;
+      // サモナー
+      if (card.effect === 'sm_summon')    return `次ターン${card.tokenId}×${card.tokenCount}を手札に追加`;
+      if (card.effect === 'sm_summon_now')return `今すぐ${card.tokenId}×${card.tokenCount}を手札に追加`;
+      if (card.effect === 'sm_summonup')  return `${card.turns}ターン間トークン効果2倍`;
+      if (card.effect === 'sm_infinsum')  return `毎ターン${card.tokenId}×${card.tokenCount}追加（${card.turns}T）`;
+      if (card.effect === 'sm_sumexplosion')return `手札のトークン全消費して枚数×${card.value}ダメ`;
+      if (card.effect === 'sm_legionrelease')return `手札のトークンを全て即発動`;
+      if (card.effect === 'sm_ultimate')  return `${card.tokenId}×10追加して全トークン即発動`;
       return '';
     }
 
@@ -1193,6 +1461,22 @@
         oppPoisonEl.textContent = `☠️ 毒: ${state.oppPoisonDmgPerTurn}/T`;
       }
 
+      // 気力ゲージ表示を更新する（モンクの場合のみ表示）
+      const myKiEl = document.getElementById('myKiBadge');
+      if (myKiEl) {
+        const kiVal = state.myKi || 0;
+        myKiEl.style.display = (kiVal > 0 || state.myJob === 'monk') ? '' : 'none';
+        myKiEl.textContent = `⚡ 気力: ${kiVal}`;
+      }
+
+      // 墓地枚数表示を更新する（ネクロマンサーの場合のみ表示）
+      const myGraveEl = document.getElementById('myGraveBadge');
+      if (myGraveEl) {
+        const graveCount = state.myGraveCount || 0;
+        myGraveEl.style.display = (graveCount > 0 || state.myJob === 'necromancer') ? '' : 'none';
+        myGraveEl.textContent = `💀 墓地: ${graveCount}`;
+      }
+
       // マナ
       document.getElementById('manaNum').textContent    = state.myMana;
       document.getElementById('maxManaNum').textContent = state.myMaxMana;
@@ -1291,6 +1575,19 @@
             socket.emit('cgTrashCard', { source: 'discard', cardIndex: i });
             closeTrashModal();
           });
+          list.appendChild(cardEl);
+        });
+      }
+
+      // 墓地のカードを表示する（ネクロマンサーのみ表示）
+      if (state.myGraveCards && state.myGraveCards.length > 0) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'modal-section-title';
+        titleEl.textContent = '墓地（参照のみ）';
+        titleEl.style.color = '#c4b5fd';
+        list.appendChild(titleEl);
+        state.myGraveCards.forEach((cardId) => {
+          const cardEl = createCardElement(cardId, { disabled: true });
           list.appendChild(cardEl);
         });
       }
