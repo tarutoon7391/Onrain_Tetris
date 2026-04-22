@@ -647,7 +647,7 @@
             <div class="hp-section">
               <div class="hp-label">HP</div>
               <div class="hp-bar-wrap"><div class="hp-bar opp-bar" id="oppHpBar" style="width:100%"></div></div>
-              <div class="hp-number" id="oppHpNum">20</div>
+              <div class="hp-number" id="oppHpNum">40</div>
             </div>
             <div>
               <div class="block-badge" id="oppBlockBadge">🛡️ ブロック: 0</div>
@@ -679,7 +679,7 @@
             <div class="hp-section">
               <div class="hp-label">HP</div>
               <div class="hp-bar-wrap"><div class="hp-bar my-bar" id="myHpBar" style="width:100%"></div></div>
-              <div class="hp-number" id="myHpNum">20</div>
+              <div class="hp-number" id="myHpNum">40</div>
             </div>
             <div>
               <div class="block-badge" id="myBlockBadge">🛡️ ブロック: 0</div>
@@ -1150,7 +1150,7 @@
 
     // ===== HPバーを更新する関数 =====
     function updateHpBar(barId, numId, hp) {
-      const pct = Math.max(0, Math.min(100, (hp / 20) * 100));
+      const pct = Math.max(0, Math.min(100, (hp / 40) * 100));
       document.getElementById(barId).style.width = pct + '%';
       const numEl = document.getElementById(numId);
       numEl.textContent = hp;
