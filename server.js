@@ -431,6 +431,159 @@ const CARD_DEFS = {
   a_deadlyvenom:{ id: 'a_deadlyvenom', name: '絶命毒',  cost: 8,  effect: 'poisoncard', value: 0,  poisonDmg: 10, poisonTurns: 4, shopCost: 24, emoji: '💀', job: 'assassin' },
   a_ritual:    { id: 'a_ritual',    name: '暗黒の儀式', cost: 8,  effect: 'ritual',    value: 35, selfDmg: 15,  shopCost: 24, emoji: '🕯️', job: 'assassin' },
   a_spiral:    { id: 'a_spiral',    name: '【必殺】死の螺旋', cost: 10, effect: 'spiral', value: 0, poisonDmg: 15, poisonTurns: 5, shopCost: 30, emoji: '🌀', job: 'assassin' },
+
+  // ===== 🛡️ ナイト固有カード =====
+  // ブロック値の2/3を消費して攻撃するカードあり
+  kn_shieldblow: { id: 'kn_shieldblow', name: '盾の一撃',     cost: 1,  effect: 'kn_shieldblow', bonus: 0,   shopCost: 3,  emoji: '🛡️', job: 'knight' },
+  kn_guard:      { id: 'kn_guard',      name: '守護',         cost: 1,  effect: 'block',          value: 3,   shopCost: 3,  emoji: '🧱', job: 'knight' },
+  kn_holyblow:   { id: 'kn_holyblow',   name: '聖盾突き',     cost: 2,  effect: 'kn_shieldblow',  bonus: 4,   shopCost: 6,  emoji: '✨', job: 'knight' },
+  kn_ironwall:   { id: 'kn_ironwall',   name: '鉄壁',         cost: 2,  effect: 'block',          value: 7,   shopCost: 6,  emoji: '🏰', job: 'knight' },
+  kn_shieldup:   { id: 'kn_shieldup',   name: '盾強化',       cost: 2,  effect: 'kn_shieldup',    mult: 1.5,  shopCost: 6,  emoji: '⬆️', job: 'knight' },
+  kn_shieldheal: { id: 'kn_shieldheal', name: '盾回復',       cost: 3,  effect: 'holyshield',     value: 6,   healValue: 4, shopCost: 9,  emoji: '💚', job: 'knight' },
+  kn_fortress:   { id: 'kn_fortress',   name: '要塞化',       cost: 3,  effect: 'block',          value: 10,  shopCost: 9,  emoji: '🏯', job: 'knight' },
+  kn_holystrike: { id: 'kn_holystrike', name: '聖なる盾撃',   cost: 3,  effect: 'kn_shieldblow',  bonus: 8,   shopCost: 9,  emoji: '⚡', job: 'knight' },
+  kn_ironcharge: { id: 'kn_ironcharge', name: '鉄壁突進',     cost: 4,  effect: 'kn_ironcharge',  shopCost: 12, emoji: '🐂', job: 'knight' },
+  kn_immovable:  { id: 'kn_immovable',  name: '不動',         cost: 4,  effect: 'ironwall',       value: 14,  shopCost: 12, emoji: '🗿', job: 'knight' },
+  kn_shieldstorm:{ id: 'kn_shieldstorm',name: '盾の嵐',       cost: 5,  effect: 'kn_shieldstorm', shopCost: 15, emoji: '🌪️', job: 'knight' },
+  kn_holyup:     { id: 'kn_holyup',     name: '聖盾強化',     cost: 5,  effect: 'kn_shieldup',    mult: 2.0,  shopCost: 15, emoji: '🌟', job: 'knight' },
+  kn_castle:     { id: 'kn_castle',     name: '城壁',         cost: 6,  effect: 'block',          value: 20,  shopCost: 18, emoji: '🏰', job: 'knight' },
+  kn_shieldcrush:{ id: 'kn_shieldcrush',name: '盾砕き返し',   cost: 6,  effect: 'kn_shieldcrush', shopCost: 18, emoji: '💥', job: 'knight' },
+  kn_perfectguard:{id: 'kn_perfectguard',name:'完全防御',      cost: 7,  effect: 'kn_perfectguard',shopCost: 21, emoji: '🔰', job: 'knight' },
+  kn_holyshield: { id: 'kn_holyshield', name: '聖域の盾',     cost: 8,  effect: 'kn_holyshield',  value: 25,  blockPerTurn: 4, blockTurns: 3, shopCost: 24, emoji: '✝️', job: 'knight' },
+  kn_godshield:  { id: 'kn_godshield',  name: '【必殺】神盾爆砕', cost: 10, effect: 'kn_godshield', bonus: 30, shopCost: 30, emoji: '☀️', job: 'knight' },
+
+  // ===== 🎲 ギャンブラー固有カード =====
+  // 各カードは50%（大穴狙いのみ20%）で成功・失敗が分かれる
+  gb_cointoss:   { id: 'gb_cointoss',   name: 'コイントス',   cost: 1,  effect: 'gb_cointoss',   shopCost: 3,  emoji: '🪙', job: 'gambler' },
+  gb_luckydraw:  { id: 'gb_luckydraw',  name: 'ラッキードロー',cost: 1, effect: 'gb_luckydraw',  shopCost: 3,  emoji: '🎴', job: 'gambler' },
+  gb_bet:        { id: 'gb_bet',        name: '賭け',         cost: 2,  effect: 'gb_bet',        shopCost: 6,  emoji: '🎰', job: 'gambler' },
+  gb_tripleup:   { id: 'gb_tripleup',   name: 'トリプルアップ',cost: 2, effect: 'gb_tripleup',   shopCost: 6,  emoji: '🃏', job: 'gambler' },
+  gb_roulette:   { id: 'gb_roulette',   name: 'ルーレット',   cost: 2,  effect: 'gb_roulette',   shopCost: 6,  emoji: '🎡', job: 'gambler' },
+  gb_highroller: { id: 'gb_highroller', name: 'ハイローラー', cost: 3,  effect: 'gb_highroller', shopCost: 9,  emoji: '🎲', job: 'gambler' },
+  gb_goddess:    { id: 'gb_goddess',    name: '幸運の女神',   cost: 3,  effect: 'gb_goddess',    shopCost: 9,  emoji: '🌈', job: 'gambler' },
+  gb_longshot:   { id: 'gb_longshot',   name: '大穴狙い',     cost: 3,  effect: 'gb_longshot',   shopCost: 9,  emoji: '🏹', job: 'gambler' },
+  gb_casino:     { id: 'gb_casino',     name: 'カジノ',       cost: 4,  effect: 'gb_casino',     shopCost: 12, emoji: '🎰', job: 'gambler' },
+  gb_slot:       { id: 'gb_slot',       name: 'スロット',     cost: 4,  effect: 'gb_slot',       shopCost: 12, emoji: '🎰', job: 'gambler' },
+  gb_instinct:   { id: 'gb_instinct',   name: '博打師の直感', cost: 5,  effect: 'gb_instinct',   shopCost: 15, emoji: '💡', job: 'gambler' },
+  gb_fate:       { id: 'gb_fate',       name: '運命の一手',   cost: 5,  effect: 'gb_fate',       shopCost: 15, emoji: '🌠', job: 'gambler' },
+  gb_jackpot:    { id: 'gb_jackpot',    name: 'ジャックポット',cost: 6, effect: 'gb_jackpot',    shopCost: 18, emoji: '💎', job: 'gambler' },
+  gb_combo:      { id: 'gb_combo',      name: '連続賭け',     cost: 6,  effect: 'gb_combo',      shopCost: 18, emoji: '🔗', job: 'gambler' },
+  gb_mastery:    { id: 'gb_mastery',    name: '賭博師の奥義', cost: 7,  effect: 'gb_mastery',    shopCost: 21, emoji: '👁️', job: 'gambler' },
+  gb_allin:      { id: 'gb_allin',      name: '全賭け',       cost: 8,  effect: 'gb_allin',      shopCost: 24, emoji: '💸', job: 'gambler' },
+  gb_ultimate:   { id: 'gb_ultimate',   name: '【必殺】究極の賭け', cost: 10, effect: 'gb_ultimate', shopCost: 30, emoji: '⭐', job: 'gambler' },
+
+  // ===== 🧪 アルケミスト固有カード =====
+  // コインを消費して効果を発動。コイン入手カード3枚あり
+  al_alchemy:    { id: 'al_alchemy',    name: '錬金術',       cost: 1,  effect: 'gold',          value: 10,  shopCost: 3,  emoji: '🧪', job: 'alchemist' },
+  al_distill:    { id: 'al_distill',    name: '蒸留',         cost: 3,  effect: 'gold',          value: 30,  shopCost: 9,  emoji: '⚗️', job: 'alchemist' },
+  al_sagestone:  { id: 'al_sagestone',  name: '賢者の錬金',   cost: 6,  effect: 'gold',          value: 60,  shopCost: 18, emoji: '💎', job: 'alchemist' },
+  al_convert:    { id: 'al_convert',    name: '変換',         cost: 1,  effect: 'al_damage',     coinCost: 5,  value: 3,   shopCost: 3,  emoji: '🔄', job: 'alchemist' },
+  al_refine:     { id: 'al_refine',     name: '精製爆発',     cost: 2,  effect: 'al_damage',     coinCost: 10, value: 8,   shopCost: 6,  emoji: '💣', job: 'alchemist' },
+  al_catalyst:   { id: 'al_catalyst',   name: '触媒',         cost: 2,  effect: 'al_catalyst',   coinCost: 5,  shopCost: 6,  emoji: '✨', job: 'alchemist' },
+  al_bomb:       { id: 'al_bomb',       name: '爆発薬',       cost: 3,  effect: 'al_damage',     coinCost: 15, value: 15,  shopCost: 9,  emoji: '💥', job: 'alchemist' },
+  al_potion:     { id: 'al_potion',     name: '回復薬',       cost: 3,  effect: 'al_heal',       coinCost: 10, value: 10,  shopCost: 9,  emoji: '💊', job: 'alchemist' },
+  al_armor:      { id: 'al_armor',      name: '強化薬',       cost: 3,  effect: 'al_block',      coinCost: 10, value: 15,  shopCost: 9,  emoji: '🛡️', job: 'alchemist' },
+  al_synthesis:  { id: 'al_synthesis',  name: '大錬成',       cost: 4,  effect: 'al_damage',     coinCost: 20, value: 25,  shopCost: 12, emoji: '⚡', job: 'alchemist' },
+  al_philstone:  { id: 'al_philstone',  name: '賢者の石',     cost: 4,  effect: 'al_combo',      coinCost: 15, value: 15,  blockValue: 10, shopCost: 12, emoji: '🌟', job: 'alchemist' },
+  al_elixir:     { id: 'al_elixir',     name: '万能薬',       cost: 5,  effect: 'al_elixir',     coinCost: 20, value: 15,  blockValue: 10, healValue: 10, shopCost: 15, emoji: '🍶', job: 'alchemist' },
+  al_transmute:  { id: 'al_transmute',  name: '変成',         cost: 5,  effect: 'al_damage',     coinCost: 25, value: 35,  shopCost: 15, emoji: '🔮', job: 'alchemist' },
+  al_elemental:  { id: 'al_elemental',  name: '元素爆発',     cost: 6,  effect: 'al_damage',     coinCost: 30, value: 50,  shopCost: 18, emoji: '🌋', job: 'alchemist' },
+  al_immortal:   { id: 'al_immortal',   name: '不死薬',       cost: 6,  effect: 'al_immortal',   coinCost: 20, healValue: 15, shopCost: 18, emoji: '🌿', job: 'alchemist' },
+  al_magicraft:  { id: 'al_magicraft',  name: '魔導錬成',     cost: 7,  effect: 'al_magicraft',  coinCost: 35, shopCost: 21, emoji: '🔯', job: 'alchemist' },
+  al_ultimate:   { id: 'al_ultimate',   name: '【必殺】哲学者の石', cost: 10, effect: 'al_ultimate', healValue: 20, shopCost: 30, emoji: '☄️', job: 'alchemist' },
+
+  // ===== 👻 ネクロマンサー固有カード =====
+  // 使用したカードはすべて墓地へ送られる。専用カードを使ったときのみ手札に戻せる
+  nc_skeleton:   { id: 'nc_skeleton',   name: '骸骨召喚',     cost: 1,  effect: 'nc_revive',     value: 1,   shopCost: 3,  emoji: '💀', job: 'necromancer' },
+  nc_claw:       { id: 'nc_claw',       name: '死霊の爪',     cost: 1,  effect: 'nc_claw',       value: 4,   bonus: 4,   threshold: 5, shopCost: 3,  emoji: '🦴', job: 'necromancer' },
+  nc_graverobbery:{id:'nc_graverobbery',name: '墓荒らし',      cost: 2,  effect: 'nc_revive',     value: 2,   shopCost: 6,  emoji: '⛏️', job: 'necromancer' },
+  nc_decay:      { id: 'nc_decay',      name: '腐敗',         cost: 2,  effect: 'nc_gravedmg',   mult: 1,    shopCost: 6,  emoji: '☠️', job: 'necromancer' },
+  nc_lament:     { id: 'nc_lament',     name: '死者の嘆き',   cost: 2,  effect: 'nc_lament',     shopCost: 6,  emoji: '😢', job: 'necromancer' },
+  nc_specterbuff:{ id: 'nc_specterbuff',name: '死霊強化',     cost: 3,  effect: 'nc_specterbuff',shopCost: 9,  emoji: '👻', job: 'necromancer' },
+  nc_revive:     { id: 'nc_revive',     name: '蘇生',         cost: 3,  effect: 'nc_revive',     value: 3,   shopCost: 9,  emoji: '🌅', job: 'necromancer' },
+  nc_chain:      { id: 'nc_chain',      name: '呪いの連鎖',   cost: 3,  effect: 'nc_gravedmg',   mult: 2,    shopCost: 9,  emoji: '⛓️', job: 'necromancer' },
+  nc_army:       { id: 'nc_army',       name: '死者の軍勢',   cost: 4,  effect: 'nc_army',       shopCost: 12, emoji: '💪', job: 'necromancer' },
+  nc_souleater:  { id: 'nc_souleater',  name: '魂喰い',       cost: 4,  effect: 'nc_souleater',  value: 20,  graveCost: 5, shopCost: 12, emoji: '🍖', job: 'necromancer' },
+  nc_oath:       { id: 'nc_oath',       name: '不死の誓い',   cost: 5,  effect: 'nc_oath',       mult: 3,    healValue: 5, shopCost: 15, emoji: '📜', job: 'necromancer' },
+  nc_explosion:  { id: 'nc_explosion',  name: '死霊爆発',     cost: 5,  effect: 'nc_explosion',  mult: 6,    shopCost: 15, emoji: '💣', job: 'necromancer' },
+  nc_reincarnation:{id:'nc_reincarnation',name:'永遠の輪廻',   cost: 6,  effect: 'nc_reincarnation', shopCost: 18, emoji: '🔄', job: 'necromancer' },
+  nc_king:       { id: 'nc_king',       name: '死者の王',     cost: 6,  effect: 'nc_king',       mult: 3,    shopCost: 18, emoji: '👑', job: 'necromancer' },
+  nc_storm:      { id: 'nc_storm',      name: '魂の嵐',       cost: 7,  effect: 'nc_explosion',  mult: 8,    shopCost: 21, emoji: '🌩️', job: 'necromancer' },
+  nc_release:    { id: 'nc_release',    name: '死霊解放',     cost: 8,  effect: 'nc_release',    blockMult: 3, shopCost: 24, emoji: '💫', job: 'necromancer' },
+  nc_awakening:  { id: 'nc_awakening',  name: '【必殺】死者の覚醒', cost: 10, effect: 'nc_awakening', dmgMult: 15, blockMult: 5, shopCost: 30, emoji: '⚡', job: 'necromancer' },
+
+  // ===== ⚡ モンク固有カード =====
+  // 気力ゲージを消費して技を発動する
+  mk_qigong:     { id: 'mk_qigong',     name: '気功',         cost: 0,  effect: 'mk_ki',         kiGain: 3,  shopCost: 3,  emoji: '🌀', job: 'monk' },
+  mk_strike:     { id: 'mk_strike',     name: '連打',         cost: 0,  effect: 'mk_kidmg',      kiCost: 3,  value: 4,   shopCost: 3,  emoji: '👊', job: 'monk' },
+  mk_meditate:   { id: 'mk_meditate',   name: '瞑想',         cost: 1,  effect: 'mk_meditate',   kiGain: 8,  drawValue: 2, shopCost: 3,  emoji: '🧘', job: 'monk' },
+  mk_ironpunch:  { id: 'mk_ironpunch',  name: '鉄拳',         cost: 1,  effect: 'mk_kidmg',      kiCost: 5,  value: 8,   shopCost: 3,  emoji: '🥊', job: 'monk' },
+  mk_airflow:    { id: 'mk_airflow',    name: '気流',         cost: 2,  effect: 'mk_ki',         kiGain: 12, shopCost: 6,  emoji: '🌬️', job: 'monk' },
+  mk_palm:       { id: 'mk_palm',       name: '剛掌打',       cost: 2,  effect: 'mk_kidmg',      kiCost: 8,  value: 14,  shopCost: 6,  emoji: '🖐️', job: 'monk' },
+  mk_shield:     { id: 'mk_shield',     name: '気盾',         cost: 2,  effect: 'mk_kiblock',    kiCost: 5,  value: 10,  shopCost: 6,  emoji: '🛡️', job: 'monk' },
+  mk_burst:      { id: 'mk_burst',      name: '気功爆発',     cost: 3,  effect: 'mk_kidmg',      kiCost: 10, value: 20,  shopCost: 9,  emoji: '💥', job: 'monk' },
+  mk_inner:      { id: 'mk_inner',      name: '内功',         cost: 3,  effect: 'mk_inner',      kiGain: 20, healValue: 5, shopCost: 9,  emoji: '💚', job: 'monk' },
+  mk_storm:      { id: 'mk_storm',      name: '嵐の拳',       cost: 3,  effect: 'mk_storm',      kiCostPerHit: 3, value: 3, maxHits: 10, shopCost: 9,  emoji: '🌊', job: 'monk' },
+  mk_release:    { id: 'mk_release',    name: '気力解放',     cost: 4,  effect: 'mk_release',    shopCost: 12, emoji: '⚡', job: 'monk' },
+  mk_godspeed:   { id: 'mk_godspeed',   name: '神速',         cost: 4,  effect: 'mk_godspeed',   kiCost: 15, manaGain: 2, shopCost: 12, emoji: '🏃', job: 'monk' },
+  mk_cannon:     { id: 'mk_cannon',     name: '気功砲',       cost: 5,  effect: 'mk_kidmg',      kiCost: 20, value: 35,  shopCost: 15, emoji: '💣', job: 'monk' },
+  mk_mushin:     { id: 'mk_mushin',     name: '無我の境地',   cost: 5,  effect: 'mk_mushin',     kiGain: 30, shopCost: 15, emoji: '🌟', job: 'monk' },
+  mk_dragon:     { id: 'mk_dragon',     name: '龍の拳',       cost: 6,  effect: 'mk_kidmg',      kiCost: 25, value: 50,  shopCost: 18, emoji: '🐉', job: 'monk' },
+  mk_heaven:     { id: 'mk_heaven',     name: '天地気功',     cost: 8,  effect: 'mk_heaven',     shopCost: 24, emoji: '☀️', job: 'monk' },
+  mk_mukyoku:    { id: 'mk_mukyoku',    name: '【必殺】無極', cost: 10, effect: 'mk_mukyoku',    shopCost: 30, emoji: '🌌', job: 'monk' },
+
+  // ===== 🌑 カース固有カード =====
+  // HPが低いほど効果が上がる。自傷しながら戦う
+  cu_bloodcost:  { id: 'cu_bloodcost',  name: '血の代償',     cost: 1,  effect: 'cu_bloodcost',  selfDmg: 3,  value: 8,   shopCost: 3,  emoji: '🩸', job: 'curse' },
+  cu_pain:       { id: 'cu_pain',       name: '苦痛',         cost: 1,  effect: 'cu_pain',       value: 6,   lowValue: 2, shopCost: 3,  emoji: '😖', job: 'curse' },
+  cu_woundpower: { id: 'cu_woundpower', name: '傷の力',       cost: 2,  effect: 'cu_woundpower', mult: 0.5,  shopCost: 6,  emoji: '⚔️', job: 'curse' },
+  cu_dyingrage:  { id: 'cu_dyingrage',  name: '瀕死の怒り',   cost: 2,  effect: 'cu_dyingrage',  value: 15,  lowValue: 4, shopCost: 6,  emoji: '😡', job: 'curse' },
+  cu_selfbuff:   { id: 'cu_selfbuff',   name: '自傷強化',     cost: 2,  effect: 'cu_selfbuff',   selfDmg: 5, shopCost: 6,  emoji: '🔥', job: 'curse' },
+  cu_bloodpact:  { id: 'cu_bloodpact',  name: '血の契約',     cost: 3,  effect: 'cu_bloodcost',  selfDmg: 10, value: 25, shopCost: 9,  emoji: '📜', job: 'curse' },
+  cu_cursearmor: { id: 'cu_cursearmor', name: '呪いの鎧',     cost: 3,  effect: 'cu_cursearmor', selfDmg: 5,  blockValue: 20, shopCost: 9,  emoji: '🛡️', job: 'curse' },
+  cu_abyss:      { id: 'cu_abyss',      name: '死の淵',       cost: 3,  effect: 'cu_abyss',      value: 30,  lowValue: 5, shopCost: 9,  emoji: '🕳️', job: 'curse' },
+  cu_bind:       { id: 'cu_bind',       name: '呪縛',         cost: 4,  effect: 'cu_bloodcost',  selfDmg: 15, value: 40, shopCost: 12, emoji: '⛓️', job: 'curse' },
+  cu_woundex:    { id: 'cu_woundex',    name: '傷の爆発',     cost: 4,  effect: 'cu_woundpower', mult: 1.0,  shopCost: 12, emoji: '💣', job: 'curse' },
+  cu_undying:    { id: 'cu_undying',    name: '不死の呪い',   cost: 5,  effect: 'cu_undying',    shopCost: 15, emoji: '💜', job: 'curse' },
+  cu_bloodstorm: { id: 'cu_bloodstorm', name: '血の嵐',       cost: 5,  effect: 'cu_bloodstorm', selfDmg: 20, value: 5, hits: 6, shopCost: 15, emoji: '🌊', job: 'curse' },
+  cu_curserelease:{id:'cu_curserelease',name: '呪いの解放',   cost: 6,  effect: 'cu_curserelease',mult: 1.5, healValue: 10, shopCost: 18, emoji: '✨', job: 'curse' },
+  cu_deathscythe:{ id: 'cu_deathscythe',name: '死神の鎌',     cost: 7,  effect: 'cu_deathscythe',value: 10,  shopCost: 21, emoji: '⚰️', job: 'curse' },
+  cu_cursepeak:  { id: 'cu_cursepeak',  name: '呪いの極致',   cost: 7,  effect: 'cu_bloodcost',  selfDmg: 30, value: 60, shopCost: 21, emoji: '👁️', job: 'curse' },
+  cu_ruination:  { id: 'cu_ruination',  name: '滅びの呪い',   cost: 8,  effect: 'cu_ruination',  mult: 3,    shopCost: 24, emoji: '💀', job: 'curse' },
+  cu_demonking:  { id: 'cu_demonking',  name: '【必殺】魔王降臨', cost: 10, effect: 'cu_demonking', value: 100, shopCost: 30, emoji: '😈', job: 'curse' },
+
+  // ===== 🤝 サモナー固有カード =====
+  // トークン（使い捨てカード）を手札に追加して戦う
+  sm_goblin:     { id: 'sm_goblin',     name: '小鬼召喚',     cost: 1,  effect: 'sm_summon',     tokenId: 'sm_tok_atk3',  tokenCount: 1, shopCost: 3,  emoji: '👺', job: 'summoner' },
+  sm_spiritshield:{ id: 'sm_spiritshield', name: '盾の精霊',  cost: 1,  effect: 'sm_summon',     tokenId: 'sm_tok_blk5',  tokenCount: 1, shopCost: 3,  emoji: '🛡️', job: 'summoner' },
+  sm_summonup:   { id: 'sm_summonup',   name: '召喚強化',     cost: 2,  effect: 'sm_summonup',   turns: 3,   shopCost: 6,  emoji: '⬆️', job: 'summoner' },
+  sm_goblinlegion:{ id: 'sm_goblinlegion', name: 'ゴブリン軍団', cost: 2, effect: 'sm_summon',   tokenId: 'sm_tok_atk3',  tokenCount: 3, shopCost: 6,  emoji: '👺', job: 'summoner' },
+  sm_healspirit: { id: 'sm_healspirit', name: '癒しの精霊',   cost: 2,  effect: 'sm_summon',     tokenId: 'sm_tok_heal5', tokenCount: 2, shopCost: 6,  emoji: '💚', job: 'summoner' },
+  sm_ogre:       { id: 'sm_ogre',       name: 'オーガ召喚',   cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_atk10', tokenCount: 1, shopCost: 9,  emoji: '👹', job: 'summoner' },
+  sm_spiritguard:{ id: 'sm_spiritguard',name: '精霊の加護',   cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_blk12', tokenCount: 1, shopCost: 9,  emoji: '✨', job: 'summoner' },
+  sm_masssummon: { id: 'sm_masssummon', name: '大量召喚',     cost: 3,  effect: 'sm_summon',     tokenId: 'sm_tok_atk3',  tokenCount: 5, shopCost: 9,  emoji: '💪', job: 'summoner' },
+  sm_dragon:     { id: 'sm_dragon',     name: 'ドラゴン召喚', cost: 4,  effect: 'sm_summon',     tokenId: 'sm_tok_atk20', tokenCount: 1, shopCost: 12, emoji: '🐉', job: 'summoner' },
+  sm_sumstorm:   { id: 'sm_sumstorm',   name: '召喚の嵐',     cost: 4,  effect: 'sm_summon_now', tokenId: 'sm_tok_atk2',  tokenCount: 5, shopCost: 12, emoji: '🌪️', job: 'summoner' },
+  sm_spiritking: { id: 'sm_spiritking', name: '精霊王',       cost: 5,  effect: 'sm_summon',     tokenId: 'sm_tok_combo15', tokenCount: 1, shopCost: 15, emoji: '👑', job: 'summoner' },
+  sm_infinsum:   { id: 'sm_infinsum',   name: '無限召喚',     cost: 5,  effect: 'sm_infinsum',   tokenId: 'sm_tok_atk3',  tokenCount: 2, turns: 3, shopCost: 15, emoji: '♾️', job: 'summoner' },
+  sm_archdemon:  { id: 'sm_archdemon',  name: '魔神召喚',     cost: 6,  effect: 'sm_summon',     tokenId: 'sm_tok_atk30', tokenCount: 1, shopCost: 18, emoji: '👿', job: 'summoner' },
+  sm_sumexplosion:{ id: 'sm_sumexplosion', name: '召喚爆発',  cost: 6,  effect: 'sm_sumexplosion', value: 5,  shopCost: 18, emoji: '💥', job: 'summoner' },
+  sm_legionrelease:{ id:'sm_legionrelease',name:'軍勢解放',    cost: 7,  effect: 'sm_legionrelease', shopCost: 21, emoji: '⚔️', job: 'summoner' },
+  sm_godcall:    { id: 'sm_godcall',    name: '召喚神降臨',   cost: 8,  effect: 'sm_summon',     tokenId: 'sm_tok_atk50', tokenCount: 1, shopCost: 24, emoji: '🌟', job: 'summoner' },
+  sm_ultimate:   { id: 'sm_ultimate',   name: '【必殺】万軍召喚', cost: 10, effect: 'sm_ultimate', tokenId: 'sm_tok_atk10_0', tokenCount: 10, shopCost: 30, emoji: '💢', job: 'summoner' },
+
+  // ===== サモナー用トークンカード（ショップ非売品・使い捨て）=====
+  sm_tok_atk3:   { id: 'sm_tok_atk3',   name: '召喚獣(弱)',   cost: 1,  effect: 'damage',  value: 3,  shopCost: 0, emoji: '👊', isToken: true },
+  sm_tok_blk5:   { id: 'sm_tok_blk5',   name: '盾精霊',       cost: 1,  effect: 'block',   value: 5,  shopCost: 0, emoji: '🛡️', isToken: true },
+  sm_tok_heal5:  { id: 'sm_tok_heal5',  name: '癒し精霊',     cost: 1,  effect: 'heal',    value: 5,  shopCost: 0, emoji: '💚', isToken: true },
+  sm_tok_atk10:  { id: 'sm_tok_atk10',  name: '召喚獣(中)',   cost: 2,  effect: 'damage',  value: 10, shopCost: 0, emoji: '⚔️', isToken: true },
+  sm_tok_blk12:  { id: 'sm_tok_blk12',  name: '護衛精霊',     cost: 2,  effect: 'block',   value: 12, shopCost: 0, emoji: '🛡️', isToken: true },
+  sm_tok_atk20:  { id: 'sm_tok_atk20',  name: 'ドラゴン',     cost: 3,  effect: 'damage',  value: 20, shopCost: 0, emoji: '🐉', isToken: true },
+  sm_tok_atk2:   { id: 'sm_tok_atk2',   name: '小精霊',       cost: 0,  effect: 'damage',  value: 2,  shopCost: 0, emoji: '✨', isToken: true },
+  sm_tok_combo15:{ id: 'sm_tok_combo15',name: '精霊王',        cost: 3,  effect: 'shieldbash', value: 15, blockValue: 15, shopCost: 0, emoji: '⭐', isToken: true },
+  sm_tok_atk30:  { id: 'sm_tok_atk30',  name: '魔神',         cost: 4,  effect: 'damage',  value: 30, shopCost: 0, emoji: '👿', isToken: true },
+  sm_tok_atk50:  { id: 'sm_tok_atk50',  name: '召喚神',       cost: 5,  effect: 'damage',  value: 50, shopCost: 0, emoji: '🌟', isToken: true },
+  sm_tok_atk10_0:{ id: 'sm_tok_atk10_0',name: '万軍兵士',     cost: 0,  effect: 'damage',  value: 10, shopCost: 0, emoji: '⚔️', isToken: true },
 };
 
 // 毒の1ターンあたりダメージ量
@@ -488,13 +641,76 @@ const ASSASSIN_POOL = [
   'a_ritual', 'a_spiral',
 ];
 
+// 🛡️ ナイト固有カードのショッププール
+const KNIGHT_POOL = [
+  'kn_shieldblow', 'kn_guard', 'kn_holyblow', 'kn_ironwall', 'kn_shieldup',
+  'kn_shieldheal', 'kn_fortress', 'kn_holystrike', 'kn_ironcharge', 'kn_immovable',
+  'kn_shieldstorm', 'kn_holyup', 'kn_castle', 'kn_shieldcrush', 'kn_perfectguard',
+  'kn_holyshield', 'kn_godshield',
+];
+
+// 🎲 ギャンブラー固有カードのショッププール
+const GAMBLER_POOL = [
+  'gb_cointoss', 'gb_luckydraw', 'gb_bet', 'gb_tripleup', 'gb_roulette',
+  'gb_highroller', 'gb_goddess', 'gb_longshot', 'gb_casino', 'gb_slot',
+  'gb_instinct', 'gb_fate', 'gb_jackpot', 'gb_combo', 'gb_mastery',
+  'gb_allin', 'gb_ultimate',
+];
+
+// 🧪 アルケミスト固有カードのショッププール
+const ALCHEMIST_POOL = [
+  'al_alchemy', 'al_distill', 'al_sagestone', 'al_convert', 'al_refine',
+  'al_catalyst', 'al_bomb', 'al_potion', 'al_armor', 'al_synthesis',
+  'al_philstone', 'al_elixir', 'al_transmute', 'al_elemental', 'al_immortal',
+  'al_magicraft', 'al_ultimate',
+];
+
+// 👻 ネクロマンサー固有カードのショッププール
+const NECROMANCER_POOL = [
+  'nc_skeleton', 'nc_claw', 'nc_graverobbery', 'nc_decay', 'nc_lament',
+  'nc_specterbuff', 'nc_revive', 'nc_chain', 'nc_army', 'nc_souleater',
+  'nc_oath', 'nc_explosion', 'nc_reincarnation', 'nc_king', 'nc_storm',
+  'nc_release', 'nc_awakening',
+];
+
+// ⚡ モンク固有カードのショッププール
+const MONK_POOL = [
+  'mk_qigong', 'mk_strike', 'mk_meditate', 'mk_ironpunch', 'mk_airflow',
+  'mk_palm', 'mk_shield', 'mk_burst', 'mk_inner', 'mk_storm',
+  'mk_release', 'mk_godspeed', 'mk_cannon', 'mk_mushin', 'mk_dragon',
+  'mk_heaven', 'mk_mukyoku',
+];
+
+// 🌑 カース固有カードのショッププール
+const CURSE_POOL = [
+  'cu_bloodcost', 'cu_pain', 'cu_woundpower', 'cu_dyingrage', 'cu_selfbuff',
+  'cu_bloodpact', 'cu_cursearmor', 'cu_abyss', 'cu_bind', 'cu_woundex',
+  'cu_undying', 'cu_bloodstorm', 'cu_curserelease', 'cu_deathscythe', 'cu_cursepeak',
+  'cu_ruination', 'cu_demonking',
+];
+
+// 🤝 サモナー固有カードのショッププール
+const SUMMONER_POOL = [
+  'sm_goblin', 'sm_spiritshield', 'sm_summonup', 'sm_goblinlegion', 'sm_healspirit',
+  'sm_ogre', 'sm_spiritguard', 'sm_masssummon', 'sm_dragon', 'sm_sumstorm',
+  'sm_spiritking', 'sm_infinsum', 'sm_archdemon', 'sm_sumexplosion', 'sm_legionrelease',
+  'sm_godcall', 'sm_ultimate',
+];
+
 // 職業名からプールを返すマップ
 const JOB_POOLS = {
-  warrior: WARRIOR_POOL,
-  mage:    MAGE_POOL,
-  priest:  PRIEST_POOL,
-  rogue:   ROGUE_POOL,
-  assassin: ASSASSIN_POOL,
+  warrior:     WARRIOR_POOL,
+  mage:        MAGE_POOL,
+  priest:      PRIEST_POOL,
+  rogue:       ROGUE_POOL,
+  assassin:    ASSASSIN_POOL,
+  knight:      KNIGHT_POOL,
+  gambler:     GAMBLER_POOL,
+  alchemist:   ALCHEMIST_POOL,
+  necromancer: NECROMANCER_POOL,
+  monk:        MONK_POOL,
+  curse:       CURSE_POOL,
+  summoner:    SUMMONER_POOL,
 };
 
 // 初期デッキ構成（攻撃×4・ゴールド×6）
@@ -590,6 +806,36 @@ function initCGGameState() {
     poisonCardsThisTurn: [[], []],
     // 累計受けたダメージ（ウォリアー激怒用）
     totalDamageTaken: [0, 0],
+    // ナイト：完全防御フラグ（次に受けるダメージをすべてブロックに変換する）
+    perfectGuard: [false, false],
+    // ナイト：毎ターン開始時に加算されるブロック値（聖域の盾など）
+    blockPerTurn: [[], []],
+    // ギャンブラー：次のギャンブルカードを必ず成功させるフラグ
+    gamblerSureSuccess: [false, false],
+    // ギャンブラー：次のカードの効果が不発になるフラグ（トリプルアップ失敗時）
+    gamblerSureMiss: [false, false],
+    // ギャンブラー：次のカードの効果を3倍にするフラグ（トリプルアップ成功時）
+    gamblerTriple: [false, false],
+    // ギャンブラー：次のターンをスキップするフラグ（賭博師の奥義使用時）
+    skipNextTurn: [false, false],
+    // モンク：気力ゲージ（気力は毎ターン持続する）
+    ki: [0, 0],
+    // ネクロマンサー：墓地（使用したカードが送られる）
+    grave: [[], []],
+    // ネクロマンサー：死霊強化バフ（次に使うカードの効果倍率）
+    specterBuff: [0, 0],
+    // アルケミスト：不死薬フラグ（次に受けるダメージを無効化する）
+    alImmortal: [false, false],
+    // カース：不死の呪いフラグ（このターン致死ダメージを受けてもHP1で耐える）
+    undyingGuard: [false, false],
+    // カース：自傷強化フラグ（次のカードの効果を3倍にする）
+    curseSelfBuff: [false, false],
+    // サモナー：次のターン開始時に手札に追加するトークンのリスト
+    pendingTokens: [[], []],
+    // サモナー：毎ターン開始時に手札に追加する定期トークンのリスト
+    recurringTokens: [[], []],
+    // サモナー：召喚強化バフ（残りターン数。>0ならトークン効果2倍）
+    summonBuff: [0, 0],
   };
 }
 
@@ -620,6 +866,43 @@ function cgStartTurn(state, playerIndex) {
   if (state.persistBlock[playerIndex] > 0) {
     state.block[playerIndex] += state.persistBlock[playerIndex];
     state.persistBlock[playerIndex] = 0;
+  }
+
+  // ナイト：毎ターンブロック付与スタックを処理する
+  if (state.blockPerTurn && state.blockPerTurn[playerIndex].length > 0) {
+    const remaining = [];
+    for (const entry of state.blockPerTurn[playerIndex]) {
+      state.block[playerIndex] += entry.amount;
+      if (entry.turns > 1) remaining.push({ amount: entry.amount, turns: entry.turns - 1 });
+    }
+    state.blockPerTurn[playerIndex] = remaining;
+  }
+
+  // サモナー：召喚強化バフのターン数を減らす
+  if (state.summonBuff && state.summonBuff[playerIndex] > 0) {
+    state.summonBuff[playerIndex] -= 1;
+  }
+
+  // サモナー：次のターン追加トークンを手札に加える
+  if (state.pendingTokens && state.pendingTokens[playerIndex].length > 0) {
+    for (const { tokenId, count } of state.pendingTokens[playerIndex]) {
+      for (let i = 0; i < count; i++) {
+        state.hand[playerIndex].push(tokenId);
+      }
+    }
+    state.pendingTokens[playerIndex] = [];
+  }
+
+  // サモナー：定期トークン（sm_infinsum）を手札に加える
+  if (state.recurringTokens && state.recurringTokens[playerIndex].length > 0) {
+    const remaining = [];
+    for (const entry of state.recurringTokens[playerIndex]) {
+      for (let i = 0; i < entry.count; i++) {
+        state.hand[playerIndex].push(entry.tokenId);
+      }
+      if (entry.turns > 1) remaining.push({ ...entry, turns: entry.turns - 1 });
+    }
+    state.recurringTokens[playerIndex] = remaining;
   }
 
   // 毒スタックのダメージを処理する（各スタックのdmgを与え、ターンを1減らす）
@@ -750,6 +1033,13 @@ function sendCGState(room) {
       myTrapTriggers: state.trapTriggers[index],
       // 封印されているカードID（相手から封印されている場合）
       mySealedCardId: state.sealedCardId[index],
+      // モンク気力
+      myKi: state.ki ? state.ki[index] : 0,
+      // ネクロマンサー墓地（ショップフェーズのときのみ中身を送る）
+      myGraveCount: state.grave ? state.grave[index].length : 0,
+      myGraveCards: (isMyShopTurn && state.grave) ? [...state.grave[index]] : null,
+      // ネクロマンサー死霊強化バフ
+      mySpecterBuff: state.specterBuff ? state.specterBuff[index] : 0,
     });
   });
 }
@@ -1351,7 +1641,7 @@ io.on("connection", (socket) => {
   socket.on('cgJoinMatch', (payload) => {
     const raw = typeof payload?.playerName === 'string' ? payload.playerName : '';
     const playerName = raw.trim().slice(0, 20) || 'ゲスト';
-    const validJobs = ['warrior', 'mage', 'priest', 'rogue', 'assassin'];
+    const validJobs = ['warrior', 'mage', 'priest', 'rogue', 'assassin', 'knight', 'gambler', 'alchemist', 'necromancer', 'monk', 'curse', 'summoner'];
     const job = validJobs.includes(payload?.job) ? payload.job : '';
     joinCGRoom(socket, playerName, job);
   });
@@ -1379,6 +1669,20 @@ io.on("connection", (socket) => {
 
     // 封印されたカードは使用不能
     if (state.sealedCardId[playerIndex] === cardId) return;
+
+    // アルケミスト：コイン消費カードはコインが足りない場合は使用不能
+    if (card.coinCost && state.gold[playerIndex] < card.coinCost) return;
+
+    // モンク：気力消費カードは気力が足りない場合は使用不能
+    if (card.kiCost && (state.ki ? state.ki[playerIndex] : 0) < card.kiCost) return;
+    if (card.kiCostPerHit && (state.ki ? state.ki[playerIndex] : 0) < card.kiCostPerHit) return;
+
+    // ネクロマンサー：魂喰いは墓地が足りない場合は使用不能
+    if (card.graveCost && (state.grave ? state.grave[playerIndex].length : 0) < card.graveCost) return;
+
+    // ナイト：ブロック消費攻撃カードはブロックが0の場合は使用不能
+    const knBlockConsumeEffects = ['kn_shieldblow', 'kn_ironcharge', 'kn_shieldstorm', 'kn_shieldcrush', 'kn_godshield'];
+    if (knBlockConsumeEffects.includes(card.effect) && state.block[playerIndex] === 0) return;
 
     // 隠密バフが有効なら実効コストを0にする
     const effectiveCost = state.stealth[playerIndex] ? 0 : card.cost;
@@ -1411,19 +1715,37 @@ io.on("connection", (socket) => {
       state.copyNext[playerIndex] = false;
     }
 
-    // amplify（魔力増幅）・bless（祝福）の倍率を計算する
+    // amplify（魔力増幅）・bless（祝福）・gamblerTriple・curseSelfBuff の倍率を計算する
     const ampMult = state.amplify[playerIndex] ? 2 : 1;
     const blsMult = state.bless[playerIndex] ? 2 : 1;
-    const effMult = ampMult * blsMult;
+    const gambTriple = (state.gamblerTriple && state.gamblerTriple[playerIndex]) ? 3 : 1;
+    const curseBuff = (state.curseSelfBuff && state.curseSelfBuff[playerIndex]) ? 3 : 1;
+    const specterMult = (state.specterBuff && state.specterBuff[playerIndex] > 0) ? (1 + state.specterBuff[playerIndex]) : 1;
+    const summonMult = (card.isToken && state.summonBuff && state.summonBuff[playerIndex] > 0) ? 2 : 1;
+    const effMult = ampMult * blsMult * gambTriple * curseBuff * specterMult * summonMult;
     if (state.amplify[playerIndex]) state.amplify[playerIndex] = false;
     if (state.bless[playerIndex]) state.bless[playerIndex] = false;
+    if (state.gamblerTriple && state.gamblerTriple[playerIndex]) state.gamblerTriple[playerIndex] = false;
+    if (state.curseSelfBuff && state.curseSelfBuff[playerIndex]) state.curseSelfBuff[playerIndex] = false;
+    if (state.specterBuff && state.specterBuff[playerIndex] > 0) state.specterBuff[playerIndex] = 0;
 
     // 武器強化ボーナス（攻撃カードに追加ダメージ）を取得する
     const weaponBonus = (state.weaponUp[playerIndex] > 0 && (card.effect === 'damage' || card.effect === 'shieldbash' || card.effect === 'combo')) ? state.weaponUp[playerIndex] : 0;
     if (weaponBonus > 0) state.weaponUp[playerIndex] = 0;
 
-    // ダメージを相手に与えるヘルパー関数（加護・ブロック・反射を考慮する）
+    // ダメージを相手に与えるヘルパー関数（加護・ブロック・反射・完全防御・不死薬を考慮する）
     function applyDamageToOpp(dmg) {
+      // アルケミスト不死薬：次に受けるダメージを無効化する
+      if (state.alImmortal && state.alImmortal[oppIndex]) {
+        state.alImmortal[oppIndex] = false;
+        return;
+      }
+      // ナイト完全防御：受けたダメージをすべてブロックに変換する
+      if (state.perfectGuard && state.perfectGuard[oppIndex]) {
+        state.block[oppIndex] += dmg;
+        state.perfectGuard[oppIndex] = false;
+        return;
+      }
       // 相手の加護が有効な場合はダメージを無効化する
       if (state.protection[oppIndex] > 0) {
         state.protection[oppIndex] -= 1;
@@ -1432,7 +1754,13 @@ io.on("connection", (socket) => {
       const absorbed = Math.min(state.block[oppIndex], dmg);
       state.block[oppIndex] = Math.max(0, state.block[oppIndex] - absorbed);
       const actualDmg = dmg - absorbed;
-      state.hp[oppIndex] = Math.max(0, state.hp[oppIndex] - actualDmg);
+      // カース不死の呪い：致死ダメージを受けてもHP1で耐える
+      if (state.undyingGuard && state.undyingGuard[oppIndex] && state.hp[oppIndex] - actualDmg < 1) {
+        state.hp[oppIndex] = 1;
+        state.undyingGuard[oppIndex] = false;
+      } else {
+        state.hp[oppIndex] = Math.max(0, state.hp[oppIndex] - actualDmg);
+      }
       // 相手の反射フラグが有効な場合はダメージの半分を攻撃側に返す
       if (state.reflect[oppIndex] && actualDmg > 0) {
         const reflectDmg = Math.floor(actualDmg / 2);
@@ -1470,7 +1798,11 @@ io.on("connection", (socket) => {
     }
 
     // カードの効果をrepeatCount回適用する
-    for (let r = 0; r < repeatCount; r++) {
+    // ギャンブラー不発フラグが立っている場合は効果をスキップする
+    const skipEffect = state.gamblerSureMiss && state.gamblerSureMiss[playerIndex];
+    if (skipEffect) state.gamblerSureMiss[playerIndex] = false;
+
+    for (let r = 0; r < repeatCount && !skipEffect; r++) {
       const dmgMult = effMult;
 
       if (card.effect === 'damage') {
@@ -1897,6 +2229,519 @@ io.on("connection", (socket) => {
         // 毒スタック追加＋相手の全毒スタックを2倍にする
         applyPoisonToOpp(card.poisonDmg, card.poisonTurns);
         state.poisonStacks[oppIndex] = state.poisonStacks[oppIndex].map(s => ({ dmg: s.dmg * 2, turns: s.turns }));
+
+      // ===== ナイト固有効果 =====
+      } else if (card.effect === 'kn_shieldblow') {
+        // 現在のブロック値の2/3を消費してその分（+bonus）ダメージを与える
+        const consumed = Math.floor(state.block[playerIndex] * 2 / 3);
+        state.block[playerIndex] -= consumed;
+        const knDmg = (consumed + (card.bonus || 0)) * dmgMult;
+        if (knDmg > 0) applyDamageToOpp(knDmg);
+      } else if (card.effect === 'kn_shieldup') {
+        // 現在のブロック値をmult倍にする
+        state.block[playerIndex] = Math.floor(state.block[playerIndex] * card.mult);
+      } else if (card.effect === 'kn_ironcharge') {
+        // 現在のブロック値の2/3を消費して消費量×1.5ダメージ
+        const consumed = Math.floor(state.block[playerIndex] * 2 / 3);
+        state.block[playerIndex] -= consumed;
+        applyDamageToOpp(Math.floor(consumed * 1.5) * dmgMult);
+      } else if (card.effect === 'kn_shieldstorm') {
+        // 現在のブロック値の2/3を消費して消費量÷3ダメージ×4回
+        const consumed = Math.floor(state.block[playerIndex] * 2 / 3);
+        state.block[playerIndex] -= consumed;
+        const hitDmg = Math.floor(consumed / 3) * dmgMult;
+        for (let i = 0; i < 4; i++) applyDamageToOpp(hitDmg);
+      } else if (card.effect === 'kn_shieldcrush') {
+        // 現在のブロック値の2/3を消費して消費量×2ダメージ
+        const consumed = Math.floor(state.block[playerIndex] * 2 / 3);
+        state.block[playerIndex] -= consumed;
+        applyDamageToOpp(consumed * 2 * dmgMult);
+      } else if (card.effect === 'kn_perfectguard') {
+        // 次に受けるダメージをすべてブロックに変換するフラグを立てる
+        state.perfectGuard[playerIndex] = true;
+      } else if (card.effect === 'kn_holyshield') {
+        // 今すぐcard.valueブロック獲得＋毎ターンcard.blockPerTurnブロック（card.blockTurnsターン）
+        state.block[playerIndex] += card.value * blsMult;
+        state.blockPerTurn[playerIndex].push({ amount: card.blockPerTurn * blsMult, turns: card.blockTurns });
+      } else if (card.effect === 'kn_godshield') {
+        // 現在のブロック値の2/3を消費して消費量×4ダメージ＋card.bonusブロック獲得
+        const consumed = Math.floor(state.block[playerIndex] * 2 / 3);
+        state.block[playerIndex] -= consumed;
+        applyDamageToOpp(consumed * 4 * dmgMult);
+        state.block[playerIndex] += card.bonus * blsMult;
+
+      // ===== ギャンブラー固有効果 =====
+      } else if (card.effect === 'gb_cointoss') {
+        // 50%:15ダメージ / 50%:自分に8ダメージ
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { applyDamageToOpp(15 * dmgMult); }
+        else { applySelfDamage(8); }
+      } else if (card.effect === 'gb_luckydraw') {
+        // 50%:5枚ドロー / 50%:手札を全て捨てる
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { cgDrawCards(state, playerIndex, 5 * blsMult); }
+        else { state.discard[playerIndex].push(...state.hand[playerIndex]); state.hand[playerIndex] = []; }
+      } else if (card.effect === 'gb_bet') {
+        // 50%:20ダメージ / 50%:自分に10ダメージ＋手札1枚捨て
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { applyDamageToOpp(20 * dmgMult); }
+        else {
+          applySelfDamage(10);
+          if (state.hand[playerIndex].length > 0) {
+            const idx = Math.floor(Math.random() * state.hand[playerIndex].length);
+            state.discard[playerIndex].push(state.hand[playerIndex].splice(idx, 1)[0]);
+          }
+        }
+      } else if (card.effect === 'gb_tripleup') {
+        // 50%:次のカードの効果3倍 / 50%:次のカードが不発
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { state.gamblerTriple[playerIndex] = true; }
+        else { state.gamblerSureMiss[playerIndex] = true; }
+      } else if (card.effect === 'gb_roulette') {
+        // 50%:25ダメージ or 10ブロック or HP10回復のどれか / 50%:自分に15ダメージ
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) {
+          const roll = Math.floor(Math.random() * 3);
+          if (roll === 0) applyDamageToOpp(25 * dmgMult);
+          else if (roll === 1) state.block[playerIndex] += 10 * blsMult;
+          else state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + 10 * blsMult);
+        } else { applySelfDamage(15); }
+      } else if (card.effect === 'gb_highroller') {
+        // 50%:35ダメージ / 50%:自分に20ダメージ＋手札2枚捨て
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { applyDamageToOpp(35 * dmgMult); }
+        else {
+          applySelfDamage(20);
+          for (let i = 0; i < 2; i++) {
+            if (state.hand[playerIndex].length > 0) {
+              const idx = Math.floor(Math.random() * state.hand[playerIndex].length);
+              state.discard[playerIndex].push(state.hand[playerIndex].splice(idx, 1)[0]);
+            }
+          }
+        }
+      } else if (card.effect === 'gb_goddess') {
+        // 50%:全職業からランダムで1枚入手 / 50%:コイン全消失
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) {
+          const allJobCards = Object.keys(CARD_DEFS).filter(id => CARD_DEFS[id].job);
+          const randomCard = allJobCards[Math.floor(Math.random() * allJobCards.length)];
+          state.deck[playerIndex].push(randomCard);
+        } else { state.gold[playerIndex] = 0; }
+      } else if (card.effect === 'gb_longshot') {
+        // 20%:50ダメージ / 80%:自分に15ダメージ
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.2;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { applyDamageToOpp(50 * dmgMult); }
+        else { applySelfDamage(15); }
+      } else if (card.effect === 'gb_casino') {
+        // 50%:30コイン獲得 / 50%:コイン全消失
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { state.gold[playerIndex] += 30; }
+        else { state.gold[playerIndex] = 0; }
+      } else if (card.effect === 'gb_slot') {
+        // 50%:ランダム大効果3つ / 50%:ランダム大デメリット3つ
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) {
+          applyDamageToOpp(20 * dmgMult);
+          state.block[playerIndex] += 15 * blsMult;
+          state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + 15 * blsMult);
+        } else {
+          applySelfDamage(20);
+          state.block[playerIndex] = 0;
+          if (state.hand[playerIndex].length > 0) {
+            const idx = Math.floor(Math.random() * state.hand[playerIndex].length);
+            state.discard[playerIndex].push(state.hand[playerIndex].splice(idx, 1)[0]);
+          }
+        }
+      } else if (card.effect === 'gb_instinct') {
+        // 50%:このターン使ったカード枚数×10ダメージ / 50%:枚数×5自分ダメージ
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        const usedCount = state.field[playerIndex].length;
+        if (success) { applyDamageToOpp(usedCount * 10 * dmgMult); }
+        else { applySelfDamage(usedCount * 5); }
+      } else if (card.effect === 'gb_fate') {
+        // 50%:HP最大値50%回復＋20ブロック / 50%:HP残量の半分失う
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) {
+          state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + Math.floor(CG_MAX_HP * 0.5) * blsMult);
+          state.block[playerIndex] += 20 * blsMult;
+        } else { applySelfDamage(Math.floor(state.hp[playerIndex] / 2)); }
+      } else if (card.effect === 'gb_jackpot') {
+        // 10%:相手HP1 / 90%:自分HP1（大穴狙いと同様に特殊確率）
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.1;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { state.hp[oppIndex] = 1; state.block[oppIndex] = 0; }
+        else { state.hp[playerIndex] = 1; state.block[playerIndex] = 0; state.totalDamageTaken[playerIndex] += CG_MAX_HP - 1; }
+      } else if (card.effect === 'gb_combo') {
+        // 50%:ランダム大効果3回連続 / 50%:ランダム大デメリット3回連続
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) {
+          for (let i = 0; i < 3; i++) {
+            const r3 = Math.floor(Math.random() * 3);
+            if (r3 === 0) applyDamageToOpp(25 * dmgMult);
+            else if (r3 === 1) state.block[playerIndex] += 15 * blsMult;
+            else state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + 15 * blsMult);
+          }
+        } else {
+          for (let i = 0; i < 3; i++) {
+            const r3 = Math.floor(Math.random() * 3);
+            if (r3 === 0) applySelfDamage(15);
+            else if (r3 === 1) state.block[playerIndex] = Math.max(0, state.block[playerIndex] - 10);
+            else if (state.hand[playerIndex].length > 0) {
+              const idx = Math.floor(Math.random() * state.hand[playerIndex].length);
+              state.discard[playerIndex].push(state.hand[playerIndex].splice(idx, 1)[0]);
+            }
+          }
+        }
+      } else if (card.effect === 'gb_mastery') {
+        // 次のギャンブルカードを必ず成功させる＋次のターンをスキップする
+        state.gamblerSureSuccess[playerIndex] = true;
+        state.skipNextTurn[playerIndex] = true;
+      } else if (card.effect === 'gb_allin') {
+        // 50%:コイン×4ダメージ / 50%:コイン×2自分ダメージ＋コイン全消失
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        const coins = state.gold[playerIndex];
+        if (success) { applyDamageToOpp(coins * 4 * dmgMult); }
+        else {
+          applySelfDamage(coins * 2);
+          state.gold[playerIndex] = 0;
+        }
+      } else if (card.effect === 'gb_ultimate') {
+        // 50%:相手HP1＋50ブロック / 50%:自分HP1＋全手札捨て
+        const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.5;
+        if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
+        if (success) { state.hp[oppIndex] = 1; state.block[oppIndex] = 0; state.block[playerIndex] += 50 * blsMult; }
+        else {
+          state.hp[playerIndex] = 1;
+          state.totalDamageTaken[playerIndex] += CG_MAX_HP - 1;
+          state.discard[playerIndex].push(...state.hand[playerIndex]);
+          state.hand[playerIndex] = [];
+        }
+
+      // ===== アルケミスト固有効果 =====
+      } else if (card.effect === 'al_damage') {
+        // 指定コインを消費してダメージを与える
+        state.gold[playerIndex] -= card.coinCost;
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'al_heal') {
+        // 指定コインを消費してHP回復する
+        state.gold[playerIndex] -= card.coinCost;
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.value * blsMult);
+      } else if (card.effect === 'al_block') {
+        // 指定コインを消費してブロックを得る
+        state.gold[playerIndex] -= card.coinCost;
+        state.block[playerIndex] += card.value * blsMult;
+      } else if (card.effect === 'al_catalyst') {
+        // 指定コインを消費して次のカードの効果2倍
+        state.gold[playerIndex] -= card.coinCost;
+        state.amplify[playerIndex] = true;
+      } else if (card.effect === 'al_combo') {
+        // 指定コインを消費してダメージ＋ブロック
+        state.gold[playerIndex] -= card.coinCost;
+        applyDamageToOpp(card.value * dmgMult);
+        state.block[playerIndex] += card.blockValue * blsMult;
+      } else if (card.effect === 'al_elixir') {
+        // 指定コインを消費してダメージ＋ブロック＋HP回復
+        state.gold[playerIndex] -= card.coinCost;
+        applyDamageToOpp(card.value * dmgMult);
+        state.block[playerIndex] += card.blockValue * blsMult;
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'al_immortal') {
+        // 指定コインを消費して次に受けるダメージ無効化＋HP回復
+        state.gold[playerIndex] -= card.coinCost;
+        state.alImmortal[playerIndex] = true;
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'al_magicraft') {
+        // 指定コインを消費して残りコイン×2ダメージ
+        state.gold[playerIndex] -= card.coinCost;
+        applyDamageToOpp(state.gold[playerIndex] * 2 * dmgMult);
+      } else if (card.effect === 'al_ultimate') {
+        // コイン全消費して消費量×3ダメージ＋HP回復
+        const coinUsed = state.gold[playerIndex];
+        state.gold[playerIndex] = 0;
+        applyDamageToOpp(coinUsed * 3 * dmgMult);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+
+      // ===== ネクロマンサー固有効果 =====
+      } else if (card.effect === 'nc_revive') {
+        // 墓地からcard.value枚を手札に戻す
+        const reviveCount = Math.min(card.value * blsMult, state.grave[playerIndex].length);
+        for (let i = 0; i < reviveCount; i++) {
+          const cid = state.grave[playerIndex].pop();
+          state.hand[playerIndex].push(cid);
+        }
+      } else if (card.effect === 'nc_claw') {
+        // 4ダメージ（墓地card.threshold枚以上なら+card.bonus）
+        const graveLen = state.grave[playerIndex].length;
+        const ncClawDmg = (card.value + (graveLen >= card.threshold ? card.bonus : 0)) * dmgMult;
+        applyDamageToOpp(ncClawDmg);
+      } else if (card.effect === 'nc_gravedmg') {
+        // 墓地枚数×card.multダメージ
+        applyDamageToOpp(Math.floor(state.grave[playerIndex].length * card.mult) * dmgMult);
+      } else if (card.effect === 'nc_lament') {
+        // 墓地から最もコストの高いカードを手札に戻す
+        if (state.grave[playerIndex].length > 0) {
+          let maxCost = -1, maxIdx = 0;
+          state.grave[playerIndex].forEach((cid, i) => {
+            const c = CARD_DEFS[cid];
+            if (c && c.cost > maxCost) { maxCost = c.cost; maxIdx = i; }
+          });
+          state.hand[playerIndex].push(state.grave[playerIndex].splice(maxIdx, 1)[0]);
+        }
+      } else if (card.effect === 'nc_specterbuff') {
+        // 次に使うカードの効果を墓地枚数×0.3倍にする
+        state.specterBuff[playerIndex] = state.grave[playerIndex].length * 0.3;
+      } else if (card.effect === 'nc_army') {
+        // 墓地を全て手札に戻す
+        state.hand[playerIndex].push(...state.grave[playerIndex]);
+        state.grave[playerIndex] = [];
+      } else if (card.effect === 'nc_souleater') {
+        // 墓地5枚消費して20ダメージ
+        for (let i = 0; i < card.graveCost; i++) state.grave[playerIndex].pop();
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'nc_oath') {
+        // 墓地枚数×card.multダメージ＋HP回復
+        applyDamageToOpp(Math.floor(state.grave[playerIndex].length * card.mult) * dmgMult);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'nc_explosion') {
+        // 墓地を全て消費して消費枚数×card.multダメージ
+        const graveCount = state.grave[playerIndex].length;
+        state.grave[playerIndex] = [];
+        applyDamageToOpp(graveCount * card.mult * dmgMult);
+      } else if (card.effect === 'nc_reincarnation') {
+        // このターン使ったカードを全て手札に戻す＋コスト合計分マナ獲得
+        const fieldCards = [...state.field[playerIndex]];
+        state.field[playerIndex] = [];
+        let costSum = 0;
+        for (const cid of fieldCards) {
+          const c = CARD_DEFS[cid];
+          if (c) costSum += c.cost;
+          state.hand[playerIndex].push(cid);
+        }
+        state.mana[playerIndex] = Math.min(state.mana[playerIndex] + costSum, state.maxMana[playerIndex] + costSum);
+      } else if (card.effect === 'nc_king') {
+        // 墓地枚数×card.multダメージ＋同枚数ブロック
+        const graveLen = state.grave[playerIndex].length;
+        applyDamageToOpp(Math.floor(graveLen * card.mult) * dmgMult);
+        state.block[playerIndex] += graveLen * blsMult;
+      } else if (card.effect === 'nc_release') {
+        // 墓地を全て手札に戻す＋戻した枚数×card.blockMultブロック
+        const graveCount = state.grave[playerIndex].length;
+        state.hand[playerIndex].push(...state.grave[playerIndex]);
+        state.grave[playerIndex] = [];
+        state.block[playerIndex] += graveCount * card.blockMult * blsMult;
+      } else if (card.effect === 'nc_awakening') {
+        // 墓地を全て手札に戻して枚数×card.dmgMultダメージ＋枚数×card.blockMultブロック
+        const graveCount = state.grave[playerIndex].length;
+        state.hand[playerIndex].push(...state.grave[playerIndex]);
+        state.grave[playerIndex] = [];
+        applyDamageToOpp(graveCount * card.dmgMult * dmgMult);
+        state.block[playerIndex] += graveCount * card.blockMult * blsMult;
+
+      // ===== モンク固有効果 =====
+      } else if (card.effect === 'mk_ki') {
+        // 気力を増やす
+        state.ki[playerIndex] += card.kiGain;
+      } else if (card.effect === 'mk_meditate') {
+        // 気力増加＋ドロー
+        state.ki[playerIndex] += card.kiGain;
+        cgDrawCards(state, playerIndex, card.drawValue * blsMult);
+      } else if (card.effect === 'mk_kidmg') {
+        // 気力を消費してダメージを与える
+        state.ki[playerIndex] -= card.kiCost;
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'mk_kiblock') {
+        // 気力を消費してブロックを得る
+        state.ki[playerIndex] -= card.kiCost;
+        state.block[playerIndex] += card.value * blsMult;
+      } else if (card.effect === 'mk_inner') {
+        // 気力増加＋HP回復
+        state.ki[playerIndex] += card.kiGain;
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'mk_storm') {
+        // 気力3消費して3ダメージを最大10回繰り返す
+        let hits = 0;
+        while (state.ki[playerIndex] >= card.kiCostPerHit && hits < card.maxHits) {
+          state.ki[playerIndex] -= card.kiCostPerHit;
+          applyDamageToOpp(card.value * dmgMult);
+          hits++;
+        }
+      } else if (card.effect === 'mk_release') {
+        // 現在の気力÷5ダメージ＋気力を0にする
+        const kiDmg = Math.floor(state.ki[playerIndex] / 5) * dmgMult;
+        state.ki[playerIndex] = 0;
+        applyDamageToOpp(kiDmg);
+      } else if (card.effect === 'mk_godspeed') {
+        // 気力を消費してマナを追加する（このターンもう2枚カードを使える）
+        state.ki[playerIndex] -= card.kiCost;
+        state.mana[playerIndex] += card.manaGain;
+      } else if (card.effect === 'mk_mushin') {
+        // 気力増加＋次のカードのコストを0にする（隠密フラグを流用）
+        state.ki[playerIndex] += card.kiGain;
+        state.stealth[playerIndex] = true;
+      } else if (card.effect === 'mk_heaven') {
+        // 気力を全消費して消費量÷2ダメージ×3回（合計最大100ダメージ）
+        const kiUsed = state.ki[playerIndex];
+        state.ki[playerIndex] = 0;
+        const hitDmg = Math.min(Math.floor(kiUsed / 2), 33) * dmgMult;
+        for (let i = 0; i < 3; i++) applyDamageToOpp(hitDmg);
+      } else if (card.effect === 'mk_mukyoku') {
+        // 気力を全消費して消費量×3ダメージ（上限150）＋消費量÷2ブロック
+        const kiUsed = state.ki[playerIndex];
+        state.ki[playerIndex] = 0;
+        const mkDmg = Math.min(kiUsed * 3, 150) * dmgMult;
+        applyDamageToOpp(mkDmg);
+        state.block[playerIndex] += Math.floor(kiUsed / 2) * blsMult;
+
+      // ===== カース固有効果 =====
+      } else if (card.effect === 'cu_bloodcost') {
+        // 自分にselfDmgダメージ＋相手にvalueダメージ
+        applySelfDamage(card.selfDmg);
+        applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'cu_pain') {
+        // HP残量が半分以下ならcard.value、そうでなければcard.lowValueダメージ
+        const ratio = state.hp[playerIndex] / CG_MAX_HP;
+        applyDamageToOpp((ratio <= 0.5 ? card.value : card.lowValue) * dmgMult);
+      } else if (card.effect === 'cu_woundpower') {
+        // 失ったHP合計×card.multダメージ
+        const lostHp = CG_MAX_HP - state.hp[playerIndex];
+        applyDamageToOpp(Math.floor(lostHp * card.mult) * dmgMult);
+      } else if (card.effect === 'cu_dyingrage') {
+        // HP残量が30%以下ならcard.value、そうでなければcard.lowValueダメージ
+        const ratio = state.hp[playerIndex] / CG_MAX_HP;
+        applyDamageToOpp((ratio <= 0.3 ? card.value : card.lowValue) * dmgMult);
+      } else if (card.effect === 'cu_selfbuff') {
+        // 自分にselfDmgダメージ＋次のカードの効果3倍
+        applySelfDamage(card.selfDmg);
+        state.curseSelfBuff[playerIndex] = true;
+      } else if (card.effect === 'cu_cursearmor') {
+        // 自分にselfDmgダメージ＋ブロック獲得
+        applySelfDamage(card.selfDmg);
+        state.block[playerIndex] += card.blockValue * blsMult;
+      } else if (card.effect === 'cu_abyss') {
+        // HP残量が20%以下ならcard.value、そうでなければcard.lowValueダメージ
+        const ratio = state.hp[playerIndex] / CG_MAX_HP;
+        applyDamageToOpp((ratio <= 0.2 ? card.value : card.lowValue) * dmgMult);
+      } else if (card.effect === 'cu_undying') {
+        // このターン致死ダメージを受けてもHP1で耐えるフラグを立てる
+        state.undyingGuard[playerIndex] = true;
+      } else if (card.effect === 'cu_bloodstorm') {
+        // 自分にselfDmgダメージ＋相手にvalueダメージ×hits回
+        applySelfDamage(card.selfDmg);
+        for (let i = 0; i < card.hits; i++) applyDamageToOpp(card.value * dmgMult);
+      } else if (card.effect === 'cu_curserelease') {
+        // 失ったHP合計×card.multダメージ＋HP回復
+        const lostHp = CG_MAX_HP - state.hp[playerIndex];
+        applyDamageToOpp(Math.floor(lostHp * card.mult) * dmgMult);
+        state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + card.healValue * blsMult);
+      } else if (card.effect === 'cu_deathscythe') {
+        // 相手HP残量が10%以下なら相手HP1＋ブロック全消去、そうでなければcard.valueダメージ
+        if (state.hp[oppIndex] / CG_MAX_HP <= 0.1) {
+          state.hp[oppIndex] = 1;
+          state.block[oppIndex] = 0;
+        } else {
+          applyDamageToOpp(card.value * dmgMult);
+        }
+      } else if (card.effect === 'cu_ruination') {
+        // 現在のHP＋ブロックの半分を失って失った合計×card.multダメージ
+        const hpLost = Math.floor(state.hp[playerIndex] / 2);
+        const blockLost = Math.floor(state.block[playerIndex] / 2);
+        state.hp[playerIndex] = Math.max(1, state.hp[playerIndex] - hpLost);
+        state.block[playerIndex] = Math.max(0, state.block[playerIndex] - blockLost);
+        state.totalDamageTaken[playerIndex] += hpLost;
+        applyDamageToOpp((hpLost + blockLost) * card.mult * dmgMult);
+      } else if (card.effect === 'cu_demonking') {
+        // 自分HP1になる代わりに相手に100ダメージ
+        const prevHp = state.hp[playerIndex];
+        state.hp[playerIndex] = 1;
+        state.totalDamageTaken[playerIndex] += prevHp - 1;
+        applyDamageToOpp(card.value * dmgMult);
+
+      // ===== サモナー固有効果 =====
+      } else if (card.effect === 'sm_summon') {
+        // 次のターン手札にトークンを追加する
+        if (!state.pendingTokens) state.pendingTokens = [[], []];
+        state.pendingTokens[playerIndex].push({ tokenId: card.tokenId, count: card.tokenCount });
+      } else if (card.effect === 'sm_summon_now') {
+        // 今すぐ手札にトークンを追加する
+        for (let i = 0; i < card.tokenCount; i++) {
+          state.hand[playerIndex].push(card.tokenId);
+        }
+      } else if (card.effect === 'sm_summonup') {
+        // 召喚強化バフを設定する（card.turnsターン間トークン効果2倍）
+        if (!state.summonBuff) state.summonBuff = [0, 0];
+        state.summonBuff[playerIndex] = card.turns;
+      } else if (card.effect === 'sm_infinsum') {
+        // 毎ターン開始時にトークンを追加する定期召喚を登録する
+        if (!state.recurringTokens) state.recurringTokens = [[], []];
+        state.recurringTokens[playerIndex].push({ tokenId: card.tokenId, count: card.tokenCount, turns: card.turns });
+      } else if (card.effect === 'sm_sumexplosion') {
+        // 手札のトークンを全て消費して枚数×card.valueダメージ
+        const tokenIndices = [];
+        state.hand[playerIndex].forEach((cid, i) => {
+          if (CARD_DEFS[cid] && CARD_DEFS[cid].isToken) tokenIndices.push(i);
+        });
+        const tokenCount = tokenIndices.length;
+        tokenIndices.reverse().forEach(i => {
+          state.discard[playerIndex].push(state.hand[playerIndex].splice(i, 1)[0]);
+        });
+        applyDamageToOpp(tokenCount * card.value * dmgMult);
+      } else if (card.effect === 'sm_legionrelease') {
+        // 手札のトークンを全て即発動する
+        const tokenIndices = [];
+        state.hand[playerIndex].forEach((cid, i) => {
+          if (CARD_DEFS[cid] && CARD_DEFS[cid].isToken) tokenIndices.push(i);
+        });
+        tokenIndices.reverse().forEach(i => {
+          const cid = state.hand[playerIndex].splice(i, 1)[0];
+          const tc = CARD_DEFS[cid];
+          state.field[playerIndex].push(cid);
+          if (!tc) return;
+          const tMult = (state.summonBuff && state.summonBuff[playerIndex] > 0) ? 2 : 1;
+          if (tc.effect === 'damage') applyDamageToOpp(tc.value * tMult * dmgMult);
+          else if (tc.effect === 'block') state.block[playerIndex] += tc.value * tMult * blsMult;
+          else if (tc.effect === 'heal') state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + tc.value * tMult * blsMult);
+          else if (tc.effect === 'shieldbash') {
+            applyDamageToOpp(tc.value * tMult * dmgMult);
+            state.block[playerIndex] += tc.blockValue * tMult * blsMult;
+          }
+        });
+      } else if (card.effect === 'sm_ultimate') {
+        // 今すぐ手札にトークン10枚追加して手札の全トークン（既存含む）を即発動する
+        for (let i = 0; i < card.tokenCount; i++) {
+          state.hand[playerIndex].push(card.tokenId);
+        }
+        const tokenIndices = [];
+        state.hand[playerIndex].forEach((cid, i) => {
+          if (CARD_DEFS[cid] && CARD_DEFS[cid].isToken) tokenIndices.push(i);
+        });
+        tokenIndices.reverse().forEach(i => {
+          const cid = state.hand[playerIndex].splice(i, 1)[0];
+          const tc = CARD_DEFS[cid];
+          state.field[playerIndex].push(cid);
+          if (!tc) return;
+          const tMult = (state.summonBuff && state.summonBuff[playerIndex] > 0) ? 2 : 1;
+          if (tc.effect === 'damage') applyDamageToOpp(tc.value * tMult * dmgMult);
+          else if (tc.effect === 'block') state.block[playerIndex] += tc.value * tMult * blsMult;
+          else if (tc.effect === 'heal') state.hp[playerIndex] = Math.min(CG_MAX_HP, state.hp[playerIndex] + tc.value * tMult * blsMult);
+          else if (tc.effect === 'shieldbash') {
+            applyDamageToOpp(tc.value * tMult * dmgMult);
+            state.block[playerIndex] += tc.blockValue * tMult * blsMult;
+          }
+        });
       }
     }
 
@@ -1926,7 +2771,13 @@ io.on("connection", (socket) => {
     if (state.activePlayer !== playerIndex || state.phase !== 'play') return;
 
     // 手札とフィールドのカードをすべて捨て札に移動する
-    state.discard[playerIndex].push(...state.hand[playerIndex], ...state.field[playerIndex]);
+    // ネクロマンサーの場合はフィールドのカードを捨て札ではなく墓地へ送る
+    if (state.jobs[playerIndex] === 'necromancer') {
+      state.grave[playerIndex].push(...state.field[playerIndex]);
+      state.discard[playerIndex].push(...state.hand[playerIndex]);
+    } else {
+      state.discard[playerIndex].push(...state.hand[playerIndex], ...state.field[playerIndex]);
+    }
     state.hand[playerIndex] = [];
     state.field[playerIndex] = [];
 
@@ -2035,6 +2886,25 @@ io.on("connection", (socket) => {
     state.phase = 'play';
     state.shop = [];
     cgStartTurn(state, nextPlayer);
+
+    // ギャンブラー賭博師の奥義：スキップフラグが立っている場合は自動的にターン終了する
+    if (state.skipNextTurn && state.skipNextTurn[nextPlayer]) {
+      state.skipNextTurn[nextPlayer] = false;
+      // 手札とフィールドを捨て札へ移動してショップフェーズへ
+      if (state.jobs[nextPlayer] === 'necromancer') {
+        state.grave[nextPlayer].push(...state.field[nextPlayer]);
+        state.discard[nextPlayer].push(...state.hand[nextPlayer]);
+      } else {
+        state.discard[nextPlayer].push(...state.hand[nextPlayer], ...state.field[nextPlayer]);
+      }
+      state.hand[nextPlayer] = [];
+      state.field[nextPlayer] = [];
+      // さらに相手（元のプレイヤー）のターンを開始する
+      const nextNext = 1 - nextPlayer;
+      state.activePlayer = nextNext;
+      state.phase = 'play';
+      cgStartTurn(state, nextNext);
+    }
 
     if (state.hp[nextPlayer] <= 0 || state.hp[1 - nextPlayer] <= 0) {
       room.resultSent = true;
