@@ -1680,6 +1680,10 @@ io.on("connection", (socket) => {
     // ネクロマンサー：魂喰いは墓地が足りない場合は使用不能
     if (card.graveCost && (state.grave ? state.grave[playerIndex].length : 0) < card.graveCost) return;
 
+    // ナイト：ブロック消費攻撃カードはブロックが0の場合は使用不能
+    const knBlockConsumeEffects = ['kn_shieldblow', 'kn_ironcharge', 'kn_shieldstorm', 'kn_shieldcrush', 'kn_godshield'];
+    if (knBlockConsumeEffects.includes(card.effect) && state.block[playerIndex] === 0) return;
+
     // 隠密バフが有効なら実効コストを0にする
     const effectiveCost = state.stealth[playerIndex] ? 0 : card.cost;
     if (state.mana[playerIndex] < effectiveCost) return;
@@ -2374,7 +2378,7 @@ io.on("connection", (socket) => {
           state.block[playerIndex] += 20 * blsMult;
         } else { applySelfDamage(Math.floor(state.hp[playerIndex] / 2)); }
       } else if (card.effect === 'gb_jackpot') {
-        // 10%:相手HP1 / 90%:自分HP1
+        // 10%:相手HP1 / 90%:自分HP1（大穴狙いと同様に特殊確率）
         const success = (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) || Math.random() < 0.1;
         if (state.gamblerSureSuccess && state.gamblerSureSuccess[playerIndex]) state.gamblerSureSuccess[playerIndex] = false;
         if (success) { state.hp[oppIndex] = 1; state.block[oppIndex] = 0; }
