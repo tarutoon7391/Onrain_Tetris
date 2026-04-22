@@ -823,12 +823,12 @@ function leaveCGRoom(socket) {
   // 勝敗確定済みの場合は切断通知を送らない
   if (room.resultSent) return;
 
-  room.started = false;
-  cgWaitingRoomId = room.id;
+  room.resultSent = true;
 
-  // 残ったプレイヤーに相手切断を通知する
+  // 残ったプレイヤーに相手切断による勝利を通知する
   room.players.forEach((socketId) => {
     io.to(socketId).emit('cgOpponentLeft', { roomId: room.id });
+    io.to(socketId).emit('cgResult', { win: true });
   });
 }
 
