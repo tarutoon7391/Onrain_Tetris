@@ -1669,15 +1669,22 @@
       showGame();
     });
 
+    // 自分のHPが0になったときにゲームオーバーをサーバーへ通知する共通関数
+    function triggerGameOver() {
+      if (!cgGameOverSent) {
+        cgGameOverSent = true;
+        socket.emit('cgGameOver');
+      }
+    }
+
     // ゲーム状態更新
     socket.off('cgStateUpdate');
     cgGameOverSent = false; // 新しいゲーム開始時にフラグをリセットする
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
       // 自分のHPが0以下になったらゲームオーバーをサーバーへ通知する（テトリスと同じ方式）
-      if (state.myHp <= 0 && !cgGameOverSent) {
-        cgGameOverSent = true;
-        socket.emit('cgGameOver');
+      if (state.myHp <= 0) {
+        triggerGameOver();
       }
     });
 
@@ -1720,11 +1727,8 @@
 
     // デバッグ：自分のHPを0にするボタン
     document.getElementById('debugHpZeroBtn').addEventListener('click', () => {
-      if (!cgGameOverSent) {
-        cgGameOverSent = true;
-        updateHpBar('myHpBar', 'myHpNum', 0);
-        socket.emit('cgGameOver');
-      }
+      updateHpBar('myHpBar', 'myHpNum', 0);
+      triggerGameOver();
     });
 
     // ===== 職業選択ボタンのイベント =====
