@@ -1847,12 +1847,10 @@ io.on("connection", (socket) => {
           }
         }
         state.scryCards[playerIndex] = scryCards;
-        // 罠ダメージ等でカード使用前に誰かのHPが0になっていた場合は勝敗を確定させる
+        // 罠ダメージ等でカード使用前に誰かのHPが0になっていた場合は最新状態を送信して終了する
+        // （クライアント側でHP0を検知してcgGameOverを送信する）
         if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
-          room.resultSent = true;
-          const p0win = state.hp[1] <= 0;
-          io.to(room.players[0]).emit('cgResult', { win: p0win });
-          io.to(room.players[1]).emit('cgResult', { win: !p0win });
+          sendCGState(room);
           return;
         }
         io.to(socket.id).emit('cgScryChoice', { cards: scryCards });
@@ -2745,15 +2743,8 @@ io.on("connection", (socket) => {
       }
     }
 
-    // HPが0になったら勝敗を通知する
-    if (state.hp[oppIndex] <= 0 || state.hp[playerIndex] <= 0) {
-      room.resultSent = true;
-      const p0win = state.hp[1] <= 0;
-      io.to(room.players[0]).emit('cgResult', { win: p0win });
-      io.to(room.players[1]).emit('cgResult', { win: !p0win });
-      return;
-    }
-
+    // HP0になった場合も最新状態をクライアントへ送信する
+    // （クライアント側でHP0を検知してcgGameOverを送信する）
     sendCGState(room);
   });
 
@@ -2915,6 +2906,24 @@ io.on("connection", (socket) => {
     }
 
     sendCGState(room);
+  });
+
+  // ゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する（テトリスのgameOverと同じ方式）
+  socket.on('cgGameOver', () => {
+    const meta = cgSocketMeta.get(socket.id);
+    if (!meta) return;
+
+    const room = cgRooms.get(meta.roomId);
+    if (!room || room.players.length < 2 || room.resultSent) return;
+
+    // 最初にゲームオーバーになったプレイヤーが負け
+    room.resultSent = true;
+    io.to(socket.id).emit('cgResult', { win: false });
+    room.players.forEach((socketId) => {
+      if (socketId !== socket.id) {
+        io.to(socketId).emit('cgResult', { win: true });
+      }
+    });
   });
 
   // カードゲームロビーへ戻る際にルームから退出させる

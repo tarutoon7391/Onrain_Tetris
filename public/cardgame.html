@@ -1249,6 +1249,7 @@
     let isMyTurn = false;
     let currentPhase = 'play';
     let selectedJob = ''; // 選択した職業
+    let cgGameOverSent = false; // cgGameOverの二重送信防止フラグ
 
     // ===== Socket.io接続 =====
     const socket = io();
@@ -1648,8 +1649,14 @@
 
     // ゲーム状態更新
     socket.off('cgStateUpdate');
+    cgGameOverSent = false; // 新しいゲーム開始時にフラグをリセットする
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
+      // 自分のHPが0以下になったらゲームオーバーをサーバーへ送信する（1回のみ）
+      if (state.myHp <= 0 && !cgGameOverSent) {
+        cgGameOverSent = true;
+        socket.emit('cgGameOver');
+      }
     });
 
     // 相手が切断した通知
