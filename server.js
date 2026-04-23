@@ -232,7 +232,8 @@ function joinBBRoom(socket, playerName) {
 
   // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
   if (room.players.includes(socket.id)) {
-    io.to(socket.id).emit("bbWaiting", { roomId: room.id, playerNumber: 1 });
+    const existingNumber = room.players.indexOf(socket.id) + 1;
+    io.to(socket.id).emit("bbWaiting", { roomId: room.id, playerNumber: existingNumber });
     return;
   }
 
@@ -1064,7 +1065,8 @@ function joinCGRoom(socket, playerName, job) {
 
   // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
   if (room.players.includes(socket.id)) {
-    io.to(socket.id).emit('cgWaiting', { roomId: room.id, playerNumber: 1 });
+    const existingNumber = room.players.indexOf(socket.id) + 1;
+    io.to(socket.id).emit('cgWaiting', { roomId: room.id, playerNumber: existingNumber });
     return;
   }
 
@@ -1284,7 +1286,8 @@ function joinTypingRoom(socket, playerName) {
 
   // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
   if (room.players.includes(socket.id)) {
-    io.to(socket.id).emit("typingWaiting", { roomId: room.id, playerNumber: 1 });
+    const existingNumber = room.players.indexOf(socket.id) + 1;
+    io.to(socket.id).emit("typingWaiting", { roomId: room.id, playerNumber: existingNumber });
     return;
   }
 
