@@ -1656,6 +1656,7 @@
 
     // ゲーム状態更新
     socket.off('cgStateUpdate');
+    cgGameOverSent = false; // 新しいゲーム開始時にフラグをリセットする
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
       // 自分のHPが0以下になったらゲームオーバーをサーバーへ通知する（テトリスと同じ方式）
