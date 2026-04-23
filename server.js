@@ -127,6 +127,13 @@ function emitMatchStart(room) {
 // ルームへプレイヤーを参加させる関数
 function joinRoom(socket, playerName) {
   const room = getJoinableRoom();
+
+  // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
+  if (room.players.includes(socket.id)) {
+    emitWaitingState(room);
+    return;
+  }
+
   room.players.push(socket.id);
   room.playerNames[socket.id] = playerName;
   socket.join(room.id);
@@ -222,6 +229,13 @@ function getJoinableBBRoom() {
 // Block Blastルームへプレイヤーを参加させる関数
 function joinBBRoom(socket, playerName) {
   const room = getJoinableBBRoom();
+
+  // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
+  if (room.players.includes(socket.id)) {
+    io.to(socket.id).emit("bbWaiting", { roomId: room.id, playerNumber: 1 });
+    return;
+  }
+
   room.players.push(socket.id);
   room.playerNames[socket.id] = playerName;
   socket.join(room.id);
@@ -1047,6 +1061,13 @@ function sendCGState(room) {
 // カードゲームルームへプレイヤーを参加させる関数
 function joinCGRoom(socket, playerName, job) {
   const room = getJoinableCGRoom();
+
+  // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
+  if (room.players.includes(socket.id)) {
+    io.to(socket.id).emit('cgWaiting', { roomId: room.id, playerNumber: 1 });
+    return;
+  }
+
   room.players.push(socket.id);
   room.playerNames[socket.id] = playerName;
   // 職業情報をルームに保存する
@@ -1260,6 +1281,13 @@ function getJoinableTypingRoom() {
 // タイピングバトルルームへプレイヤーを参加させる関数
 function joinTypingRoom(socket, playerName) {
   const room = getJoinableTypingRoom();
+
+  // 既に同じルームに参加済みの場合は二重参加を防ぐ（自己対戦防止）
+  if (room.players.includes(socket.id)) {
+    io.to(socket.id).emit("typingWaiting", { roomId: room.id, playerNumber: 1 });
+    return;
+  }
+
   room.players.push(socket.id);
   room.playerNames[socket.id] = playerName;
   socket.join(room.id);
@@ -2923,24 +2951,6 @@ io.on("connection", (socket) => {
     }
 
     sendCGState(room);
-  });
-
-  // ゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する（テトリスのgameOverと同じ方式）
-  socket.on('cgGameOver', () => {
-    const meta = cgSocketMeta.get(socket.id);
-    if (!meta) return;
-
-    const room = cgRooms.get(meta.roomId);
-    if (!room || room.players.length < 2 || room.resultSent) return;
-
-    // 最初にゲームオーバーになったプレイヤーが負け
-    room.resultSent = true;
-    io.to(socket.id).emit('cgResult', { win: false });
-    room.players.forEach((socketId) => {
-      if (socketId !== socket.id) {
-        io.to(socketId).emit('cgResult', { win: true });
-      }
-    });
   });
 
   // カードゲームロビーへ戻る際にルームから退出させる
