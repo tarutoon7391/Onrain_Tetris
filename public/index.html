@@ -1910,6 +1910,8 @@
     // 相手切断時の処理
     socket.on("opponentLeft", () => {
       document.getElementById("matchingStatus").textContent = "相手が切断しました。";
+      // サーバー側のルームを正しく解放してから退室する（未解放のままだと再マッチ時に自己対戦が発生する）
+      socket.emit("leaveRoom");
       enterLobby();
     });
 

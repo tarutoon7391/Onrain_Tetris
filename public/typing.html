@@ -1053,6 +1053,8 @@
       gameActive = false;
       showScreen("waitingScreen");
       document.getElementById("waitingStatus").textContent = "相手が切断しました。再マッチング中...";
+      // サーバー側の古いルームを正しく解放してから新規マッチングを要求する（未解放のままだと自己対戦が発生する）
+      socket.emit("typingLeaveRoom");
       socket.emit("typingJoinMatch", { playerName: myPlayerName });
     });
 
