@@ -1650,6 +1650,10 @@
     socket.off('cgStateUpdate');
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
+      // 自分のHPが0以下になったらゲームオーバーをサーバーへ送信する
+      if (state.myHp <= 0) {
+        socket.emit('cgGameOver');
+      }
     });
 
     // 相手が切断した通知
