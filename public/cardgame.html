@@ -448,6 +448,18 @@
       transform: none;
     }
 
+    /* デバッグボタン */
+    #debugHpZeroBtn {
+      width: 100%;
+      padding: 8px;
+      font-size: 0.8rem;
+      background: linear-gradient(180deg, #7f1d1d, #450a0a);
+      border-color: #ef4444;
+      opacity: 0.7;
+    }
+
+    #debugHpZeroBtn:hover { opacity: 1; }
+
     /* ショップ */
     #shopPanel { display: none; }
 
@@ -755,6 +767,9 @@
 
         <!-- ターン終了ボタン -->
         <button id="endTurnBtn" type="button" disabled>ターン終了</button>
+
+        <!-- デバッグ：自分のHPを0にする -->
+        <button id="debugHpZeroBtn" type="button" title="デバッグ用：自分のHPを強制的に0にして敗北させる">🐛 自分HP→0 [DEBUG]</button>
 
         <!-- ショップパネル -->
         <div class="panel" id="shopPanel">
@@ -1654,15 +1669,22 @@
       showGame();
     });
 
+    // 自分のHPが0になったときにゲームオーバーをサーバーへ通知する共通関数
+    function triggerGameOver() {
+      if (!cgGameOverSent) {
+        cgGameOverSent = true;
+        socket.emit('cgGameOver');
+      }
+    }
+
     // ゲーム状態更新
     socket.off('cgStateUpdate');
     cgGameOverSent = false; // 新しいゲーム開始時にフラグをリセットする
     socket.on('cgStateUpdate', (state) => {
       applyState(state);
       // 自分のHPが0以下になったらゲームオーバーをサーバーへ通知する（テトリスと同じ方式）
-      if (state.myHp <= 0 && !cgGameOverSent) {
-        cgGameOverSent = true;
-        socket.emit('cgGameOver');
+      if (state.myHp <= 0) {
+        triggerGameOver();
       }
     });
 
@@ -1701,6 +1723,12 @@
     document.getElementById('backToLobbyBtn').addEventListener('click', () => {
       socket.emit('cgLeaveRoom');
       window.location.href = '/';
+    });
+
+    // デバッグ：自分のHPを0にするボタン
+    document.getElementById('debugHpZeroBtn').addEventListener('click', () => {
+      updateHpBar('myHpBar', 'myHpNum', 0);
+      triggerGameOver();
     });
 
     // ===== 職業選択ボタンのイベント =====
