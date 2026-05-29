@@ -431,8 +431,8 @@
       color: var(--gold);
     }
 
-    /* ターン終了ボタン */
-    #endTurnBtn {
+    /* 確定ボタン */
+    #confirmBtn {
       width: 100%;
       padding: 12px;
       font-size: 1rem;
@@ -440,12 +440,31 @@
       border-color: #22c55e;
     }
 
-    #endTurnBtn:disabled {
+    #confirmBtn:disabled {
       background: linear-gradient(180deg, #374151, #1f2937);
       border-color: #4b5563;
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
+    }
+
+    /* 手札の選択中ハイライト（同時処理方式） */
+    .card-item.selected {
+      outline: 3px solid #22d3ee;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
+      transform: translateY(-4px);
+    }
+
+    /* 相手の選択待ち表示 */
+    #oppWaiting {
+      padding: 10px;
+      margin: 8px 0;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid #60a5fa;
+      border-radius: 6px;
+      color: #bfdbfe;
+      text-align: center;
+      font-weight: 700;
     }
 
     /* デバッグボタン */
@@ -765,8 +784,11 @@
           <div class="gold-display" id="goldDisplay">🪙 0</div>
         </div>
 
-        <!-- ターン終了ボタン -->
-        <button id="endTurnBtn" type="button" disabled>ターン終了</button>
+        <!-- 確定ボタン（同時処理方式：選択したカードを確定する） -->
+        <button id="confirmBtn" type="button" disabled>確定</button>
+
+        <!-- 相手の選択待ち表示 -->
+        <div id="oppWaiting" style="display:none;">⏳ 相手の選択を待っています...</div>
 
         <!-- デバッグ：自分のHPを0にする -->
         <button id="debugHpZeroBtn" type="button" title="デバッグ用：自分のHPを強制的に0にして敗北させる">🐛 自分HP→0 [DEBUG]</button>
@@ -1262,9 +1284,16 @@
     let myPlayerNumber = 0;
     let lastState = null;
     let isMyTurn = false;
-    let currentPhase = 'play';
+    let currentPhase = 'select';
     let selectedJob = ''; // 選択した職業
     let cgGameOverSent = false; // 自分のHP0検知時にcgGameOverを多重送信しないためのフラグ
+    // 同時処理方式：select フェーズで選択中（フィールドに置いた）のカードIDを管理する
+    let currentFieldIds = [];
+    // 同時処理方式：選択中の手札インデックスのセット（currentFieldIds と対応）
+    let selectedHandIndices = [];
+    // 前回の state（フェーズ遷移検出用）
+    let prevPhaseForReset = null;
+    let prevMyConfirmedForReset = false;
 
     // ===== Socket.io接続 =====
     const socket = io();
@@ -1364,18 +1393,47 @@
     }
 
     // ===== 手札を描画する関数 =====
-    function renderHand(hand, mana, sealedCardId, stealth) {
+    function renderHand(hand, mana, sealedCardId, stealth, myConfirmed) {
       const container = document.getElementById('handArea');
       container.innerHTML = '';
+      // 同時処理方式：選択中カードの合計コストを計算する（select フェーズ判定用）
+      const selectedTotalCost = selectedHandIndices.reduce((sum, idx) => {
+        const cid = hand[idx];
+        const c = CARD_DEFS[cid];
+        if (!c) return sum;
+        const eff = stealth ? 0 : c.cost;
+        return sum + eff;
+      }, 0);
+
       hand.forEach((cardId, index) => {
         const card = CARD_DEFS[cardId];
         if (!card) return;
         const isSealed = sealedCardId === cardId;
         // 隠密バフが有効な場合はカードのコストを0とみなしてプレイ可否を判定する
         const effectiveCost = stealth ? 0 : card.cost;
-        // 自分のターンのプレイフェーズのみクリック可能にする（封印カードは不可）
-        const canPlay = isMyTurn && currentPhase === 'play' && mana >= effectiveCost && !isSealed;
-        const cardEl = createCardElement(cardId, { disabled: !canPlay });
+
+        let canInteract = false;
+        let isSelected = false;
+
+        if (currentPhase === 'select') {
+          // 同時処理方式：select フェーズでは即発動せず選択トグルにする
+          isSelected = selectedHandIndices.includes(index);
+          if (!myConfirmed && !isSealed) {
+            if (isSelected) {
+              // 選択済みは常に解除可能
+              canInteract = true;
+            } else {
+              // 未選択は合計コストがマナを超えない場合のみ選択可能
+              canInteract = (selectedTotalCost + effectiveCost) <= mana;
+            }
+          }
+        } else if (currentPhase === 'play') {
+          // 後方互換：play フェーズが残っている間は従来通り即発動
+          canInteract = isMyTurn && mana >= effectiveCost && !isSealed;
+        }
+
+        const cardEl = createCardElement(cardId, { disabled: !canInteract && !isSelected });
+        if (isSelected) cardEl.classList.add('selected');
 
         // 封印中は表示を変える
         if (isSealed) {
@@ -1383,9 +1441,25 @@
           cardEl.title = '封印中：このターン使用不可';
         }
 
-        if (canPlay) {
+        if (canInteract) {
           cardEl.addEventListener('click', () => {
-            socket.emit('cgPlayCard', { handIndex: index });
+            if (currentPhase === 'select') {
+              // 選択トグル：既に選択中なら解除、未選択なら追加
+              const pos = selectedHandIndices.indexOf(index);
+              if (pos >= 0) {
+                selectedHandIndices.splice(pos, 1);
+                const fpos = currentFieldIds.indexOf(cardId);
+                if (fpos >= 0) currentFieldIds.splice(fpos, 1);
+              } else {
+                selectedHandIndices.push(index);
+                currentFieldIds.push(cardId);
+              }
+              // 再描画して見た目と確定ボタン状態を更新する
+              if (lastState) applyState(lastState);
+            } else if (currentPhase === 'play') {
+              // 後方互換：play フェーズのみ即発動を送信する
+              socket.emit('cgPlayCard', { handIndex: index });
+            }
           });
         }
 
@@ -1450,6 +1524,17 @@
       isMyTurn = (state.activePlayer === state.myPlayerNumber);
       currentPhase = state.phase;
 
+      // 同時処理方式：新しい select ラウンドに入った（自分が未確定）タイミングで選択状態をリセットする
+      const enteringFreshSelect =
+        currentPhase === 'select' && !state.myConfirmed &&
+        (prevPhaseForReset !== 'select' || prevMyConfirmedForReset === true);
+      if (enteringFreshSelect) {
+        currentFieldIds = [];
+        selectedHandIndices = [];
+      }
+      prevPhaseForReset = currentPhase;
+      prevMyConfirmedForReset = !!state.myConfirmed;
+
       // HP更新
       updateHpBar('myHpBar', 'myHpNum', state.myHp);
       updateHpBar('oppHpBar', 'oppHpNum', state.oppHp);
@@ -1505,35 +1590,66 @@
       renderField('myField', state.myField);
       renderField('oppField', state.oppField);
 
-      // 手札（封印・隠密バフを渡す）
-      renderHand(state.myHand, state.myMana, state.mySealedCardId, state.myStealth);
+      // 手札（封印・隠密バフ・確定状況を渡す）
+      renderHand(state.myHand, state.myMana, state.mySealedCardId, state.myStealth, state.myConfirmed);
 
-      // ターン情報
+      // ターン情報（同時処理方式：select フェーズの確定状況に応じてラベルを切り替える）
       const turnLabel = document.getElementById('turnLabel');
-      if (isMyTurn) {
-        turnLabel.textContent = '▶ 自分のターン';
-        turnLabel.className = 'active-label my-turn';
+      if (currentPhase === 'select') {
+        if (!state.myConfirmed) {
+          turnLabel.textContent = '▶ カードを選択して確定してください';
+          turnLabel.className = 'active-label my-turn';
+        } else {
+          turnLabel.textContent = '⏳ 相手の選択を待っています...';
+          turnLabel.className = 'active-label opp-turn';
+        }
+      } else if (currentPhase === 'shop') {
+        if (!state.myShopDone) {
+          turnLabel.textContent = '🛒 ショップで買い物中';
+          turnLabel.className = 'active-label my-turn';
+        } else {
+          turnLabel.textContent = '⏳ 相手のショップ完了を待っています...';
+          turnLabel.className = 'active-label opp-turn';
+        }
       } else {
-        turnLabel.textContent = '⏳ 相手のターン';
-        turnLabel.className = 'active-label opp-turn';
+        // 後方互換：play フェーズ表示
+        if (isMyTurn) {
+          turnLabel.textContent = '▶ 自分のターン';
+          turnLabel.className = 'active-label my-turn';
+        } else {
+          turnLabel.textContent = '⏳ 相手のターン';
+          turnLabel.className = 'active-label opp-turn';
+        }
       }
 
-      // ターン終了ボタン（自分のターンのプレイフェーズのみ有効）
-      const endBtn = document.getElementById('endTurnBtn');
-      endBtn.disabled = !(isMyTurn && currentPhase === 'play');
+      // 確定ボタン（select フェーズかつ自分が未確定のときのみ有効）
+      const confirmBtn = document.getElementById('confirmBtn');
+      confirmBtn.disabled = !(currentPhase === 'select' && !state.myConfirmed);
 
-      // ショップパネル
+      // 相手の選択待ち表示（自分が確定済みで相手が未確定のときだけ表示）
+      document.getElementById('oppWaiting').style.display =
+        (state.myConfirmed && !state.oppConfirmed) ? 'block' : 'none';
+
+      // ショップパネル（両者個別ショップ：自分のショップが未完了のときに表示する）
       const shopPanel = document.getElementById('shopPanel');
-      if (isMyTurn && currentPhase === 'shop') {
+      if (currentPhase === 'shop' && !state.myShopDone) {
         shopPanel.style.display = 'block';
         renderShop(state.shop, state.myGold, state.myTrashCost, state);
-        document.getElementById('msgBar').textContent = '🛒 カードを購入するかスキップしてください';
+        document.getElementById('msgBar').textContent = '🛒 カードを購入するかスキップしてください（相手と独立して操作できます）';
       } else {
         shopPanel.style.display = 'none';
-        if (!isMyTurn) {
+        if (currentPhase === 'select') {
+          if (!state.myConfirmed) {
+            document.getElementById('msgBar').textContent = 'カードを選択して確定ボタンを押してください';
+          } else {
+            document.getElementById('msgBar').textContent = '相手の選択を待っています...';
+          }
+        } else if (currentPhase === 'shop' && state.myShopDone) {
+          document.getElementById('msgBar').textContent = '相手のショップ完了を待っています...';
+        } else if (!isMyTurn) {
           document.getElementById('msgBar').textContent = '相手のターンです...';
         } else {
-          document.getElementById('msgBar').textContent = 'カードを使ってターン終了ボタンを押してください';
+          document.getElementById('msgBar').textContent = '';
         }
       }
     }
@@ -1703,9 +1819,10 @@
 
     // ===== ボタンイベント =====
 
-    // ターン終了ボタン
-    document.getElementById('endTurnBtn').addEventListener('click', () => {
-      socket.emit('cgEndTurn');
+    // 確定ボタン（同時処理方式：フィールドに置いたカードIDを送って確定する）
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+      // 現在フィールドに置かれているカードIDを送る
+      socket.emit('cgConfirmCards', { cardIds: [...currentFieldIds] });
     });
 
     // ショップスキップボタン
