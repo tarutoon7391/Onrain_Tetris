@@ -1118,7 +1118,7 @@
       if (card.effect === 'manafill')    return `次のターン追加で+${card.value}マナ`;
       if (card.effect === 'amplify')     return `次のカードのダメージ2倍`;
       if (card.effect === 'chain')       return `手札枚数×${card.value}ダメージ`;
-      if (card.effect === 'freeze')      return `${card.value}ダメ＋相手次ターンマナ-3`;
+      if (card.effect === 'freeze')      return `${card.value}ダメ＋相手次ターンマナ-1`;
       if (card.effect === 'thunder')     return `${card.value}ダメ＋${card.drawValue}枚ドロー`;
       if (card.effect === 'm_recover')   return `捨て札から${card.value}枚を手札に戻す`;
       if (card.effect === 'm_seal')      return `相手の手札1枚を封印`;
