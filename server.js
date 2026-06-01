@@ -779,8 +779,14 @@ function initCGGameState() {
     discard: [[], []],
     field: [[], []],
     activePlayer: 0,
-    phase: 'play',
-    shop: [],
+    // 同時処理方式：select（カード選択）→shop（買い物）の2フェーズ
+    phase: 'select',
+    // 両者個別ショップ（[player0用, player1用]）
+    shop: [[], []],
+    // 各プレイヤーが今ラウンドに確定したカードID配列（未確定なら null）
+    confirmedCards: [null, null],
+    // 各プレイヤーがショップを完了したかどうか
+    shopDone: [false, false],
     // カード削除回数（プレイヤーごと）
     trashCount: [0, 0],
     // 現在の削除コスト（初回5コイン、削除するたびに5コイン増加）
@@ -996,12 +1002,34 @@ function getJoinableCGRoom() {
 }
 
 // カードゲームの状態を各プレイヤーへ送信する関数（相手の手札は枚数のみ開示する）
+// 同時処理方式への移行に伴い追加されたフィールドを補完するマイグレーション関数
+// 古い状態オブジェクト（または再起動前のメモリ）に新フィールドが無い場合に備える
+function migrateCGState(state) {
+  if (!state) return state;
+  if (!Array.isArray(state.confirmedCards) || state.confirmedCards.length !== 2) {
+    state.confirmedCards = [null, null];
+  }
+  if (!Array.isArray(state.shopDone) || state.shopDone.length !== 2) {
+    state.shopDone = [false, false];
+  }
+  // 旧形式の shop（カードID配列）を両者個別形式へ変換する
+  if (!Array.isArray(state.shop) || state.shop.length !== 2 || !Array.isArray(state.shop[0])) {
+    state.shop = [[], []];
+  }
+  // 旧 phase 値（'play'）を新しい 'select' に置き換える
+  if (state.phase === 'play') {
+    state.phase = 'select';
+  }
+  return state;
+}
+
 function sendCGState(room) {
   const state = room.state;
+  migrateCGState(state);
   room.players.forEach((socketId, index) => {
     const opp = 1 - index;
-    // 自分のショップフェーズのときはデッキ・捨て札の中身もカード削除UIのために送る
-    const isMyShopTurn = state.phase === 'shop' && state.activePlayer === index;
+    // ショップフェーズかつ自分がまだ完了していなければ自分用のショップを表示する
+    const isMyShopTurn = state.phase === 'shop' && !state.shopDone[index];
     // 毒の合計ダメージ/ターンを計算して送る
     const myPoisonDmgPerTurn = state.poisonStacks[index].reduce((s, st) => s + st.dmg, 0);
     const oppPoisonDmgPerTurn = state.poisonStacks[opp].reduce((s, st) => s + st.dmg, 0);
@@ -1024,8 +1052,13 @@ function sendCGState(room) {
       activePlayer: state.activePlayer + 1,
       myPlayerNumber: index + 1,
       phase: state.phase,
-      // ショップフェーズかつ自分のターンのときだけショップ情報を送る
-      shop: isMyShopTurn ? state.shop : [],
+      // ショップフェーズかつ自分がまだ完了していなければ自分用のショップを送る（両者個別）
+      shop: (state.phase === 'shop' && !state.shopDone[index]) ? state.shop[index] : [],
+      // 自分の確定状況・相手の確定状況（同時処理方式のUI制御用）
+      myConfirmed: state.confirmedCards[index] !== null,
+      oppConfirmed: state.confirmedCards[opp] !== null,
+      // 自分がショップを完了したかどうか
+      myShopDone: state.shopDone[index],
       // 現在の削除コスト
       myTrashCost: state.trashCost[index],
       // 累積削除回数
@@ -1088,7 +1121,9 @@ function joinCGRoom(socket, playerName, job) {
     room.state = initCGGameState();
     room.state.jobs[0] = room.playerJobs[room.players[0]] || '';
     room.state.jobs[1] = room.playerJobs[room.players[1]] || '';
+    // 同時処理方式：両プレイヤーの最初のターン（マナ・手札）を初期化する
     cgStartTurn(room.state, 0);
+    cgStartTurn(room.state, 1);
 
     room.players.forEach((socketId, index) => {
       const opponentId = room.players[1 - index];
@@ -2796,33 +2831,35 @@ io.on("connection", (socket) => {
     });
   });
 
-  // ターン終了処理（手札・フィールドを捨て札へ移動しショップフェーズへ移行する）
-  socket.on('cgEndTurn', () => {
+  // 同時処理方式：プレイヤーが今ラウンドに使うカードを確定する処理
+  // ※ カードの発動処理（resolveRound）は PR② で実装予定。ここでは確定情報の保存のみを行う。
+  socket.on('cgConfirmCards', (payload) => {
     const meta = cgSocketMeta.get(socket.id);
     if (!meta) return;
-
     const room = cgRooms.get(meta.roomId);
     if (!room || !room.state || room.resultSent) return;
-
     const state = room.state;
+    migrateCGState(state);
     const playerIndex = meta.playerNumber - 1;
 
-    if (state.activePlayer !== playerIndex || state.phase !== 'play') return;
+    if (state.phase !== 'select') return;
+    if (state.confirmedCards[playerIndex] !== null) return;
 
-    // 手札とフィールドのカードをすべて捨て札に移動する
-    // ネクロマンサーの場合はフィールドのカードを捨て札ではなく墓地へ送る
-    if (state.jobs[playerIndex] === 'necromancer') {
-      state.grave[playerIndex].push(...state.field[playerIndex]);
-      state.discard[playerIndex].push(...state.hand[playerIndex]);
-    } else {
-      state.discard[playerIndex].push(...state.hand[playerIndex], ...state.field[playerIndex]);
+    const cardIds = Array.isArray(payload?.cardIds) ? payload.cardIds : [];
+    let totalCost = 0;
+    for (const cardId of cardIds) {
+      const card = CARD_DEFS[cardId];
+      if (!card) return;
+      totalCost += card.cost;
     }
-    state.hand[playerIndex] = [];
-    state.field[playerIndex] = [];
+    if (totalCost > state.mana[playerIndex]) return;
 
-    // ショップフェーズへ移行する
-    state.phase = 'shop';
-    state.shop = generateCGShop(state.jobs[playerIndex]);
+    state.confirmedCards[playerIndex] = cardIds;
+
+    if (state.confirmedCards[0] !== null && state.confirmedCards[1] !== null) {
+      console.log('[CG] 両者確定 → resolveRound は PR② で実装予定');
+      // TODO: PR②で resolveRound(room) を呼ぶ
+    }
 
     sendCGState(room);
   });
@@ -2836,14 +2873,17 @@ io.on("connection", (socket) => {
     if (!room || !room.state || room.resultSent) return;
 
     const state = room.state;
+    migrateCGState(state);
     const playerIndex = meta.playerNumber - 1;
 
-    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+    // 同時処理方式：自分のショップが完了していないときのみ購入可能
+    if (state.phase !== 'shop' || state.shopDone[playerIndex]) return;
 
+    const myShop = state.shop[playerIndex];
     const shopIndex = Number(payload?.shopIndex);
-    if (!Number.isInteger(shopIndex) || shopIndex < 0 || shopIndex >= state.shop.length) return;
+    if (!Number.isInteger(shopIndex) || shopIndex < 0 || shopIndex >= myShop.length) return;
 
-    const cardId = state.shop[shopIndex];
+    const cardId = myShop[shopIndex];
     const card = CARD_DEFS[cardId];
     if (!card) return;
 
@@ -2853,7 +2893,7 @@ io.on("connection", (socket) => {
     // カードを購入しデッキに直接追加する
     state.gold[playerIndex] -= card.shopCost;
     state.deck[playerIndex].push(cardId);
-    state.shop.splice(shopIndex, 1);
+    myShop.splice(shopIndex, 1);
 
     sendCGState(room);
   });
@@ -2867,10 +2907,11 @@ io.on("connection", (socket) => {
     if (!room || !room.state || room.resultSent) return;
 
     const state = room.state;
+    migrateCGState(state);
     const playerIndex = meta.playerNumber - 1;
 
-    // ショップフェーズかつ自分のターンであることを確認する
-    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+    // 同時処理方式：自分のショップが完了していないときのみ削除可能
+    if (state.phase !== 'shop' || state.shopDone[playerIndex]) return;
 
     // 削除コストが足りているか確認する
     const cost = state.trashCost[playerIndex];
@@ -2906,7 +2947,7 @@ io.on("connection", (socket) => {
     sendCGState(room);
   });
 
-  // ショップをスキップして相手のターンへ移行する処理
+  // ショップを完了する処理（両者独立。両者が完了したら次ラウンドを開始する）
   socket.on('cgSkipShop', () => {
     const meta = cgSocketMeta.get(socket.id);
     if (!meta) return;
@@ -2915,42 +2956,22 @@ io.on("connection", (socket) => {
     if (!room || !room.state || room.resultSent) return;
 
     const state = room.state;
+    migrateCGState(state);
     const playerIndex = meta.playerNumber - 1;
 
-    if (state.activePlayer !== playerIndex || state.phase !== 'shop') return;
+    if (state.phase !== 'shop') return;
+    if (state.shopDone[playerIndex]) return;
 
-    // 相手のターンを開始する
-    const nextPlayer = 1 - playerIndex;
-    state.activePlayer = nextPlayer;
-    state.phase = 'play';
-    state.shop = [];
-    cgStartTurn(state, nextPlayer);
+    state.shopDone[playerIndex] = true;
 
-    // ギャンブラー賭博師の奥義：スキップフラグが立っている場合は自動的にターン終了する
-    if (state.skipNextTurn && state.skipNextTurn[nextPlayer]) {
-      state.skipNextTurn[nextPlayer] = false;
-      // 手札とフィールドを捨て札へ移動してショップフェーズへ
-      if (state.jobs[nextPlayer] === 'necromancer') {
-        state.grave[nextPlayer].push(...state.field[nextPlayer]);
-        state.discard[nextPlayer].push(...state.hand[nextPlayer]);
-      } else {
-        state.discard[nextPlayer].push(...state.hand[nextPlayer], ...state.field[nextPlayer]);
-      }
-      state.hand[nextPlayer] = [];
-      state.field[nextPlayer] = [];
-      // さらに相手（元のプレイヤー）のターンを開始する
-      const nextNext = 1 - nextPlayer;
-      state.activePlayer = nextNext;
-      state.phase = 'play';
-      cgStartTurn(state, nextNext);
-    }
-
-    if (state.hp[nextPlayer] <= 0 || state.hp[1 - nextPlayer] <= 0) {
-      room.resultSent = true;
-      const p0win = state.hp[1] <= 0;
-      io.to(room.players[0]).emit('cgResult', { win: p0win });
-      io.to(room.players[1]).emit('cgResult', { win: !p0win });
-      return;
+    if (state.shopDone[0] && state.shopDone[1]) {
+      state.block = [0, 0];
+      state.phase = 'select';
+      state.shop = [[], []];
+      // 両者のマナ・手札をリセットして次ラウンドを開始する
+      state.confirmedCards = [null, null];
+      cgStartTurn(state, 0);
+      cgStartTurn(state, 1);
     }
 
     sendCGState(room);
