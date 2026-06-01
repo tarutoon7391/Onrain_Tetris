@@ -1785,6 +1785,7 @@
 
     // 自分のHPが0になったときにゲームオーバーをサーバーへ通知する共通関数
     function triggerGameOver() {
+      console.log('[CG DEBUG] triggerGameOver called, cgGameOverSent=', cgGameOverSent);
       if (!cgGameOverSent) {
         cgGameOverSent = true;
         socket.emit('cgGameOver');
@@ -1842,6 +1843,7 @@
 
     // デバッグ：自分のHPを0にするボタン
     document.getElementById('debugHpZeroBtn').addEventListener('click', () => {
+      console.log('[CG DEBUG] debug button clicked');
       updateHpBar('myHpBar', 'myHpNum', 0);
       triggerGameOver();
     });
