@@ -2000,9 +2000,9 @@ io.on("connection", (socket) => {
         const chainDmg = state.hand[playerIndex].length * card.value * dmgMult;
         applyDamageToOpp(chainDmg);
       } else if (card.effect === 'freeze') {
-        // ダメージ＋相手の次のターンのマナを3減らす
+        // ダメージ＋相手の次のターンのマナを1減らす
         applyDamageToOpp(card.value * dmgMult);
-        state.manaBonusNextTurn[oppIndex] -= 3;
+        state.manaBonusNextTurn[oppIndex] -= 1;
       } else if (card.effect === 'thunder') {
         // ダメージ＋カードを引く
         applyDamageToOpp(card.value * dmgMult);
