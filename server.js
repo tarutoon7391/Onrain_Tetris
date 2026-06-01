@@ -2815,11 +2815,15 @@ io.on("connection", (socket) => {
 
   // カードゲームのゲームオーバー通知を受け取り勝敗を両プレイヤーへ通知する（テトリスのgameOverと同じ方式）
   socket.on('cgGameOver', () => {
+    console.log('[CG DEBUG] cgGameOver received, room=', meta?.roomId, 'players=', room?.players?.length, 'resultSent=', room?.resultSent);
     const meta = cgSocketMeta.get(socket.id);
-    if (!meta) return;
+    if (!meta) { console.log('[CG DEBUG] no meta'); return; }
 
     const room = cgRooms.get(meta.roomId);
-    if (!room || room.players.length < 2 || room.resultSent) return;
+    if (!room || room.players.length < 2 || room.resultSent) {
+      console.log('[CG DEBUG] early return: room=', !!room, 'players=', room?.players?.length, 'resultSent=', room?.resultSent);
+      return;
+    }
 
     // 最初にHP0を検知して通知してきたプレイヤーが負け
     room.resultSent = true;
