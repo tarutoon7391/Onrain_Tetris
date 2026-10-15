@@ -535,6 +535,13 @@
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
     }
 
+    /* ふえふえドロップボタン */
+    .btn-fuefue {
+      background: linear-gradient(135deg, #be185d, #ec4899);
+      border-color: rgba(236, 72, 153, 0.5);
+      box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
+    }
+
     /* マッチング状況テキスト */
     .arcade-matching-status {
       margin-top: 18px;
@@ -596,6 +603,11 @@
         <span class="btn-icon">🃏</span>
         <span class="btn-label">カードゲーム</span>
         <span class="btn-tag">CARD GAME</span>
+      </button>
+      <button id="matchFuefueBtn" type="button" class="game-btn btn-fuefue">
+        <span class="btn-icon">🎱</span>
+        <span class="btn-label">ふえふえドロップ</span>
+        <span class="btn-tag">1 PLAYER</span>
       </button>
       <p id="matchingStatus" class="arcade-matching-status"></p>
     </div>
@@ -1830,6 +1842,12 @@
     document.getElementById("matchCardBtn").addEventListener("click", () => {
       localStorage.setItem("cgPlayerName", myPlayerName);
       window.location.href = "/cardgame.html";
+    });
+
+    // ふえふえドロップボタン処理（fuefue.htmlへ遷移する）
+    document.getElementById("matchFuefueBtn").addEventListener("click", () => {
+      localStorage.setItem("fuefuePlayerName", myPlayerName);
+      window.location.href = "/fuefue.html";
     });
 
     // ロビーへ戻るボタン処理
